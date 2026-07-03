@@ -7,7 +7,7 @@ This roadmap is intentionally incremental. Do not implement these phases now. Ea
 Use this checklist as the source of truth for what remains to be implemented. Keep completed items checked, and keep the detailed phase notes below for context.
 
 - [x] 1. Bootstrap the Next.js project.
-- [ ] 2. Configure basic project tooling.
+- [x] 2. Configure basic project tooling.
 - [ ] 3. Set up Supabase project.
 - [ ] 4. Configure Supabase Auth.
 - [ ] 5. Implement magic link login.
@@ -73,6 +73,16 @@ Do not do yet:
 - Build finance features.
 
 ## 2. Configure Basic Project Tooling
+
+Status:
+
+- Completed.
+
+Implemented result:
+
+- ESLint configured with the Next.js core web vitals and TypeScript rules.
+- Prettier configured for consistent formatting.
+- Development scripts added for linting, formatting, and combined checks.
 
 Goal:
 

@@ -171,4 +171,3 @@ Avoid:
 - Monitor sync failures and unusual access patterns.
 - Add structured error handling that avoids leaking secrets.
 - Review RLS policies before every schema expansion.
-

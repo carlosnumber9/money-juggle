@@ -285,4 +285,3 @@ Consequences:
 Possible future revisit trigger:
 
 - If the user explicitly requests a larger implementation batch.
-

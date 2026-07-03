@@ -175,4 +175,3 @@ A feature is acceptable when:
 Build in small, didactic steps. Prefer clear, explicit code over premature abstractions. Add tests when they clarify behavior, protect financial logic, or reduce regression risk. Keep explanations practical and focused on what the user is learning.
 
 Never generate large parts of the app without the user's confirmation. Explain important changes before implementing them.
-

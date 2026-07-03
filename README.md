@@ -19,6 +19,20 @@ npm run dev
 Run the basic checks:
 
 ```bash
+npm run check
+```
+
+Or run them separately:
+
+```bash
 npm run typecheck
+npm run lint
+npm run format:check
 npm run build
+```
+
+Format files:
+
+```bash
+npm run format
 ```

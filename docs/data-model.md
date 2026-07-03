@@ -376,15 +376,15 @@ Source:
 
 ## Data Source Summary
 
-| Entity | Primary source |
-| --- | --- |
-| `auth.users` | Supabase Auth |
-| `profiles` | Supabase Auth and app metadata |
-| `institutions` | GoCardless or app-managed reference data |
-| `bank_connections` | GoCardless consent and requisition flow |
-| `accounts` | GoCardless account data |
-| `balances` | GoCardless balances |
-| `transactions` | GoCardless transactions |
-| `sync_runs` | App sync process |
-| `consent_events` | App consent lifecycle tracking |
-| `manual_assets` | Manual user input or future import |
+| Entity             | Primary source                           |
+| ------------------ | ---------------------------------------- |
+| `auth.users`       | Supabase Auth                            |
+| `profiles`         | Supabase Auth and app metadata           |
+| `institutions`     | GoCardless or app-managed reference data |
+| `bank_connections` | GoCardless consent and requisition flow  |
+| `accounts`         | GoCardless account data                  |
+| `balances`         | GoCardless balances                      |
+| `transactions`     | GoCardless transactions                  |
+| `sync_runs`        | App sync process                         |
+| `consent_events`   | App consent lifecycle tracking           |
+| `manual_assets`    | Manual user input or future import       |

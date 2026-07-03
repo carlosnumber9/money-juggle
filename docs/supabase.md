@@ -146,4 +146,3 @@ The check must happen server-side after Supabase authentication. UI-only filteri
 Design every user-owned financial row as if more users may exist later.
 
 This keeps the app safer and prevents future refactors from becoming dangerous. The current owner may be the only user, but `user_id` should still be part of financial records.
-

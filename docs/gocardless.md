@@ -158,4 +158,3 @@ When implementation begins, prefer small steps:
 8. Add transactions.
 
 Each step should be verified before moving to the next one.
-

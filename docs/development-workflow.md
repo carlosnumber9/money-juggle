@@ -120,4 +120,3 @@ Before coding, explain the flow and list the files you expect to change.
 ```
 
 Avoid prompts that ask for the whole app at once.
-

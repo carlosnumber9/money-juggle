@@ -45,11 +45,11 @@ This app should make financial review easier by collecting read-only financial d
 
 ## Target Banks And Platforms
 
-| Institution or platform | Initial approach | Notes |
-| --- | --- | --- |
-| CaixaBank | GoCardless Bank Account Data API | Primary PSD2 path. |
-| ING | GoCardless Bank Account Data API | Primary PSD2 path. |
-| Trade Republic | Special case | Investment data may not be available through PSD2. |
+| Institution or platform | Initial approach                 | Notes                                              |
+| ----------------------- | -------------------------------- | -------------------------------------------------- |
+| CaixaBank               | GoCardless Bank Account Data API | Primary PSD2 path.                                 |
+| ING                     | GoCardless Bank Account Data API | Primary PSD2 path.                                 |
+| Trade Republic          | Special case                     | Investment data may not be available through PSD2. |
 
 ## Initial Limitations
 
@@ -79,4 +79,3 @@ Trade Republic should therefore be handled separately. Possible future approache
 - CSV import if available and acceptable.
 - A dedicated integration if a safe official option exists.
 - A placeholder model until the banking foundation is complete.
-

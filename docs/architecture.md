@@ -181,4 +181,3 @@ lib/domain/consents.ts
 ```
 
 Domain modules should describe financial concepts without depending directly on React components or raw external API responses.
-
