@@ -10,6 +10,14 @@ Install dependencies:
 npm install
 ```
 
+Create local environment variables:
+
+```bash
+cp .env.example .env.local
+```
+
+Then fill the Supabase values in `.env.local`.
+
 Start the local Next.js app:
 
 ```bash

@@ -94,10 +94,13 @@ Do not use service role:
 
 ## Environment Variables
 
-Likely future variables:
+Current required variables:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+
+Future server-only variables:
+
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `ALLOWED_EMAILS` or `OWNER_EMAIL`
 - `GOCARDLESS_SECRET_ID`
@@ -105,7 +108,26 @@ Likely future variables:
 
 Only values explicitly intended for browser use should use `NEXT_PUBLIC_`.
 
-Do not create environment files until implementation begins.
+Local development uses `.env.local`, which is ignored by Git. Shared examples
+belong in `.env.example`.
+
+Supabase now labels browser-safe API keys as publishable keys. This project uses
+`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` instead of the older anon key variable
+name.
+
+## Client Helpers
+
+The project provides two small Supabase helpers:
+
+- `lib/supabase/client.ts` creates a browser client for future client
+  components.
+- `lib/supabase/server.ts` creates a server client for future Server
+  Components, Route Handlers, and Server Actions.
+
+Both helpers use the publishable key. They do not use the service role key.
+
+Do not add service role clients until a server-only feature has a documented
+need to bypass RLS.
 
 ## Local Development Practices
 

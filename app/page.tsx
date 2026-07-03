@@ -1,7 +1,7 @@
 const nextSteps = [
-  "Preparar el proyecto Supabase",
   "Configurar acceso con enlace mágico",
-  "Proteger el acceso con una lista de correos permitidos"
+  "Proteger el acceso con una lista de correos permitidos",
+  "Crear el primer espacio privado"
 ];
 
 export default function Home() {
@@ -11,9 +11,9 @@ export default function Home() {
         <p className="eyebrow">money-juggle</p>
         <h1 id="page-title">Tu base financiera ya está lista.</h1>
         <p className="intro">
-          Esta primera versión solo confirma que la app Next.js funciona. Las
-          conexiones bancarias, autenticación y datos llegarán en pasos pequeños
-          y revisables.
+          La app Next.js ya tiene preparada la conexión base con Supabase. La
+          autenticación, los datos financieros y las conexiones bancarias
+          llegarán en pasos pequeños y revisables.
         </p>
       </section>
 

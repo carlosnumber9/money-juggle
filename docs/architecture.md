@@ -21,6 +21,15 @@ The frontend should:
 - Never call GoCardless directly.
 - Never receive GoCardless secrets, refresh tokens, service role keys, or raw sensitive integration credentials.
 
+## UI System
+
+The project does not have a component library yet.
+
+Do not add shadcn/ui, `components.json`, Tailwind setup, or shared UI components
+as part of backend, Supabase, or integration work. Introduce the UI system later
+as its own explicit feature so the styling, folder aliases, and component
+conventions can be reviewed together.
+
 ## Backend Responsibilities Inside Next.js
 
 Next.js server-side code should:

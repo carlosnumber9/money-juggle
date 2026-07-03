@@ -8,7 +8,7 @@ Use this checklist as the source of truth for what remains to be implemented. Ke
 
 - [x] 1. Bootstrap the Next.js project.
 - [x] 2. Configure basic project tooling.
-- [ ] 3. Set up Supabase project.
+- [x] 3. Set up Supabase project.
 - [ ] 4. Configure Supabase Auth.
 - [ ] 5. Implement magic link login.
 - [ ] 6. Add email allowlist.
@@ -112,6 +112,17 @@ Do not do yet:
 - Add complex CI/CD.
 
 ## 3. Set Up Supabase Project
+
+Status:
+
+- Completed.
+
+Implemented result:
+
+- Supabase client dependencies were installed.
+- Public Supabase environment variables were added for local development.
+- Browser and server Supabase client helpers were created with `@supabase/ssr`.
+- Environment variable documentation was added without committing local secret files.
 
 Goal:
 
