@@ -2,7 +2,48 @@
 
 This roadmap is intentionally incremental. Do not implement these phases now. Each phase should become a small, reviewable task when requested.
 
+## Implementation Tracker
+
+Use this checklist as the source of truth for what remains to be implemented. Keep completed items checked, and keep the detailed phase notes below for context.
+
+- [x] 1. Bootstrap the Next.js project.
+- [ ] 2. Configure basic project tooling.
+- [ ] 3. Set up Supabase project.
+- [ ] 4. Configure Supabase Auth.
+- [ ] 5. Implement magic link login.
+- [ ] 6. Add email allowlist.
+- [ ] 7. Create basic private layout.
+- [ ] 8. Design initial database schema.
+- [ ] 9. Enable and test RLS.
+- [ ] 10. Add conceptual GoCardless configuration.
+- [ ] 11. Implement first GoCardless token call.
+- [ ] 12. List available institutions.
+- [ ] 13. Start bank connection flow.
+- [ ] 14. Store requisition and consent data.
+- [ ] 15. Handle GoCardless callback.
+- [ ] 16. Store connected accounts.
+- [ ] 17. Sync balances.
+- [ ] 18. Sync transactions.
+- [ ] 19. Build a basic dashboard.
+- [ ] 20. Add transaction categorization.
+- [ ] 21. Add monthly reports.
+- [ ] 22. Add manual assets for Trade Republic / investments.
+- [ ] 23. Add scheduled sync with Vercel Cron.
+- [ ] 24. Add error and reconnection flows.
+- [ ] 25. Security hardening.
+
 ## 1. Bootstrap The Next.js Project
+
+Status:
+
+- Completed.
+
+Implemented result:
+
+- Minimal Next.js App Router project with TypeScript.
+- First Spanish user-visible page.
+- Basic local development, type check, build, and audit commands.
+- Public npm registry configured through `.npmrc`.
 
 Goal:
 
@@ -713,4 +754,3 @@ Risks or decisions:
 Do not do yet:
 
 - Add security theater without addressing real risks.
-
