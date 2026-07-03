@@ -14,6 +14,8 @@ This app should make financial review easier by collecting read-only financial d
 
 - Provide a private view of accounts, balances, and transactions.
 - Avoid routine manual bank statement exports.
+- Store imported transactions in a way that avoids duplicates across repeated syncs.
+- Let the owner categorize transactions according to their own reporting preferences.
 - Support mobile and desktop usage.
 - Keep bank integrations read-only.
 - Use PSD2/Open Banking for supported banks.
@@ -39,6 +41,7 @@ This app should make financial review easier by collecting read-only financial d
 - View connected accounts.
 - Review latest balances.
 - Review transactions.
+- Categorize transactions quickly for personal reporting.
 - Understand monthly income and spending.
 - Track assets that may not be available through PSD2.
 - Reconnect a bank when consent expires.
@@ -54,7 +57,9 @@ This app should make financial review easier by collecting read-only financial d
 ## Initial Limitations
 
 - The first versions should prioritize authentication, ownership, consent tracking, account sync, balance sync, and transaction sync.
+- Transaction sync should be idempotent before scheduled sync is introduced.
 - Reporting should start simple and become richer later.
+- Categorization should start as user-owned app metadata before adding automated rules.
 - Investment data should not block the banking foundation.
 - Trade Republic may begin as manual assets or another isolated approach.
 - No banking credentials should ever be stored.

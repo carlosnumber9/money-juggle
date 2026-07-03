@@ -69,12 +69,114 @@ Store enough information to understand and manage consent and synchronization:
 - Sync failures.
 - Consent lifecycle events.
 
+For transactions, store normalized fields plus identity fields that make sync idempotent:
+
+- Internal account row.
+- Provider name: `gocardless`.
+- Booking status: for example `booked`, `pending`, or `information`.
+- Transaction amount and currency.
+- Booking date and value date when available.
+- Description or remittance information.
+- Counterparty or merchant fields when available.
+- GoCardless `internalTransactionId` when available.
+- Bank-provided `transactionId` when available.
+- Bank-provided `entryReference` when available.
+- `endToEndId` when available and meaningful.
+- App-computed `stable_import_key`.
+- App-computed `deduplication_fingerprint`.
+- `identity_source`, so it is clear which identity rule was used.
+- First and last time the transaction was seen by sync.
+
 Avoid storing:
 
 - GoCardless client secrets in the database.
 - Bank credentials.
 - Unnecessary raw payloads.
 - Sensitive tokens unless a clear server-side design requires them.
+
+Raw transaction payloads should be avoided by default. If a limited `raw_provider_data` field is useful for debugging, it should be intentionally scoped and should not become a dumping ground for every API response.
+
+## Transaction Identity
+
+Transaction sync must be idempotent. If the same bank transaction is fetched repeatedly, the app should update the existing row instead of creating a duplicate.
+
+There is no single external transaction ID that should be assumed to exist for every transaction. GoCardless Bank Account Data can expose several useful identifiers, but they may be optional or bank-dependent:
+
+- `internalTransactionId`: transaction identifier given by GoCardless.
+- `transactionId`: transaction identifier provided by the financial institution.
+- `entryReference`: reference provided by the financial institution.
+- `endToEndId`: payment end-to-end identifier, often useful for transfers.
+
+The app should therefore create its own deterministic `stable_import_key` for each normalized transaction.
+
+Recommended identity priority:
+
+```text
+if internalTransactionId exists:
+  gocardless_internal:{account_id}:{internalTransactionId}
+
+else if transactionId exists:
+  bank_transaction:{account_id}:{transactionId}
+
+else if entryReference exists:
+  bank_entry_reference:{account_id}:{entryReference}
+
+else if endToEndId exists and is meaningful:
+  bank_end_to_end:{account_id}:{endToEndId}
+
+else:
+  fingerprint:{account_id}:{deduplication_fingerprint}
+```
+
+Important rules:
+
+- Always scope external transaction identifiers to the internal `account_id`.
+- Keep the internal Supabase `transactions.id` separate from provider identifiers.
+- Store the original identifiers even when `stable_import_key` is computed from another identifier.
+- Store `identity_source` to make future debugging possible.
+- Use a unique constraint on `user_id`, `account_id`, and `stable_import_key` when the schema is created.
+
+## Transaction Fingerprints
+
+`deduplication_fingerprint` is the fallback identity when no useful external identifier is available.
+
+It should be a hash of normalized values such as:
+
+- Internal `account_id`.
+- Booking date or value date.
+- Amount in minor units.
+- Currency.
+- Normalized description or remittance text.
+- Counterparty or merchant name when available.
+- Counterparty account suffix when available.
+- Bank transaction code or merchant category code when available.
+
+The fingerprint implementation should normalize whitespace, casing, decimal precision, missing fields, and date formats before hashing.
+
+Fingerprints are useful but imperfect. They can collide in rare cases, for example two same-day card payments for the same amount and merchant. They can also change if the bank later updates the text or booking date. For that reason, fingerprints should be treated as fallback identity, not as a stronger source than provider IDs.
+
+## Transaction Upsert And Reconciliation
+
+Transaction persistence should follow an upsert-like flow:
+
+1. Fetch transactions server-side from GoCardless.
+2. Normalize each transaction into app fields.
+3. Compute `stable_import_key`.
+4. Search for an existing row with the same `user_id`, `account_id`, and `stable_import_key`.
+5. If found, update provider-owned fields and `last_seen_at`.
+6. Preserve user-owned fields such as `category_id`, user notes, or manual review state.
+7. If no row exists by `stable_import_key`, search for recent compatible same-account candidates using stored external IDs and the fallback fingerprint.
+8. If a compatible candidate exists, update that row and improve its identity fields.
+9. If no compatible candidate exists, insert a new transaction.
+
+This reconciliation step matters because a transaction may first arrive as pending or incomplete and later arrive as booked with stronger identifiers or slightly different dates/descriptions.
+
+Pending transactions should be treated as provisional:
+
+- They may be shown in the UI later if useful.
+- They should not be the main source for permanent reports unless intentionally designed.
+- Manual categories should primarily apply to booked transactions.
+- If a pending row is later reconciled with a booked row, user-owned metadata should be preserved where safe.
 
 ## Consent Expiration
 

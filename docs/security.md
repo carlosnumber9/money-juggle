@@ -9,6 +9,7 @@ Important assets:
 - Bank account metadata.
 - Balances.
 - Transactions.
+- Transaction categories and category rules.
 - Consent state.
 - Manual asset data.
 - Supabase sessions.
@@ -90,6 +91,7 @@ Financial sensitivity:
 - Account identifiers.
 - Balances.
 - Transactions.
+- Transaction categories and category rules.
 - Institution connections.
 - Consent records.
 - Manual asset values.
@@ -161,6 +163,20 @@ Avoid:
 - Using service role for ordinary user reads.
 - Passing service role powered results without checking ownership.
 - Making service role the default database client.
+
+## Transaction Sync And Categorization Risks
+
+Imported transactions should be treated as financial records. Transaction categories and category rules are app-owned metadata, but they may still reveal sensitive spending patterns.
+
+Security expectations:
+
+- Transaction rows must include `user_id` ownership and RLS.
+- Category and category rule rows must include `user_id` ownership and RLS.
+- Server-side sync may insert or update provider-owned transaction fields.
+- Sync must preserve user-owned metadata such as `category_id` unless an explicit user action changes it.
+- Deduplication identifiers such as `stable_import_key`, provider transaction IDs, and fingerprints should not be exposed beyond authenticated owner views.
+- Logs should avoid printing full transaction descriptions, raw provider payloads, or large batches of transaction identifiers.
+- Scheduled sync should not run until transaction upsert and deduplication behavior has been tested.
 
 ## Future Recommendations
 

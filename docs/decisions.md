@@ -285,3 +285,90 @@ Consequences:
 Possible future revisit trigger:
 
 - If the user explicitly requests a larger implementation batch.
+
+## ADR-013: Use Stable Import Keys For Transaction Sync
+
+Status:
+
+- Accepted.
+
+Context:
+
+- The app needs to store bank transactions in Supabase and sync them repeatedly from GoCardless Bank Account Data.
+- Repeated syncs should not create duplicate transaction rows.
+- GoCardless transaction output can include useful identifiers such as `internalTransactionId`, bank-provided `transactionId`, `entryReference`, and `endToEndId`.
+- These identifiers are useful but should be treated as optional and bank-dependent.
+- A transaction may first appear as pending or incomplete and later appear as booked with stronger identifiers or slightly changed fields.
+
+Decision:
+
+- Keep `transactions.id` as an internal Supabase primary key.
+- Add a deterministic `stable_import_key` for sync identity.
+- Always scope transaction identity to the internal `account_id`.
+- Store useful external identifiers separately for debugging and reconciliation.
+- Compute `stable_import_key` using this priority:
+
+```text
+if provider_internal_transaction_id exists:
+  gocardless_internal:{account_id}:{provider_internal_transaction_id}
+
+else if provider_transaction_id exists:
+  bank_transaction:{account_id}:{provider_transaction_id}
+
+else if entry_reference exists:
+  bank_entry_reference:{account_id}:{entry_reference}
+
+else if end_to_end_id exists and is meaningful:
+  bank_end_to_end:{account_id}:{end_to_end_id}
+
+else:
+  fingerprint:{account_id}:{deduplication_fingerprint}
+```
+
+- Store `identity_source` so future maintainers can understand which identity rule was used.
+- Use an app-computed `deduplication_fingerprint` only as a fallback when stronger identifiers are unavailable.
+- Before inserting a new transaction, attempt reconciliation against recent same-account candidates if the stable key does not match.
+
+Consequences:
+
+- Re-running the same transaction sync should update existing rows instead of creating duplicates.
+- The app is not locked to one provider-specific ID field.
+- Sync logic is slightly more complex, but safer for real bank behavior.
+- Pending transactions can be stored, but should be treated as provisional.
+- Transaction sync tests should cover repeated sync, provider ID matching, fallback fingerprint matching, and preservation of user-owned fields.
+
+Possible future revisit trigger:
+
+- If real CaixaBank or ING data proves one provider identifier is always stable enough to simplify the strategy.
+- If a future Open Banking provider has stronger transaction identity guarantees.
+
+## ADR-014: Treat Transaction Categorization As App-Owned Metadata
+
+Status:
+
+- Accepted.
+
+Context:
+
+- The owner wants to categorize bank transactions according to their own financial review habits.
+- Provider data may include hints such as merchant category codes, but those hints should not define the owner's reporting model.
+- Categorization should be fast to query from Supabase and should survive future transaction syncs.
+
+Decision:
+
+- Model transaction categories as user-owned app data.
+- Link transactions to categories with `category_id` when schema work begins.
+- Do not store the user's final category as provider-owned data.
+- Do not overwrite manual category assignments during provider sync.
+- Allow future rule-based categorization as a small, optional layer after manual categorization exists.
+
+Consequences:
+
+- Reports can group transactions by the owner's chosen categories.
+- The app can use provider hints later without making them authoritative.
+- RLS must protect both transactions and categories by owner.
+- User-visible category names should be Spanish; internal table and column names remain English.
+
+Possible future revisit trigger:
+
+- If category sharing, household budgeting, or multi-user collaboration is intentionally designed later.

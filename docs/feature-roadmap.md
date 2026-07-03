@@ -267,6 +267,8 @@ Concepts learned:
 - Ownership columns.
 - External provider IDs.
 - Financial data modeling.
+- Idempotent transaction identity.
+- User-owned categorization metadata.
 
 Possible future files:
 
@@ -276,6 +278,8 @@ Possible future files:
 Risks or decisions:
 
 - Avoid storing unnecessary sensitive raw data.
+- Model transaction identity before importing real transaction history.
+- Keep provider-owned transaction data separate from user-owned metadata such as categories.
 
 Do not do yet:
 
@@ -540,29 +544,62 @@ Do not do yet:
 Goal:
 
 - Fetch and store transactions.
+- Make repeated transaction syncs idempotent.
 
 Expected result:
 
 - Transaction history is available for reporting.
+- Fetching the same transactions again updates existing rows instead of creating duplicates.
+- The app stores enough external identifiers to debug and improve future sync behavior.
 
 Concepts learned:
 
 - Deduplication.
 - Booking date vs value date.
 - Provider transaction IDs.
+- Stable import keys.
+- Pending vs booked transaction behavior.
+- Reconciliation before insert.
 
 Possible future files:
 
 - Transaction tables.
 - Transaction normalization tests.
+- Transaction identity helpers.
+- Sync persistence logic.
 
 Risks or decisions:
 
 - Duplicate transactions and raw data sensitivity.
+- GoCardless transaction identifiers are useful but optional, so the app must not depend on one field always being present.
+- Pending transactions can later become booked with stronger identifiers or changed fields.
+- User-owned transaction metadata, such as categories, must not be overwritten by provider sync.
+
+Recommended scope:
+
+- Normalize GoCardless transaction fields into the app data model.
+- Store external identifiers such as `internalTransactionId`, `transactionId`, `entryReference`, and `endToEndId` when available.
+- Compute a deterministic `stable_import_key` using the documented priority:
+  `internalTransactionId`, then `transactionId`, then `entryReference`, then meaningful `endToEndId`, then fallback fingerprint.
+- Store `identity_source` and `deduplication_fingerprint`.
+- Upsert by `user_id`, `account_id`, and `stable_import_key`.
+- Reconcile against recent same-account candidates before inserting when the stable key has changed because a pending or incomplete transaction gained stronger identifiers.
+- Preserve app-owned fields such as `category_id` during sync updates.
+- Prefer booked transactions as the source for permanent reports.
+
+Suggested acceptance criteria:
+
+- Running the same transaction sync twice does not create duplicates.
+- A transaction with a provider ID is matched by provider ID within the same account.
+- A transaction without provider IDs receives a deterministic fingerprint fallback.
+- Sync can update provider-owned fields without overwriting manual categorization.
+- Tests cover at least one repeated sync case and one fallback fingerprint case.
 
 Do not do yet:
 
 - Build complex categorization.
+- Build machine learning classification.
+- Treat pending transactions as final reporting data without an explicit decision.
 
 ## 19. Build A Basic Dashboard
 
@@ -597,28 +634,56 @@ Do not do yet:
 Goal:
 
 - Categorize transactions for reporting.
+- Let the owner define categories according to their own financial review habits.
 
 Expected result:
 
 - Transactions can be grouped by category.
+- Categories are stored as app-owned metadata in Supabase and can be queried quickly.
+- Manual categorization survives later provider syncs.
 
 Concepts learned:
 
 - User-owned metadata.
 - Rule-based classification.
+- Manual category assignment.
+- Provider data vs app-owned annotations.
 
 Possible future files:
 
 - Category tables.
 - Categorization domain logic.
+- Category rule tests.
+- Transaction list or editor UI later.
 
 Risks or decisions:
 
 - Manual vs automatic categorization.
+- Provider category hints should not become the source of truth.
+- User-visible category names in the app should be Spanish.
+- Internal table and column names should remain English.
+
+Recommended scope:
+
+- Add user-owned `transaction_categories`.
+- Link transactions through `category_id`.
+- Allow manual category assignment first.
+- Add optional `transaction_category_rules` only when it helps categorize repeated merchants or descriptions.
+- Keep rules simple at first, for example matching description or counterparty name.
+- Do not overwrite a manually assigned category during later syncs.
+
+Suggested acceptance criteria:
+
+- A user can create, update, archive, and list only their own categories.
+- A user can assign one of their categories to one of their transactions.
+- A later transaction sync does not erase that assignment.
+- Reports can group transactions by `category_id`.
+- RLS prevents access to another user's categories or category assignments.
 
 Do not do yet:
 
 - Build machine learning classification.
+- Build a complex budgeting system.
 
 ## 21. Add Monthly Reports
 
@@ -692,6 +757,7 @@ Concepts learned:
 - Scheduled jobs.
 - Idempotent sync.
 - Operational monitoring.
+- Why transaction identity must be stable before automation.
 
 Possible future files:
 
@@ -701,6 +767,7 @@ Possible future files:
 Risks or decisions:
 
 - Protect cron endpoints.
+- Scheduled sync multiplies the impact of duplicate transaction bugs, so transaction idempotency should be tested before cron is enabled.
 
 Do not do yet:
 
