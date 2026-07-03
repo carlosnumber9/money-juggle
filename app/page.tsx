@@ -1,3 +1,12 @@
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
+
 const nextSteps = [
   "Configurar acceso con enlace mágico",
   "Proteger el acceso con una lista de correos permitidos",
@@ -17,14 +26,21 @@ export default function Home() {
         </p>
       </section>
 
-      <section className="next-section" aria-labelledby="next-title">
-        <h2 id="next-title">Próximos pasos</h2>
-        <ul>
-          {nextSteps.map((step) => (
-            <li key={step}>{step}</li>
-          ))}
-        </ul>
-      </section>
+      <Card className="mt-14" aria-labelledby="next-title">
+        <CardHeader>
+          <CardTitle id="next-title">Próximos pasos</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="grid gap-3">
+            {nextSteps.map((step) => (
+              <li key={step}>{step}</li>
+            ))}
+          </ul>
+        </CardContent>
+        <CardFooter>
+          <Button disabled>Próximo: acceso por email</Button>
+        </CardFooter>
+      </Card>
     </main>
   );
 }

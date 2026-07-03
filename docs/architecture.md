@@ -25,10 +25,12 @@ The frontend should:
 
 The project does not have a component library yet.
 
-Do not add shadcn/ui, `components.json`, Tailwind setup, or shared UI components
-as part of backend, Supabase, or integration work. Introduce the UI system later
-as its own explicit feature so the styling, folder aliases, and component
-conventions can be reviewed together.
+shadcn/ui should be introduced as its own explicit feature, separate from
+backend, Supabase, or integration work, so the styling, folder aliases, and
+component conventions can be reviewed together.
+
+Keep the first UI system step small: initialize the required configuration and
+add only the minimal starter components needed for upcoming screens.
 
 ## Backend Responsibilities Inside Next.js
 

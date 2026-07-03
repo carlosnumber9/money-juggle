@@ -1,6 +1,6 @@
 # Feature Roadmap
 
-This roadmap is intentionally incremental. Do not implement these phases now. Each phase should become a small, reviewable task when requested.
+This roadmap is intentionally incremental. Do not implement these phases unless requested. Each phase should become a small, reviewable task when requested.
 
 ## Implementation Tracker
 
@@ -9,28 +9,29 @@ Use this checklist as the source of truth for what remains to be implemented. Ke
 - [x] 1. Bootstrap the Next.js project.
 - [x] 2. Configure basic project tooling.
 - [x] 3. Set up Supabase project.
-- [ ] 4. Configure Supabase Auth.
-- [ ] 5. Implement magic link login.
-- [ ] 6. Add email allowlist.
-- [ ] 7. Create basic private layout.
-- [ ] 8. Design initial database schema.
-- [ ] 9. Enable and test RLS.
-- [ ] 10. Add conceptual GoCardless configuration.
-- [ ] 11. Implement first GoCardless token call.
-- [ ] 12. List available institutions.
-- [ ] 13. Start bank connection flow.
-- [ ] 14. Store requisition and consent data.
-- [ ] 15. Handle GoCardless callback.
-- [ ] 16. Store connected accounts.
-- [ ] 17. Sync balances.
-- [ ] 18. Sync transactions.
-- [ ] 19. Build a basic dashboard.
-- [ ] 20. Add transaction categorization.
-- [ ] 21. Add monthly reports.
-- [ ] 22. Add manual assets for Trade Republic / investments.
-- [ ] 23. Add scheduled sync with Vercel Cron.
-- [ ] 24. Add error and reconnection flows.
-- [ ] 25. Security hardening.
+- [x] 4. Configure quick UI foundation with shadcn/ui.
+- [ ] 5. Configure Supabase Auth.
+- [ ] 6. Implement magic link login.
+- [ ] 7. Add email allowlist.
+- [ ] 8. Create basic private layout.
+- [ ] 9. Design initial database schema.
+- [ ] 10. Enable and test RLS.
+- [ ] 11. Add conceptual GoCardless configuration.
+- [ ] 12. Implement first GoCardless token call.
+- [ ] 13. List available institutions.
+- [ ] 14. Start bank connection flow.
+- [ ] 15. Store requisition and consent data.
+- [ ] 16. Handle GoCardless callback.
+- [ ] 17. Store connected accounts.
+- [ ] 18. Sync balances.
+- [ ] 19. Sync transactions.
+- [ ] 20. Build a basic dashboard.
+- [ ] 21. Add transaction categorization.
+- [ ] 22. Add monthly reports.
+- [ ] 23. Add manual assets for Trade Republic / investments.
+- [ ] 24. Add scheduled sync with Vercel Cron.
+- [ ] 25. Add error and reconnection flows.
+- [ ] 26. Security hardening.
 
 ## 1. Bootstrap The Next.js Project
 
@@ -149,7 +150,58 @@ Do not do yet:
 
 - Store real financial data before RLS exists.
 
-## 4. Configure Supabase Auth
+## 4. Configure Quick UI Foundation With shadcn/ui
+
+Status:
+
+- Completed.
+
+Implemented result:
+
+- Tailwind CSS v4 was installed with the required PostCSS integration.
+- shadcn/ui was initialized with the selected preset `b6thgHlWC`.
+- `components.json` was created with the `base-sera` style, olive base color, Lucide icons, and project aliases.
+- Minimal starter UI components were added: `button` and `card`.
+- The existing Spanish home page was updated to display the starter card and button without adding product functionality.
+
+Goal:
+
+- Add a minimal shadcn/ui foundation so future screens can use a consistent component style.
+
+Expected result:
+
+- The project has the required shadcn/ui configuration and minimal styling foundation.
+- Only the smallest useful starter component set is added.
+- Existing Spanish user-visible text remains unchanged unless a UI check requires a tiny adjustment.
+
+Concepts learned:
+
+- shadcn/ui CLI initialization.
+- Tailwind CSS integration for Next.js.
+- Component aliases and project styling conventions.
+
+Possible future files:
+
+- `components.json`
+- `app/globals.css`
+- `components/ui/`
+- `lib/utils.ts`
+- Tailwind or PostCSS configuration files if required by the selected setup.
+
+Risks or decisions:
+
+- Keep this as UI infrastructure only, not a dashboard build.
+- Review generated configuration before accepting it.
+- Do not expose or touch financial credentials.
+- User-visible app text must stay in Spanish.
+
+Do not do yet:
+
+- Build full application pages.
+- Create a broad design system.
+- Add finance-specific components.
+
+## 5. Configure Supabase Auth
 
 Goal:
 
@@ -177,7 +229,7 @@ Do not do yet:
 
 - Add public registration behavior without allowlist.
 
-## 5. Implement Magic Link Login
+## 6. Implement Magic Link Login
 
 Goal:
 
@@ -207,7 +259,7 @@ Do not do yet:
 
 - Build dashboard data features.
 
-## 6. Add Email Allowlist
+## 7. Add Email Allowlist
 
 Goal:
 
@@ -235,7 +287,7 @@ Do not do yet:
 
 - Build multi-user admin management.
 
-## 7. Create Basic Private Layout
+## 8. Create Basic Private Layout
 
 Goal:
 
@@ -263,7 +315,7 @@ Do not do yet:
 
 - Build full dashboard.
 
-## 8. Design Initial Database Schema
+## 9. Design Initial Database Schema
 
 Goal:
 
@@ -299,7 +351,7 @@ Do not do yet:
 
 - Create every possible reporting table.
 
-## 9. Enable And Test RLS
+## 10. Enable And Test RLS
 
 Goal:
 
@@ -328,7 +380,7 @@ Do not do yet:
 
 - Import financial data before policies are verified.
 
-## 10. Add Conceptual GoCardless Configuration
+## 11. Add Conceptual GoCardless Configuration
 
 Goal:
 
@@ -356,7 +408,7 @@ Do not do yet:
 
 - Implement the full consent flow.
 
-## 11. Implement First GoCardless Token Call
+## 12. Implement First GoCardless Token Call
 
 Goal:
 
@@ -384,7 +436,7 @@ Do not do yet:
 
 - Fetch transactions.
 
-## 12. List Available Institutions
+## 13. List Available Institutions
 
 Goal:
 
@@ -412,7 +464,7 @@ Do not do yet:
 
 - Start consent automatically.
 
-## 13. Start Bank Connection Flow
+## 14. Start Bank Connection Flow
 
 Goal:
 
@@ -441,7 +493,7 @@ Do not do yet:
 
 - Assume the bank connection succeeded before callback verification.
 
-## 14. Store Requisition And Consent Data
+## 15. Store Requisition And Consent Data
 
 Goal:
 
@@ -469,7 +521,7 @@ Do not do yet:
 
 - Sync account data before consent is valid.
 
-## 15. Handle GoCardless Callback
+## 16. Handle GoCardless Callback
 
 Goal:
 
@@ -497,7 +549,7 @@ Do not do yet:
 
 - Trust callback query parameters without server verification.
 
-## 16. Store Connected Accounts
+## 17. Store Connected Accounts
 
 Goal:
 
@@ -525,7 +577,7 @@ Do not do yet:
 
 - Build detailed reports.
 
-## 17. Sync Balances
+## 18. Sync Balances
 
 Goal:
 
@@ -553,7 +605,7 @@ Do not do yet:
 
 - Aggregate net worth before manual assets are modeled.
 
-## 18. Sync Transactions
+## 19. Sync Transactions
 
 Goal:
 
@@ -615,7 +667,7 @@ Do not do yet:
 - Build machine learning classification.
 - Treat pending transactions as final reporting data without an explicit decision.
 
-## 19. Build A Basic Dashboard
+## 20. Build A Basic Dashboard
 
 Goal:
 
@@ -643,7 +695,7 @@ Do not do yet:
 
 - Create advanced analytics.
 
-## 20. Add Transaction Categorization
+## 21. Add Transaction Categorization
 
 Goal:
 
@@ -712,7 +764,7 @@ Do not do yet:
 - Build machine learning classification.
 - Build a complex budgeting system.
 
-## 21. Add Monthly Reports
+## 22. Add Monthly Reports
 
 Goal:
 
@@ -741,7 +793,7 @@ Do not do yet:
 
 - Add tax or accounting features.
 
-## 22. Add Manual Assets For Trade Republic / Investments
+## 23. Add Manual Assets For Trade Republic / Investments
 
 Goal:
 
@@ -769,7 +821,7 @@ Do not do yet:
 
 - Scrape Trade Republic.
 
-## 23. Add Scheduled Sync With Vercel Cron
+## 24. Add Scheduled Sync With Vercel Cron
 
 Goal:
 
@@ -800,7 +852,7 @@ Do not do yet:
 
 - Run scheduled sync before manual sync is stable.
 
-## 24. Add Error And Reconnection Flows
+## 25. Add Error And Reconnection Flows
 
 Goal:
 
@@ -828,7 +880,7 @@ Do not do yet:
 
 - Auto-reconnect without explicit bank consent.
 
-## 25. Security Hardening
+## 26. Security Hardening
 
 Goal:
 

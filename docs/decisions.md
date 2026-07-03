@@ -372,3 +372,35 @@ Consequences:
 Possible future revisit trigger:
 
 - If category sharing, household budgeting, or multi-user collaboration is intentionally designed later.
+
+## ADR-015: Use shadcn/ui With The Selected Preset For The UI Foundation
+
+Status:
+
+- Accepted.
+
+Context:
+
+- The app needs a quick, consistent UI foundation before building authentication and private screens.
+- The user selected the visual preset through shadcn tooling and provided the preset ID `b6thgHlWC`.
+- The setup should stay small and avoid becoming a full design system or dashboard implementation.
+
+Decision:
+
+- Use shadcn/ui as the component foundation.
+- Use Tailwind CSS v4 with `@tailwindcss/postcss`.
+- Initialize shadcn/ui with preset `b6thgHlWC`, which generated the `base-sera` style, olive base color, CSS variables, and Lucide icon configuration.
+- Start with only minimal reusable UI components: `button` and `card`.
+
+Consequences:
+
+- Future screens can reuse a consistent component convention.
+- UI components live under `components/ui/`.
+- Shared class merging lives in `lib/utils.ts`.
+- The project now depends on the shadcn/Tailwind styling toolchain.
+- Further UI components should be added only when a feature needs them.
+
+Possible future revisit trigger:
+
+- If the selected preset does not fit the finance product once real private screens exist.
+- If the app adopts a different design system intentionally.
