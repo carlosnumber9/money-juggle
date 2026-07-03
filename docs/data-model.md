@@ -257,7 +257,7 @@ Probable fields:
 - `counterparty_account_last4`.
 - `bank_transaction_code`.
 - `merchant_category_code`.
-- `category_id`.
+- `category_id`: nullable, because imported transactions should start uncategorized.
 - `raw_data` or a limited `raw_provider_data` object, only if useful.
 - `first_seen_at`.
 - `last_seen_at`.
@@ -370,11 +370,51 @@ The app should not rely on provider categories as the source of truth. Provider 
 
 Recommended approach:
 
+- Use a separate `transaction_category_groups` table for broad reporting groups.
 - Use a separate `transaction_categories` table rather than a free-text `category` column once schema work begins.
-- Link transactions with `category_id`.
-- Keep categories user-owned through `user_id`.
+- Link each category to one category group through `group_id`.
+- Link transactions with nullable `category_id`.
+- Keep category groups and categories user-owned through `user_id`.
+- Let imported transactions remain uncategorized until the user assigns a category or a later explicit rule applies one.
 - Do not overwrite a manually assigned category during later syncs.
 - Allow future rule-based suggestions without making them mandatory.
+- Do not split the category model into separate income and expense trees at first. Reports can use signed transaction amounts or transaction direction, which allows reimbursements or shared payments to reduce the net total of the same category.
+
+### `transaction_category_groups`
+
+Purpose:
+
+- Stores broad user-defined groups for transaction categories.
+- Allows reports to roll category totals up into a simpler view.
+
+Probable fields:
+
+- `id`.
+- `user_id`.
+- `name`.
+- `slug`.
+- `sort_order`.
+- `is_archived`.
+- `created_at`.
+- `updated_at`.
+
+Relationships:
+
+- Belongs to `profiles`.
+- Has many `transaction_categories`.
+
+Ownership model:
+
+- Owned by the authenticated user through `user_id`.
+
+Security and RLS:
+
+- User can read and manage only their own category groups.
+- Category groups are less sensitive than transactions, but still user-owned app data.
+
+Source:
+
+- Manual user setup, with possible app-provided defaults later.
 
 ### `transaction_categories`
 
@@ -387,6 +427,7 @@ Probable fields:
 
 - `id`.
 - `user_id`.
+- `group_id`.
 - `name`.
 - `slug`.
 - `color`.
@@ -399,6 +440,7 @@ Probable fields:
 Relationships:
 
 - Belongs to `profiles`.
+- Belongs to `transaction_category_groups`.
 - Has many `transactions` through `transactions.category_id`.
 
 Ownership model:
@@ -408,6 +450,7 @@ Ownership model:
 Security and RLS:
 
 - User can read and manage only their own categories.
+- Category queries should ensure the referenced group belongs to the same user.
 - Categories are less sensitive than transactions, but still user-owned app data.
 
 Source:
@@ -572,6 +615,7 @@ Source:
 | `accounts`                   | GoCardless account data                  |
 | `balances`                   | GoCardless balances                      |
 | `transactions`               | GoCardless transactions                  |
+| `transaction_category_groups` | Manual user setup or app defaults        |
 | `transaction_categories`     | Manual user setup or app defaults        |
 | `transaction_category_rules` | Manual user setup or future suggestions  |
 | `sync_runs`                  | App sync process                         |

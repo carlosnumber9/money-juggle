@@ -269,6 +269,7 @@ Concepts learned:
 - Financial data modeling.
 - Idempotent transaction identity.
 - User-owned categorization metadata.
+- Category groups as simple reporting metadata.
 
 Possible future files:
 
@@ -279,7 +280,9 @@ Risks or decisions:
 
 - Avoid storing unnecessary sensitive raw data.
 - Model transaction identity before importing real transaction history.
-- Keep provider-owned transaction data separate from user-owned metadata such as categories.
+- Keep provider-owned transaction data separate from user-owned metadata such as category groups and categories.
+- Transactions should start uncategorized unless the user assigns a category or a later explicit rule feature applies one.
+- Category grouping should start as a simple one-to-many relationship: each category belongs to one category group.
 
 Do not do yet:
 
@@ -635,19 +638,24 @@ Goal:
 
 - Categorize transactions for reporting.
 - Let the owner define categories according to their own financial review habits.
+- Group categories into simple category groups, such as food-related categories under a broader food group.
 
 Expected result:
 
 - Transactions can be grouped by category.
+- Categories can be grouped by category group.
 - Categories are stored as app-owned metadata in Supabase and can be queried quickly.
 - Manual categorization survives later provider syncs.
+- Imported transactions remain uncategorized by default until the owner categorizes them manually or a future explicit rule applies.
 
 Concepts learned:
 
 - User-owned metadata.
 - Rule-based classification.
 - Manual category assignment.
+- Category groups vs categories.
 - Provider data vs app-owned annotations.
+- Signed transaction amounts for income and spending reports.
 
 Possible future files:
 
@@ -662,11 +670,15 @@ Risks or decisions:
 - Provider category hints should not become the source of truth.
 - User-visible category names in the app should be Spanish.
 - Internal table and column names should remain English.
+- Income and expenses should not require separate category trees at first. Reports can use transaction direction or signed amounts, allowing refunds, reimbursements, or shared payments to reduce the net total of the same category.
+- Category groups should stay simple. A separate many-to-many relationship is unnecessary unless one category needs to belong to multiple groups later.
 
 Recommended scope:
 
+- Add user-owned `transaction_category_groups`.
 - Add user-owned `transaction_categories`.
-- Link transactions through `category_id`.
+- Link each category to one category group through `group_id`.
+- Link transactions through a nullable `category_id`.
 - Allow manual category assignment first.
 - Add optional `transaction_category_rules` only when it helps categorize repeated merchants or descriptions.
 - Keep rules simple at first, for example matching description or counterparty name.
@@ -674,11 +686,15 @@ Recommended scope:
 
 Suggested acceptance criteria:
 
+- A user can create, update, archive, and list only their own category groups.
 - A user can create, update, archive, and list only their own categories.
+- A user can assign one of their categories to one of their category groups.
 - A user can assign one of their categories to one of their transactions.
+- Transactions without manual assignment remain uncategorized.
 - A later transaction sync does not erase that assignment.
 - Reports can group transactions by `category_id`.
-- RLS prevents access to another user's categories or category assignments.
+- Reports can optionally roll category totals up to `transaction_category_groups`.
+- RLS prevents access to another user's category groups, categories, or category assignments.
 
 Do not do yet:
 
