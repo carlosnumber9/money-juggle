@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { hasAllowedEmails, isEmailAllowed } from "@/lib/auth/allowlist";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getRequestOrigin } from "@/lib/url/request-origin";
 
 type LoginPageProps = {
   searchParams: Promise<{
@@ -40,7 +41,7 @@ async function requestMagicLink(formData: FormData) {
   }
 
   const headerStore = await headers();
-  const origin = headerStore.get("origin") ?? "http://localhost:3000";
+  const origin = getRequestOrigin(headerStore);
   const supabase = await createSupabaseServerClient();
 
   const { error } = await supabase.auth.signInWithOtp({

@@ -44,8 +44,11 @@ The future login implementation should pass `/auth/callback` as the redirect
 target when requesting a magic link. Supabase will only redirect to URLs that
 match the configured allow list.
 
-The current login implementation passes `/auth/callback` as the redirect target
-and uses `shouldCreateUser: false`. This prevents public self-registration
+The current login implementation passes the runtime origin plus
+`/auth/callback` as the redirect target and uses `shouldCreateUser: false`.
+The runtime origin is resolved from forwarded request headers so production and
+preview deployments generate magic links for the domain that served the login
+request, not a hard-coded local URL. This prevents public self-registration
 through the login form. The owner user must exist in Supabase before the login
 request can succeed.
 
