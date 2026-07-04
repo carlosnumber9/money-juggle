@@ -138,8 +138,9 @@ Current required variables:
 Future server-only variables:
 
 - `SUPABASE_SERVICE_ROLE_KEY`
-- `GOCARDLESS_SECRET_ID`
-- `GOCARDLESS_SECRET_KEY`
+- `ENABLE_BANKING_APPLICATION_ID`
+- `ENABLE_BANKING_PRIVATE_KEY`
+- Enable Banking provider tokens or authorization secrets if the implementation requires them.
 
 Only values explicitly intended for browser use should use `NEXT_PUBLIC_`.
 

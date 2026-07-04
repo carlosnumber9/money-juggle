@@ -14,8 +14,8 @@ Important assets:
 - Manual asset data.
 - Supabase sessions.
 - Supabase service role key.
-- GoCardless credentials.
-- GoCardless access and refresh tokens if used.
+- Enable Banking signing keys and provider credentials.
+- Enable Banking access or authorization tokens if used.
 
 Relevant threats:
 
@@ -69,9 +69,8 @@ Server-only secrets should be stored in Vercel environment variables and local d
 
 Never expose:
 
-- `GOCARDLESS_SECRET_ID`
-- `GOCARDLESS_SECRET_KEY`
-- GoCardless refresh tokens
+- `ENABLE_BANKING_PRIVATE_KEY`
+- Enable Banking access or authorization tokens
 - Supabase service role key
 - Internal sync secrets
 - Webhook or cron secrets
@@ -108,9 +107,9 @@ Logs should avoid secrets and should minimize financial detail.
 
 The browser must never receive:
 
-- GoCardless secret ID or secret key.
+- Enable Banking private key or provider credentials.
 - Supabase service role key.
-- GoCardless access or refresh tokens.
+- Enable Banking access or authorization tokens.
 - Raw server-side error payloads containing secrets.
 - Credentials for any bank.
 - Any key that can bypass RLS.
@@ -143,7 +142,7 @@ Future mitigations:
 
 ## Leaked Environment Variable Risk
 
-If GoCardless or Supabase service role secrets leak, an attacker may access financial data or external APIs.
+If Enable Banking signing keys, provider tokens, or Supabase service role secrets leak, an attacker may access financial data or external APIs.
 
 Mitigations:
 

@@ -19,7 +19,7 @@ Decision:
 Consequences:
 
 - Frontend and server-side route logic can live in one project.
-- Server-only GoCardless calls can be implemented through Next.js server code.
+- Server-only bank data provider calls can be implemented through Next.js server code.
 - The project fits Vercel deployment naturally.
 
 Possible future revisit trigger:
@@ -101,27 +101,29 @@ Possible future revisit trigger:
 
 Status:
 
-- Accepted.
+- Superseded by ADR-016.
 
 Context:
 
 - CaixaBank and ING should be connected through Open Banking / PSD2 where possible.
+- GoCardless Bank Account Data was initially selected because it offered read-only account, balance, and transaction access.
+- When the project reached account creation, new Bank Account Data signups were disabled for private users.
 
 Decision:
 
-- Use GoCardless Bank Account Data API for read-only account, balance, and transaction access.
+- Do not rely on GoCardless Bank Account Data for the initial implementation.
+- Keep this ADR as historical context for why the provider changed.
 
 Consequences:
 
-- The app can avoid routine manual bank statement exports.
-- Consent state and expiration must be modeled.
-- External API failures and coverage limitations must be handled.
+- The roadmap and provider-specific documentation must move away from GoCardless terminology.
+- Generic consent, account, transaction, and sync concepts remain useful.
 
 Possible future revisit trigger:
 
-- If another Open Banking provider offers materially better coverage, pricing, or reliability.
+- If GoCardless reopens private signups and offers materially better coverage, pricing, or reliability.
 
-## ADR-006: Do Not Use GoCardless Drop-in
+## ADR-006: Do Not Use Payment-Oriented Provider Drop-ins
 
 Status:
 
@@ -129,11 +131,13 @@ Status:
 
 Context:
 
-- Drop-in and `gocardless/react-dropin` are payment or billing oriented and do not match the app's read-only goal.
+- Payment or billing oriented drop-ins do not match the app's read-only goal.
+- GoCardless Drop-in and `gocardless/react-dropin` were the original examples of this risk.
 
 Decision:
 
-- Do not use GoCardless Drop-in or `gocardless/react-dropin`.
+- Do not use payment, checkout, billing, mandate, or payment-initiation drop-ins from any provider.
+- Use only account information capabilities.
 
 Consequences:
 
@@ -175,7 +179,7 @@ Status:
 
 Context:
 
-- Investment data may not be available through PSD2 or GoCardless Bank Account Data.
+- Investment data may not be available through PSD2 or Enable Banking Account Information.
 
 Decision:
 
@@ -191,7 +195,7 @@ Possible future revisit trigger:
 
 - If a safe official API, reliable export, or appropriate integration path becomes available.
 
-## ADR-009: Keep All GoCardless Calls Server-Side
+## ADR-009: Keep All Bank Data Provider Calls Server-Side
 
 Status:
 
@@ -199,16 +203,16 @@ Status:
 
 Context:
 
-- GoCardless credentials and tokens are sensitive.
+- Bank data provider credentials, signing keys, and tokens are sensitive.
 
 Decision:
 
-- All GoCardless API calls must happen in server-only code.
+- All bank data provider API calls must happen in server-only code.
 
 Consequences:
 
-- The browser never receives GoCardless secrets.
-- UI must call internal server endpoints or actions instead of GoCardless directly.
+- The browser never receives Enable Banking signing keys, provider tokens, Supabase service role keys, or other sensitive credentials.
+- UI must call internal server endpoints or actions instead of Enable Banking directly.
 - Server-side modules need clear boundaries.
 
 Possible future revisit trigger:
@@ -294,9 +298,9 @@ Status:
 
 Context:
 
-- The app needs to store bank transactions in Supabase and sync them repeatedly from GoCardless Bank Account Data.
-- Repeated syncs should not create duplicate transaction rows.
-- GoCardless transaction output can include useful identifiers such as `internalTransactionId`, bank-provided `transactionId`, `entryReference`, and `endToEndId`.
+- The app needs to store bank transactions in Supabase and sync them repeatedly from the selected bank data provider.
+- The provider later changed to Enable Banking, but repeated syncs still must not create duplicate transaction rows.
+- Bank data provider output can include useful provider identifiers, bank-provided transaction IDs, entry references, and end-to-end IDs.
 - These identifiers are useful but should be treated as optional and bank-dependent.
 - A transaction may first appear as pending or incomplete and later appear as booked with stronger identifiers or slightly changed fields.
 
@@ -310,7 +314,7 @@ Decision:
 
 ```text
 if provider_internal_transaction_id exists:
-  gocardless_internal:{account_id}:{provider_internal_transaction_id}
+  provider_internal:{account_id}:{provider_internal_transaction_id}
 
 else if provider_transaction_id exists:
   bank_transaction:{account_id}:{provider_transaction_id}
@@ -404,3 +408,47 @@ Possible future revisit trigger:
 
 - If the selected preset does not fit the finance product once real private screens exist.
 - If the app adopts a different design system intentionally.
+
+## ADR-016: Use Enable Banking For Initial PSD2 Account Information
+
+Status:
+
+- Accepted.
+
+Context:
+
+- The product needs read-only account, balance, and transaction access for
+  CaixaBank and ING.
+- GoCardless Bank Account Data was originally selected, but new private signups
+  were unavailable when the project reached provider setup.
+- Enable Banking supports Account Information through PSD2/Open Banking.
+- Enable Banking allows a production application restricted to the owner's own
+  linked accounts, which matches the current personal-use scope.
+- CaixaBank and ING appear as available ASPSPs and have been linked manually.
+- Trade Republic does not appear as an available ASPSP and remains outside the
+  initial PSD2 path.
+
+Decision:
+
+- Use Enable Banking as the primary banking data provider for the initial PSD2
+  integration.
+- Use only Account Information capabilities.
+- Keep the app read-only with respect to banks.
+- Treat the current Enable Banking application as a restricted own-accounts
+  integration, not a public commercial multi-user integration.
+
+Consequences:
+
+- Provider-specific modules should use `enable-banking` naming.
+- Server-side code must sign provider requests with the configured private key.
+- The private key must remain server-only and must not be committed.
+- Documentation and environment variables should use the `ENABLE_BANKING_`
+  prefix.
+- Consent, account, balance, transaction, and sync concepts remain provider
+  neutral in the data model where possible.
+
+Possible future revisit trigger:
+
+- If Enable Banking stops supporting own linked accounts.
+- If CaixaBank or ING coverage proves unreliable.
+- If another provider offers a better free personal-use path.

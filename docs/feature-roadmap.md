@@ -16,12 +16,12 @@ Use this checklist as the source of truth for what remains to be implemented. Ke
 - [x] 8. Create basic private layout.
 - [x] 9. Design initial database schema.
 - [x] 10. Enable RLS.
-- [ ] 11. Add conceptual GoCardless configuration.
-- [ ] 12. Implement first GoCardless token call.
-- [ ] 13. List available institutions.
+- [x] 11. Add conceptual Enable Banking configuration.
+- [ ] 12. Implement first Enable Banking signed API call.
+- [ ] 13. List available ASPSPs.
 - [ ] 14. Start bank connection flow.
-- [ ] 15. Store requisition and consent data.
-- [ ] 16. Handle GoCardless callback.
+- [ ] 15. Store authorization and consent data.
+- [ ] 16. Handle Enable Banking callback.
 - [ ] 17. Store connected accounts.
 - [ ] 18. Sync balances.
 - [ ] 19. Sync transactions.
@@ -465,7 +465,26 @@ Do not do yet:
 
 - Build multi-user test fixtures before the app has data-writing features.
 
-## 11. Add Conceptual GoCardless Configuration
+## 11. Add Conceptual Enable Banking Configuration
+
+Status:
+
+- Completed.
+
+Implemented result:
+
+- GoCardless Bank Account Data was evaluated and rejected for the initial path
+  because new private signups were disabled.
+- Enable Banking was selected as the primary PSD2 Account Information provider.
+- A production restricted Enable Banking application was created for own linked
+  accounts.
+- CaixaBank and ING appear as available ASPSPs and have been linked manually.
+- Trade Republic does not appear as an available ASPSP and remains a manual or
+  future separate-integration case.
+- The app is deployed at `https://money-juggle.vercel.app/`.
+- Enable Banking registered URLs are documented in `docs/enable-banking.md`.
+- A local RSA private key and public certificate were generated under
+  `.secrets/enable-banking/`, with `.secrets/` ignored by Git.
 
 Goal:
 
@@ -483,57 +502,65 @@ Concepts learned:
 Possible future files:
 
 - Environment variable docs.
-- `lib/gocardless/` later.
+- `docs/enable-banking.md`.
+- `lib/enable-banking/` later.
 
 Risks or decisions:
 
 - Never expose credentials to the client.
+- Keep the Enable Banking private key server-only.
+- Use only Account Information, never payment initiation.
 
 Do not do yet:
 
 - Implement the full consent flow.
 
-## 12. Implement First GoCardless Token Call
+## 12. Implement First Enable Banking Signed API Call
 
 Goal:
 
-- Make one server-side token request.
+- Make one server-side signed API request.
 
 Expected result:
 
-- Server code can authenticate with GoCardless.
+- Server code can authenticate with Enable Banking using the registered
+  application and private key.
 
 Concepts learned:
 
 - Server-only API calls.
-- Secret management.
+- RSA private keys.
+- JWT request signing.
+- Secret management in local development and Vercel.
 
 Possible future files:
 
-- `lib/gocardless/`
+- `lib/enable-banking/`
 - A controlled server endpoint or script.
 
 Risks or decisions:
 
-- Token storage and logging.
+- Private key storage and logging.
+- Provider token storage if the API returns temporary tokens.
+- Avoid printing signed JWTs or raw provider credentials.
 
 Do not do yet:
 
 - Fetch transactions.
 
-## 13. List Available Institutions
+## 13. List Available ASPSPs
 
 Goal:
 
-- Fetch supported institutions for relevant countries.
+- Fetch supported ASPSPs for Spain.
 
 Expected result:
 
-- The app can show supported banks such as CaixaBank and ING if available.
+- The app can confirm supported banks such as CaixaBank and ING.
 
 Concepts learned:
 
-- Institution IDs.
+- ASPSP IDs.
 - Provider reference data.
 
 Possible future files:
@@ -553,7 +580,7 @@ Do not do yet:
 
 Goal:
 
-- Create the initial requisition flow for a selected bank.
+- Create the initial account information authorization flow for a selected bank.
 
 Expected result:
 
@@ -561,14 +588,14 @@ Expected result:
 
 Concepts learned:
 
-- End user agreements.
-- Requisitions.
+- Account information authorization.
+- ASPSP selection.
 - Redirect URLs.
 
 Possible future files:
 
-- `app/api/bank-connections/start/route.ts`
-- `lib/gocardless/`
+- `app/api/bank-connections/enable-banking/start/route.ts`
+- `lib/enable-banking/`
 
 Risks or decisions:
 
@@ -578,7 +605,7 @@ Do not do yet:
 
 - Assume the bank connection succeeded before callback verification.
 
-## 15. Store Requisition And Consent Data
+## 15. Store Authorization And Consent Data
 
 Goal:
 
@@ -592,6 +619,7 @@ Concepts learned:
 
 - Consent state machines.
 - External IDs.
+- Provider authorization state.
 
 Possible future files:
 
@@ -606,7 +634,7 @@ Do not do yet:
 
 - Sync account data before consent is valid.
 
-## 16. Handle GoCardless Callback
+## 16. Handle Enable Banking Callback
 
 Goal:
 
@@ -614,7 +642,8 @@ Goal:
 
 Expected result:
 
-- The app verifies the requisition and updates connection state.
+- The app verifies the returned authorization state and updates connection
+  state.
 
 Concepts learned:
 
@@ -623,7 +652,7 @@ Concepts learned:
 
 Possible future files:
 
-- `app/api/bank-connections/callback/route.ts`
+- `app/api/bank-connections/enable-banking/callback/route.ts`
 - Consent event persistence.
 
 Risks or decisions:
@@ -722,14 +751,14 @@ Possible future files:
 Risks or decisions:
 
 - Duplicate transactions and raw data sensitivity.
-- GoCardless transaction identifiers are useful but optional, so the app must not depend on one field always being present.
+- Provider transaction identifiers are useful but optional, so the app must not depend on one field always being present.
 - Pending transactions can later become booked with stronger identifiers or changed fields.
 - User-owned transaction metadata, such as categories, must not be overwritten by provider sync.
 
 Recommended scope:
 
-- Normalize GoCardless transaction fields into the app data model.
-- Store external identifiers such as `internalTransactionId`, `transactionId`, `entryReference`, and `endToEndId` when available.
+- Normalize Enable Banking transaction fields into the app data model.
+- Store external provider and bank identifiers when available, such as provider transaction IDs, bank transaction IDs, entry references, and meaningful end-to-end IDs.
 - Compute a deterministic `stable_import_key` using the documented priority:
   `internalTransactionId`, then `transactionId`, then `entryReference`, then meaningful `endToEndId`, then fallback fingerprint.
 - Store `identity_source` and `deduplication_fingerprint`.

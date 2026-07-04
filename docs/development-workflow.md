@@ -24,9 +24,9 @@ Prefer small slices such as:
 - Configure magic link login.
 - Add an email allowlist.
 - Create one table and one set of RLS policies.
-- Fetch one GoCardless token server-side.
-- List institutions.
-- Start one requisition flow.
+- Make one signed Enable Banking API request server-side.
+- List ASPSPs for Spain.
+- Start one account information authorization flow.
 
 Avoid combining several architectural steps into one large change.
 
@@ -38,7 +38,7 @@ Important changes should be explained before implementation, especially when the
 - Authorization.
 - Database schema.
 - RLS.
-- GoCardless integration.
+- Enable Banking integration.
 - Environment variables.
 - Deployment.
 - Scheduled sync.
@@ -60,7 +60,7 @@ Use verification appropriate to the feature:
 - Integration checks for server routes.
 - Manual browser testing for flows.
 - SQL policy checks for RLS.
-- Dry-run or sandbox checks for GoCardless where available.
+- Dry-run, sandbox, or restricted own-account checks for Enable Banking where available.
 
 If verification cannot be run, explain why.
 
@@ -104,8 +104,8 @@ When a new concept appears, include a short explanation in the relevant PR summa
 Examples:
 
 - What RLS protects.
-- Why GoCardless calls are server-only.
-- What a requisition is.
+- Why Enable Banking calls are server-only.
+- What an ASPSP and account information authorization flow are.
 - Why Trade Republic is modeled separately.
 
 ## Future Prompts

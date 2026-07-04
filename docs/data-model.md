@@ -47,7 +47,7 @@ readable by authenticated users only.
 For now, financial provider-owned tables such as `bank_connections`, `accounts`,
 `balances`, `transactions`, `sync_runs`, and `consent_events` only expose read
 policies to authenticated owners. Server-controlled write flows will be added
-when GoCardless synchronization is implemented. User-managed category tables
+when Enable Banking synchronization is implemented. User-managed category tables
 allow owner-scoped create, read, update, and delete operations.
 
 Detailed RLS checks with representative rows are deferred until the features
@@ -143,7 +143,7 @@ Purpose:
 Probable fields:
 
 - `id`.
-- `provider`: for example `gocardless` or `manual`.
+- `provider`: for example `enable_banking` or `manual`.
 - `provider_institution_id`.
 - `name`.
 - `country`.
@@ -167,7 +167,7 @@ Security and RLS:
 
 Source:
 
-- GoCardless institution list or app-managed reference data.
+- Enable Banking ASPSP list or app-managed reference data.
 
 ### `bank_connections`
 
@@ -181,8 +181,12 @@ Probable fields:
 - `user_id`.
 - `institution_id`.
 - `provider`.
-- `provider_requisition_id`.
-- `provider_agreement_id`.
+- `provider_requisition_id`: current first-migration name; originally chosen
+  for GoCardless. It should be treated as a generic external authorization or
+  session identifier until a future migration renames it.
+- `provider_agreement_id`: current first-migration name; originally chosen for
+  GoCardless. It may become unnecessary or be renamed once the Enable Banking
+  flow is implemented.
 - `status`: for example `created`, `linked`, `expired`, `error`, `revoked`.
 - `consent_expires_at`.
 - `redirect_url`.
@@ -208,7 +212,7 @@ Security and RLS:
 
 Source:
 
-- GoCardless requisition and agreement flows.
+- Enable Banking account information authorization flows.
 
 ### `accounts`
 
@@ -246,7 +250,7 @@ Security and RLS:
 
 Source:
 
-- GoCardless account details.
+- Enable Banking account details.
 
 ### `balances`
 
@@ -282,7 +286,7 @@ Security and RLS:
 
 Source:
 
-- GoCardless balances endpoint.
+- Enable Banking balances endpoint.
 
 ### `transactions`
 
@@ -298,8 +302,8 @@ Probable fields:
 - `user_id`.
 - `account_id`.
 - `stable_import_key`.
-- `identity_source`: for example `gocardless_internal`, `bank_transaction`, `bank_entry_reference`, `bank_end_to_end`, or `fingerprint`.
-- `provider`: for example `gocardless`.
+- `identity_source`: for example `provider_internal`, `bank_transaction`, `bank_entry_reference`, `bank_end_to_end`, or `fingerprint`.
+- `provider`: for example `enable_banking`.
 - `provider_transaction_id`.
 - `provider_internal_transaction_id`.
 - `entry_reference`.
@@ -345,16 +349,16 @@ Security and RLS:
 
 Source:
 
-- GoCardless transactions endpoint.
+- Enable Banking transactions endpoint.
 
 #### Transaction Identity And Deduplication
 
-Provider transaction identity is not guaranteed to be perfect. GoCardless Bank Account Data may expose several transaction-related identifiers, but the useful identifiers are optional and may depend on the bank:
+Provider transaction identity is not guaranteed to be perfect. Bank data providers such as Enable Banking may expose several transaction-related identifiers, but the useful identifiers are optional and may depend on the bank:
 
-- `internalTransactionId`: transaction identifier given by GoCardless.
-- `transactionId`: transaction identifier provided by the financial institution.
-- `entryReference`: transaction reference provided by the financial institution.
-- `endToEndId`: end-to-end payment identifier, often most useful for transfers.
+- Provider internal transaction ID when available.
+- Bank-provided transaction ID when available.
+- Bank-provided entry reference when available.
+- End-to-end payment identifier when available and meaningful.
 
 The app should therefore not depend on one external field being present for every transaction.
 
@@ -370,7 +374,7 @@ Recommended `stable_import_key` priority:
 
 ```text
 if provider_internal_transaction_id exists:
-  gocardless_internal:{account_id}:{provider_internal_transaction_id}
+  provider_internal:{account_id}:{provider_internal_transaction_id}
 
 else if provider_transaction_id exists:
   bank_transaction:{account_id}:{provider_transaction_id}
@@ -625,7 +629,7 @@ Security and RLS:
 
 Source:
 
-- App-managed events based on GoCardless states and callbacks.
+- App-managed events based on Enable Banking authorization states and callbacks.
 
 ### `manual_assets`
 
@@ -667,18 +671,18 @@ Source:
 
 ## Data Source Summary
 
-| Entity                        | Primary source                           |
-| ----------------------------- | ---------------------------------------- |
-| `auth.users`                  | Supabase Auth                            |
-| `profiles`                    | Supabase Auth and app metadata           |
-| `institutions`                | GoCardless or app-managed reference data |
-| `bank_connections`            | GoCardless consent and requisition flow  |
-| `accounts`                    | GoCardless account data                  |
-| `balances`                    | GoCardless balances                      |
-| `transactions`                | GoCardless transactions                  |
-| `transaction_category_groups` | Manual user setup or app defaults        |
-| `transaction_categories`      | Manual user setup or app defaults        |
-| `transaction_category_rules`  | Manual user setup or future suggestions  |
-| `sync_runs`                   | App sync process                         |
-| `consent_events`              | App consent lifecycle tracking           |
-| `manual_assets`               | Manual user input or future import       |
+| Entity                        | Primary source                                      |
+| ----------------------------- | --------------------------------------------------- |
+| `auth.users`                  | Supabase Auth                                       |
+| `profiles`                    | Supabase Auth and app metadata                      |
+| `institutions`                | Enable Banking ASPSPs or app-managed reference data |
+| `bank_connections`            | Enable Banking consent and authorization flow       |
+| `accounts`                    | Enable Banking account data                         |
+| `balances`                    | Enable Banking balances                             |
+| `transactions`                | Enable Banking transactions                         |
+| `transaction_category_groups` | Manual user setup or app defaults                   |
+| `transaction_categories`      | Manual user setup or app defaults                   |
+| `transaction_category_rules`  | Manual user setup or future suggestions             |
+| `sync_runs`                   | App sync process                                    |
+| `consent_events`              | App consent lifecycle tracking                      |
+| `manual_assets`               | Manual user input or future import                  |

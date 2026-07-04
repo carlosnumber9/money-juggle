@@ -6,6 +6,7 @@ supabase/.temp/
 
 .env*
 !.env.example
+.secrets/
 
 npm-debug.log*
 yarn-debug.log*

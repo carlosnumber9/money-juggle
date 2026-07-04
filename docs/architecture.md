@@ -7,7 +7,7 @@ Browser / mobile
   -> Next.js App Router on Vercel
   -> Supabase Auth
   -> Supabase Postgres with RLS
-  -> GoCardless Bank Account Data API
+  -> Enable Banking Account Information API
 ```
 
 ## Frontend Responsibilities
@@ -18,8 +18,8 @@ The frontend should:
 - Start authentication and bank connection flows.
 - Show connection, account, balance, transaction, and report states.
 - Call internal Next.js endpoints or server actions when server work is required.
-- Never call GoCardless directly.
-- Never receive GoCardless secrets, refresh tokens, service role keys, or raw sensitive integration credentials.
+- Never call Enable Banking directly.
+- Never receive Enable Banking signing keys, provider tokens, service role keys, or raw sensitive integration credentials.
 
 ## UI System
 
@@ -38,7 +38,7 @@ Next.js server-side code should:
 
 - Validate the authenticated user.
 - Enforce email allowlist behavior.
-- Talk to GoCardless from server-only code.
+- Talk to Enable Banking from server-only code.
 - Store and update consent, account, balance, transaction, and sync state.
 - Use Supabase server clients appropriately.
 - Keep sensitive environment variables private.
@@ -50,7 +50,7 @@ Future server-side code may live in:
 app/api/
 lib/auth/
 lib/domain/
-lib/gocardless/
+lib/enable-banking/
 lib/supabase/
 ```
 
@@ -69,20 +69,19 @@ Supabase should provide:
 
 Supabase should not be treated as a place to bypass security. RLS must be part of the design from the first schema migration.
 
-## GoCardless Responsibilities
+## Enable Banking Responsibilities
 
-GoCardless Bank Account Data API should provide PSD2 access for supported banks:
+Enable Banking Account Information should provide PSD2 access for supported banks:
 
-- Institution discovery.
-- End user agreements.
-- Requisitions.
+- ASPSP discovery.
+- Account information authorization flows.
 - Bank consent redirects.
 - Linked accounts.
 - Account details.
 - Balances.
 - Transactions.
 
-GoCardless should not be used for payment initiation, mandates, checkout, billing requests, or scraping.
+Enable Banking should not be used for payment initiation, transfers, mandates, checkout, billing requests, or scraping.
 
 ## Authentication Flow
 
@@ -102,17 +101,16 @@ The allowlist check is important even for a personal app because a magic link lo
 Conceptual flow:
 
 1. Authenticated user selects a bank.
-2. Server code requests or confirms the GoCardless institution.
-3. Server code creates an end user agreement if needed.
-4. Server code creates a requisition.
-5. The app redirects the user to the bank consent page.
-6. User completes consent at the bank.
-7. GoCardless redirects back to the app.
-8. Server code verifies the requisition.
-9. Server code lists linked accounts.
-10. The app stores bank connection and account metadata.
+2. Server code requests or confirms the Enable Banking ASPSP.
+3. Server code creates or starts an account information authorization flow.
+4. The app redirects the user to the bank consent page.
+5. User completes consent at the bank.
+6. Enable Banking redirects back to the app.
+7. Server code verifies the returned authorization state.
+8. Server code lists linked accounts.
+9. The app stores bank connection and account metadata.
 
-The database should preserve the consent state clearly enough to answer: which institution was connected, which requisition was used, which accounts were linked, when consent expires, and what the current status is.
+The database should preserve the consent state clearly enough to answer: which institution or ASPSP was connected, which provider authorization flow was used, which accounts were linked, when consent expires, and what the current status is.
 
 ## Synchronization Flow
 
@@ -120,7 +118,7 @@ Conceptual flow:
 
 1. A sync is triggered manually or by a scheduled job.
 2. Server code loads active bank connections for the user.
-3. Server code fetches account details, balances, and transactions from GoCardless.
+3. Server code fetches account details, balances, and transactions from Enable Banking.
 4. Data is normalized and stored.
 5. A `sync_runs` record captures success, failure, timing, and error details.
 6. Expired or failed consents are marked for reconnection.
@@ -141,7 +139,7 @@ lib/
   auth/
   db/
   domain/
-  gocardless/
+  enable-banking/
   supabase/
 supabase/
   migrations/
@@ -154,14 +152,14 @@ Responsibilities:
 - Shared UI belongs in `components/`.
 - Business rules belong in `lib/domain/`.
 - Database access belongs in `lib/db/` or integration-specific modules.
-- GoCardless calls belong in `lib/gocardless/` and must be server-only.
+- Enable Banking calls belong in `lib/enable-banking/` and must be server-only.
 - Supabase client setup belongs in `lib/supabase/`.
 
 ## Server-Only Isolation
 
-GoCardless credentials and service role operations must only appear in server-side modules. Future implementation should use clear boundaries such as:
+Enable Banking credentials, signing keys, provider tokens, and service role operations must only appear in server-side modules. Future implementation should use clear boundaries such as:
 
-- Server-only modules for GoCardless clients.
+- Server-only modules for Enable Banking clients.
 - Route Handlers for bank connection callbacks and sync triggers.
 - Environment variables without `NEXT_PUBLIC_` for secrets.
 - Small domain functions that can be tested without external calls.
@@ -171,8 +169,8 @@ GoCardless credentials and service role operations must only appear in server-si
 Possible future Route Handlers:
 
 ```text
-app/api/bank-connections/start/route.ts
-app/api/bank-connections/callback/route.ts
+app/api/bank-connections/enable-banking/start/route.ts
+app/api/bank-connections/enable-banking/callback/route.ts
 app/api/sync/balances/route.ts
 app/api/sync/transactions/route.ts
 ```

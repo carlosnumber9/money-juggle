@@ -16,7 +16,10 @@ Initial target institutions and platforms:
 - ING
 - Trade Republic
 
-CaixaBank and ING should initially use GoCardless Bank Account Data API. Trade Republic is a special case because investment data may not be available through PSD2 and may require manual input, a separate integration, or a future solution.
+CaixaBank and ING should initially use Enable Banking Account Information through
+Open Banking / PSD2. Trade Republic is a special case because investment data
+is not available through the current PSD2 path and may require manual input, a
+separate integration, or a future solution.
 
 ## Language Rules
 
@@ -35,7 +38,7 @@ CaixaBank and ING should initially use GoCardless Bank Account Data API. Trade R
 - Magic link login by email
 - Supabase Postgres
 - Supabase Row Level Security
-- GoCardless Bank Account Data API
+- Enable Banking Account Information API
 - Next.js Route Handlers for server-side logic
 - Private environment variables in Vercel
 - Possible Vercel Cron for periodic synchronization
@@ -47,7 +50,7 @@ Browser / mobile
   -> Next.js on Vercel
   -> Supabase Auth
   -> Supabase Postgres
-  -> GoCardless Bank Account Data API
+  -> Enable Banking Account Information API
 ```
 
 ## Non-Negotiable Security Rules
@@ -60,9 +63,9 @@ Browser / mobile
 - Never use payment initiation flows.
 - Never scrape online banking.
 - Never store bank login credentials.
-- Never expose GoCardless secrets to the browser.
-- All GoCardless calls must happen on the server.
-- The frontend must never receive `GOCARDLESS_SECRET_ID`, `GOCARDLESS_SECRET_KEY`, refresh tokens, service role keys, or other sensitive credentials.
+- Never expose Enable Banking signing keys or provider tokens to the browser.
+- All Enable Banking calls must happen on the server.
+- The frontend must never receive `ENABLE_BANKING_PRIVATE_KEY`, provider tokens, service role keys, or other sensitive credentials.
 - Supabase RLS must be enabled for tables containing financial data.
 - Even though this is a personal app, model ownership as if multiple users may exist later.
 - Magic link login must be restricted to the owner email or an explicit allowlist.
@@ -79,7 +82,7 @@ Do not create these without explicit user approval:
 - Environment files
 - Project configuration files
 - Database clients
-- GoCardless clients
+- Enable Banking clients
 - Payment flows
 - Scraping tools
 - Large architectural rewrites
@@ -115,7 +118,7 @@ lib/
   auth/
   db/
   domain/
-  gocardless/
+  enable-banking/
   supabase/
 docs/
 supabase/
@@ -130,7 +133,7 @@ Suggested responsibilities:
 - `lib/auth/`: authentication helpers and allowlist checks.
 - `lib/db/`: database access helpers.
 - `lib/domain/`: business rules independent from framework details.
-- `lib/gocardless/`: server-only GoCardless integration code.
+- `lib/enable-banking/`: server-only Enable Banking integration code.
 - `lib/supabase/`: Supabase browser/server client setup.
 - `supabase/migrations/`: database migrations when schema work begins.
 - `tests/`: focused tests for domain rules and integration boundaries.
@@ -146,15 +149,15 @@ Suggested responsibilities:
 - Restrict login to the owner email or an explicit allowlist.
 - Keep schema changes small and documented.
 
-## GoCardless Rules
+## Enable Banking Rules
 
-- Use GoCardless Bank Account Data API for PSD2 account information.
-- Do not use GoCardless Drop-in or `gocardless/react-dropin`; those are for checkout, billing requests, payments, or mandates, not this read-only account data use case.
-- Keep all GoCardless credentials server-only.
-- Store consent state clearly: institution, requisition, linked accounts, expiration, status, and relevant events.
+- Use Enable Banking Account Information for PSD2 account information.
+- Use only Account Information. Do not implement Enable Banking payment initiation or any other money-moving capability.
+- Keep all Enable Banking credentials, signing keys, and provider tokens server-only.
+- Store consent state clearly: institution/ASPSP, authorization flow, linked accounts, expiration, status, and relevant events.
 - Handle consent expiration and reconnection explicitly.
 - Sync failures should be recorded and visible enough to debug.
-- Separate UI from integration logic. UI starts flows; server-side code talks to GoCardless.
+- Separate UI from integration logic. UI starts flows; server-side code talks to Enable Banking.
 
 ## Feature Acceptance Criteria
 
