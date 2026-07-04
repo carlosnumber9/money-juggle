@@ -128,6 +128,52 @@ Implementation details may differ once the first API spike is built. Keep the
 first technical slice narrow: authenticate server-side and fetch a harmless
 resource before starting a full app UI flow.
 
+## Implemented Connection Flow
+
+The first connection flow now uses these Enable Banking Account Information
+endpoints:
+
+- `GET /aspsps` to list Spanish personal ASPSPs for the `AIS` service.
+- `POST /auth` to start authorization for a selected ASPSP.
+- `POST /sessions` from the callback handler to exchange the returned `code`
+  for an authorized session and account list.
+
+Implemented app routes:
+
+- `GET /api/bank-connections/enable-banking/aspsps`
+- `POST /api/bank-connections/enable-banking/start`
+- `GET /api/bank-connections/enable-banking/callback`
+
+The callback route is:
+
+```text
+https://money-juggle.vercel.app/api/bank-connections/enable-banking/callback
+```
+
+The start route requests only Account Information access:
+
+- `balances: true`
+- `transactions: true`
+- `psu_type: personal`
+- `language: es`
+
+The app passes the Supabase user ID as `psu_id` instead of an email address.
+Enable Banking stores only its derived `psu_id_hash`, which the app keeps for
+operational consent tracking.
+
+The callback handler requires:
+
+- An authenticated Supabase user.
+- A server-side email allowlist match.
+- A returned `state` matching a pending connection owned by that user.
+
+The app stores account metadata returned by the authorized session, including
+Enable Banking account `uid`, display name, currency, account type, and only
+the last four IBAN characters when available.
+
+Balances and transactions are not synchronized yet. Those remain separate
+roadmap items.
+
 ## What To Store
 
 Store enough information to understand and manage consent and synchronization:

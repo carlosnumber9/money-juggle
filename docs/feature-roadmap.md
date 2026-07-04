@@ -18,11 +18,11 @@ Use this checklist as the source of truth for what remains to be implemented. Ke
 - [x] 10. Enable RLS.
 - [x] 11. Add conceptual Enable Banking configuration.
 - [x] 12. Implement first Enable Banking signed API call.
-- [ ] 13. List available ASPSPs.
-- [ ] 14. Start bank connection flow.
-- [ ] 15. Store authorization and consent data.
-- [ ] 16. Handle Enable Banking callback.
-- [ ] 17. Store connected accounts.
+- [x] 13. List available ASPSPs.
+- [x] 14. Start bank connection flow.
+- [x] 15. Store authorization and consent data.
+- [x] 16. Handle Enable Banking callback.
+- [x] 17. Store connected accounts.
 - [ ] 18. Sync balances.
 - [ ] 19. Sync transactions.
 - [ ] 20. Build a basic dashboard.
@@ -569,6 +569,19 @@ Do not do yet:
 
 ## 13. List Available ASPSPs
 
+Status:
+
+- Completed.
+
+Implemented result:
+
+- `lib/enable-banking/client.ts` can call `GET /aspsps` with country, PSU
+  type, and service filters.
+- `app/api/bank-connections/enable-banking/aspsps/route.ts` exposes a
+  protected internal ASPSP list for authenticated allowed users.
+- The private home screen loads Spanish personal Account Information ASPSPs and
+  shows the initial CaixaBank / ING options when Enable Banking returns them.
+
 Goal:
 
 - Fetch supported ASPSPs for Spain.
@@ -596,6 +609,21 @@ Do not do yet:
 - Start consent automatically.
 
 ## 14. Start Bank Connection Flow
+
+Status:
+
+- Completed.
+
+Implemented result:
+
+- `app/api/bank-connections/enable-banking/start/route.ts` validates the
+  authenticated user and email allowlist before starting any provider flow.
+- The route verifies the selected ASPSP through Enable Banking and calls
+  `POST /auth` with Account Information access for balances and transactions.
+- The flow uses `psu_type: personal`, Spanish language, an app-generated
+  callback `state`, and the Supabase user ID as the anonymized `psu_id`.
+- The browser is redirected to the provider authorization URL returned by
+  Enable Banking.
 
 Goal:
 
@@ -626,6 +654,21 @@ Do not do yet:
 
 ## 15. Store Authorization And Consent Data
 
+Status:
+
+- Completed.
+
+Implemented result:
+
+- `supabase/migrations/20260704170000_add_enable_banking_connection_fields.sql`
+  adds explicit Enable Banking authorization, session, callback state, PSU hash,
+  and provider metadata fields to `bank_connections`.
+- Server-only persistence creates the user profile if needed, upserts the
+  selected institution, stores a `linking` bank connection, and records
+  `created` / `redirected` consent events.
+- `SUPABASE_SERVICE_ROLE_KEY` is now required for controlled server-side
+  provider writes that RLS intentionally blocks for browser clients.
+
 Goal:
 
 - Persist consent lifecycle data.
@@ -655,6 +698,20 @@ Do not do yet:
 
 ## 16. Handle Enable Banking Callback
 
+Status:
+
+- Completed.
+
+Implemented result:
+
+- `app/api/bank-connections/enable-banking/callback/route.ts` receives the
+  Enable Banking callback at the registered callback path.
+- The route validates the authenticated allowed user and verifies the returned
+  `state` against a pending connection owned by that user.
+- Provider errors are stored as failed consent events.
+- Successful callbacks exchange the returned `code` through `POST /sessions`
+  and mark the connection as `linked`.
+
 Goal:
 
 - Complete the consent return flow.
@@ -683,6 +740,21 @@ Do not do yet:
 - Trust callback query parameters without server verification.
 
 ## 17. Store Connected Accounts
+
+Status:
+
+- Completed.
+
+Implemented result:
+
+- Authorized accounts returned by `POST /sessions` are normalized and upserted
+  into `accounts`.
+- The app stores Enable Banking account `uid`, display name, currency, account
+  type, and only the last four IBAN characters when an IBAN is available.
+- The private home screen lists connected banks, consent expiration, and stored
+  account metadata.
+- Balance and transaction synchronization remain deferred to roadmap items 18
+  and 19.
 
 Goal:
 

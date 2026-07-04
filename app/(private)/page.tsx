@@ -1,8 +1,17 @@
 import { Card, CardContent } from "@/components/ui/card";
 
+import { BankConnectionsPanel } from "@/app/(private)/bank-connections-panel";
 import { EnableBankingStatus } from "@/app/(private)/enable-banking-status";
 
-export default function Home() {
+type HomeProps = {
+  searchParams?: Promise<{
+    bank_connection_status?: string;
+  }>;
+};
+
+export default async function Home({ searchParams }: HomeProps) {
+  const params = await searchParams;
+
   return (
     <main className="accounts-page">
       <div className="accounts-heading">
@@ -18,6 +27,7 @@ export default function Home() {
           </CardContent>
         </Card>
       </div>
+      <BankConnectionsPanel status={params?.bank_connection_status} />
     </main>
   );
 }

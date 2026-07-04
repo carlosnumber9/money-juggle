@@ -22,6 +22,7 @@ function Tooltip({
     <TooltipPrimitive.Provider delay={150} closeDelay={100}>
       <TooltipPrimitive.Root>
         <TooltipPrimitive.Trigger
+          type="button"
           aria-label={triggerLabel}
           closeOnClick={false}
           className={cn(

@@ -187,6 +187,15 @@ Probable fields:
 - `provider_agreement_id`: current first-migration name; originally chosen for
   GoCardless. It may become unnecessary or be renamed once the Enable Banking
   flow is implemented.
+- `provider_authorization_id`: Enable Banking authorization identifier returned
+  by `POST /auth`.
+- `provider_session_id`: Enable Banking session identifier returned by
+  `POST /sessions`.
+- `provider_state`: app-generated callback state used to verify that the
+  callback belongs to a connection initiated by the same user.
+- `provider_psu_id_hash`: Enable Banking hash for the app-provided PSU ID.
+- `provider_metadata`: small provider-specific operational metadata for consent
+  management. This should not become a raw payload dump.
 - `status`: for example `created`, `linked`, `expired`, `error`, `revoked`.
 - `consent_expires_at`.
 - `redirect_url`.

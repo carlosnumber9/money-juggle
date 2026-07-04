@@ -93,6 +93,122 @@ body {
   padding: 4px;
 }
 
+.bank-institution-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: calc(100vw - 48px);
+  max-width: none;
+  margin-left: calc(50% - 50vw + 24px);
+  margin-top: 32px;
+  gap: 16px;
+}
+
+.bank-institution-card {
+  position: relative;
+  display: block;
+  min-height: clamp(160px, 18vw, 240px);
+  width: 100%;
+  overflow: visible;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  box-shadow: 0 1px 2px oklch(0.153 0.006 107.1 / 6%);
+}
+
+.bank-institution-card::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  content: "";
+  background-image: var(--bank-logo);
+  background-repeat: no-repeat;
+  background-position: right 10% bottom 30%;
+  background-size: 112% auto;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.bank-institution-card-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: clamp(160px, 18vw, 240px);
+  width: 100%;
+  align-items: flex-start;
+  border: 0;
+  background: linear-gradient(
+    135deg,
+    var(--card) 0%,
+    color-mix(in oklch, var(--card), transparent 18%) 100%
+  );
+  color: var(--foreground);
+  padding: 18px;
+  text-align: left;
+}
+
+.bank-institution-title {
+  max-width: calc(100% - 48px);
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.bank-institution-status {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 20;
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: color-mix(in oklch, var(--background), transparent 8%);
+  backdrop-filter: blur(8px);
+}
+
+.bank-institution-status[data-tone="success"] {
+  color: oklch(0.45 0.13 145);
+}
+
+.bank-institution-status[data-tone="error"] {
+  color: var(--destructive);
+}
+
+.bank-institution-status[data-tone="loading"] {
+  color: var(--muted-foreground);
+}
+
+.bank-institution-status-tooltip {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 50;
+  width: max-content;
+  max-width: 260px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: 0 8px 24px oklch(0.153 0.006 107.1 / 14%);
+  font-size: 0.875rem;
+  line-height: 1.45;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-2px);
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
+}
+
+.bank-institution-status:hover .bank-institution-status-tooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .hero {
   max-width: 720px;
 }
@@ -158,6 +274,12 @@ li {
 @media (max-width: 640px) {
   .home {
     padding: 48px 18px;
+  }
+
+  .bank-institution-grid {
+    grid-template-columns: 1fr;
+    width: calc(100vw - 36px);
+    margin-left: calc(50% - 50vw + 18px);
   }
 
   .next-section {

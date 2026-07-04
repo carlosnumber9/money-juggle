@@ -156,6 +156,11 @@ Mitigations:
 
 The Supabase service role bypasses RLS. It should only be used in server-only code when there is a clear reason.
 
+The Enable Banking connection flow uses the service role only for controlled
+provider writes after validating the authenticated user, the email allowlist,
+and the provider callback `state`. Ordinary user-facing reads should continue
+to use the RLS-aware Supabase server client.
+
 Avoid:
 
 - Using service role from client code.

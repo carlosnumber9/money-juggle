@@ -452,3 +452,40 @@ Possible future revisit trigger:
 - If Enable Banking stops supporting own linked accounts.
 - If CaixaBank or ING coverage proves unreliable.
 - If another provider offers a better free personal-use path.
+
+## ADR-017: Use Service Role Only For Controlled Provider Writes
+
+Status:
+
+- Accepted.
+
+Context:
+
+- Financial tables expose owner-scoped read policies to authenticated users.
+- Provider-owned records such as bank connections, accounts, sync runs, and
+  consent events should not be writable directly from the browser.
+- The Enable Banking connection flow needs server-side writes after starting
+  authorization and after validating the provider callback.
+
+Decision:
+
+- Add a server-only Supabase service role helper.
+- Use the service role only in server-only provider flows where RLS
+  intentionally blocks browser writes.
+- Validate the authenticated user, email allowlist, and provider callback
+  `state` before creating or updating user-owned financial records.
+- Continue using the normal RLS-aware server client for ordinary user-facing
+  reads.
+
+Consequences:
+
+- Browser clients cannot insert or mutate provider-owned financial rows.
+- Service role usage is easier to audit because it is isolated in server-only
+  modules.
+- Future sync jobs may use the same pattern, but each use must preserve
+  explicit ownership checks.
+
+Possible future revisit trigger:
+
+- If SQL security-definer functions or tighter RLS write policies become a
+  better fit for provider-controlled writes.
