@@ -33,7 +33,11 @@ function Tooltip({
           {children}
         </TooltipPrimitive.Trigger>
         <TooltipPrimitive.Portal>
-          <TooltipPrimitive.Positioner side="bottom" sideOffset={8}>
+          <TooltipPrimitive.Positioner
+            side="bottom"
+            sideOffset={8}
+            className="ui-tooltip-positioner"
+          >
             <TooltipPrimitive.Popup className="max-w-64 rounded-md bg-popover px-3 py-2 text-sm leading-relaxed text-popover-foreground shadow-md ring-1 ring-border">
               {label}
             </TooltipPrimitive.Popup>
