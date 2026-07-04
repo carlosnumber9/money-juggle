@@ -10,7 +10,7 @@ Use this checklist as the source of truth for what remains to be implemented. Ke
 - [x] 2. Configure basic project tooling.
 - [x] 3. Set up Supabase project.
 - [x] 4. Configure quick UI foundation with shadcn/ui.
-- [ ] 5. Configure Supabase Auth.
+- [x] 5. Configure Supabase Auth.
 - [x] 6. Implement magic link login.
 - [x] 7. Add email allowlist.
 - [x] 8. Create basic private layout.
@@ -205,19 +205,19 @@ Do not do yet:
 
 Status:
 
-- Documented. The actual Supabase Dashboard settings must still be applied and
-  verified outside the repository.
+- Completed.
 
 Goal:
 
 - Enable email magic link authentication.
 
-Documented result:
+Implemented result:
 
 - Required Supabase Auth dashboard settings are listed in `docs/supabase.md`.
 - Local and production callback URL expectations are documented.
-- The distinction between authentication and the future server-side email
-  allowlist is explicit.
+- The configured magic-link flow has been manually verified with the local app.
+- The distinction between authentication and server-side email authorization is
+  explicit.
 
 Expected result:
 
@@ -257,6 +257,7 @@ Implemented result:
 - The form uses a server action to request a Supabase magic link.
 - `app/auth/callback/route.ts` exchanges the Supabase code for a session.
 - New user creation is disabled in magic-link requests.
+- The login flow has been manually verified end to end.
 
 Expected result:
 
@@ -299,6 +300,7 @@ Implemented result:
 - Login requests are rejected before sending an email when the address is not
   allowed.
 - The auth callback and private layout also enforce the allowlist server-side.
+- The allowlist has been manually verified in the MVP login flow.
 
 Expected result:
 
@@ -338,6 +340,7 @@ Implemented result:
   `app/(private)/page.tsx`.
 - `app/(private)/layout.tsx` requires a valid Supabase user and allowed email.
 - A minimal session header and sign-out action are available.
+- The private home and sign-out flow have been manually verified.
 
 Expected result:
 
