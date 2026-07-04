@@ -323,6 +323,53 @@ Never expose:
 
 Any variable containing secrets must not use `NEXT_PUBLIC_`.
 
+Current implementation variables:
+
+- `ENABLE_BANKING_APPLICATION_ID`: registered Enable Banking application key ID.
+- `ENABLE_BANKING_PRIVATE_KEY`: RSA private key PEM. In hosted environments this
+  can contain escaped newlines (`\n`), which the server normalizes before
+  signing.
+- `ENABLE_BANKING_PRIVATE_KEY_PATH`: optional local-only path to an ignored PEM
+  file, such as `.secrets/enable-banking/private.key`.
+- `ENABLE_BANKING_API_BASE_URL`: optional override. Defaults to
+  `https://api.enablebanking.com`.
+
+## First Signed API Call
+
+The first implemented API call is intentionally narrow:
+
+```text
+GET https://api.enablebanking.com/application
+```
+
+The server signs a JWT with the registered application ID as the `kid` and sends
+it in the `Authorization: Bearer <JWT>` header. Enable Banking responds with
+metadata for the application associated with the JWT key ID.
+
+This verifies:
+
+- The private key can sign requests from server-only code.
+- Enable Banking accepts the JWT.
+- The application ID and private key match the registered application.
+
+This does not yet verify:
+
+- CaixaBank or ING account consent.
+- Linked accounts.
+- Balances.
+- Transactions.
+- Any stored bank connection state.
+
+The internal verification route is:
+
+```text
+GET /api/integrations/enable-banking/application
+```
+
+It requires an authenticated Supabase session and an allowed email. It returns
+only safe application metadata and sanitized errors. It must not return signed
+JWTs, private keys, provider credentials, or raw Enable Banking error payloads.
+
 ## Client/UI Separation
 
 The UI may:

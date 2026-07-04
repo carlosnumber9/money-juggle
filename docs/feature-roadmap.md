@@ -17,7 +17,7 @@ Use this checklist as the source of truth for what remains to be implemented. Ke
 - [x] 9. Design initial database schema.
 - [x] 10. Enable RLS.
 - [x] 11. Add conceptual Enable Banking configuration.
-- [ ] 12. Implement first Enable Banking signed API call.
+- [x] 12. Implement first Enable Banking signed API call.
 - [ ] 13. List available ASPSPs.
 - [ ] 14. Start bank connection flow.
 - [ ] 15. Store authorization and consent data.
@@ -516,6 +516,25 @@ Do not do yet:
 - Implement the full consent flow.
 
 ## 12. Implement First Enable Banking Signed API Call
+
+Status:
+
+- Completed.
+
+Implemented result:
+
+- Server-only Enable Banking configuration helpers were added.
+- Server-only JWT signing with the registered application ID and RSA private
+  key was added.
+- A minimal Enable Banking client calls `GET /application` to verify the signed
+  request against the registered application.
+- A protected internal route exposes only safe application metadata to the
+  authenticated allowed owner.
+- The private home screen now shows a `Tus cuentas` view with a card that checks
+  the Enable Banking connection and displays loading, success, or sanitized
+  error state.
+- No bank consent flow, accounts, balances, transactions, or persistence were
+  added in this step.
 
 Goal:
 
