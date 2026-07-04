@@ -14,8 +14,8 @@ Use this checklist as the source of truth for what remains to be implemented. Ke
 - [x] 6. Implement magic link login.
 - [x] 7. Add email allowlist.
 - [x] 8. Create basic private layout.
-- [ ] 9. Design initial database schema.
-- [ ] 10. Enable and test RLS.
+- [x] 9. Design initial database schema.
+- [x] 10. Enable RLS.
 - [ ] 11. Add conceptual GoCardless configuration.
 - [ ] 12. Implement first GoCardless token call.
 - [ ] 13. List available institutions.
@@ -366,9 +366,24 @@ Do not do yet:
 
 ## 9. Design Initial Database Schema
 
+Status:
+
+- Completed.
+
 Goal:
 
 - Turn the conceptual model into an initial schema proposal.
+
+Implemented result:
+
+- `docs/data-model.md` now documents the initial executable schema scope.
+- `supabase/migrations/20260704143000_create_initial_schema.sql` creates the
+  initial tables, relationships, constraints, indexes, and RLS policies.
+- The initial schema includes profiles, institutions, bank connections,
+  accounts, balances, transactions, category groups, categories, sync runs, and
+  consent events.
+- Category rules, manual assets, report caches, and advanced scheduler metadata
+  are intentionally deferred.
 
 Expected result:
 
@@ -400,21 +415,36 @@ Do not do yet:
 
 - Create every possible reporting table.
 
-## 10. Enable And Test RLS
+## 10. Enable RLS
+
+Status:
+
+- Completed for the initial schema.
 
 Goal:
 
-- Add RLS policies for initial tables.
+- Enable RLS and add baseline policies for initial tables.
+
+Implemented result:
+
+- The initial migration enables RLS for every created table.
+- Owner-scoped read policies are defined for user-owned financial tables.
+- Category group and category tables include owner-scoped CRUD policies.
+- `institutions` is readable by authenticated users as non-sensitive reference
+  data.
+- Deeper policy verification with real rows is deferred to the features that
+  first create bank connections, accounts, balances, transactions, and
+  categories.
 
 Expected result:
 
-- Users can access only their own rows.
+- Initial tables are not left publicly readable or writable.
 
 Concepts learned:
 
 - RLS policies.
 - `auth.uid()`.
-- Policy testing.
+- Owner-scoped access.
 
 Possible future files:
 
@@ -424,10 +454,12 @@ Possible future files:
 Risks or decisions:
 
 - Avoid relying on service role for normal app reads.
+- Keep this app personal for now, while still modeling ownership for future
+  safety.
 
 Do not do yet:
 
-- Import financial data before policies are verified.
+- Build multi-user test fixtures before the app has data-writing features.
 
 ## 11. Add Conceptual GoCardless Configuration
 

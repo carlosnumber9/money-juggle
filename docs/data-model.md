@@ -1,6 +1,10 @@
-# Conceptual Data Model
+# Data Model
 
-This document proposes a conceptual data model only. It is not a migration and should not be treated as final schema design.
+This document describes the initial data model for `money-juggle`.
+
+The first executable schema is defined in:
+
+- `supabase/migrations/20260704143000_create_initial_schema.sql`
 
 The model should preserve user ownership even though the app starts as a personal project.
 
@@ -9,6 +13,63 @@ The model should preserve user ownership even though the app starts as a persona
 Financial rows should be owned by a Supabase Auth user through `user_id`. RLS policies should enforce access by owner.
 
 Shared reference rows, such as institutions, may be global if they do not contain user-specific financial data.
+
+## Initial Schema Scope
+
+The first migration creates the smallest useful schema for PSD2 bank
+connections, account data, balance snapshots, transactions, categorization, and
+sync observability.
+
+Included tables:
+
+- `profiles`
+- `institutions`
+- `bank_connections`
+- `accounts`
+- `balances`
+- `transactions`
+- `transaction_category_groups`
+- `transaction_categories`
+- `sync_runs`
+- `consent_events`
+
+Deferred tables:
+
+- `transaction_category_rules`: useful later, after manual categorization exists.
+- `manual_assets`: useful later for Trade Republic and other non-PSD2 assets.
+- Report cache or materialized report tables.
+- Advanced sync scheduler metadata.
+
+The first migration also enables RLS for every table it creates. User-owned
+tables use `user_id = auth.uid()` policies. Global `institutions` rows are
+readable by authenticated users only.
+
+For now, financial provider-owned tables such as `bank_connections`, `accounts`,
+`balances`, `transactions`, `sync_runs`, and `consent_events` only expose read
+policies to authenticated owners. Server-controlled write flows will be added
+when GoCardless synchronization is implemented. User-managed category tables
+allow owner-scoped create, read, update, and delete operations.
+
+Detailed RLS checks with representative rows are deferred until the features
+that create those rows exist. The initial migration still enables RLS from day
+one so no financial table starts in a public-by-default state.
+
+## Initial Schema Constraints
+
+Important constraints in the first migration:
+
+- User-owned child rows use foreign keys that include `user_id` where useful, so
+  rows cannot accidentally point to another user's parent record.
+- `transactions` has a unique identity on `user_id`, `account_id`, and
+  `stable_import_key`.
+- `transactions` also has partial unique indexes for provider transaction IDs
+  when those IDs are present.
+- Full IBAN values are not stored; `accounts.iban_last4` keeps only the last
+  four characters.
+- Amounts use `numeric(20, 6)` rather than floating point.
+- Currency values are constrained to three uppercase letters.
+- Category groups and categories are user-owned and unique by `user_id` and
+  `slug`.
 
 ## Entities
 
@@ -606,18 +667,18 @@ Source:
 
 ## Data Source Summary
 
-| Entity                       | Primary source                           |
-| ---------------------------- | ---------------------------------------- |
-| `auth.users`                 | Supabase Auth                            |
-| `profiles`                   | Supabase Auth and app metadata           |
-| `institutions`               | GoCardless or app-managed reference data |
-| `bank_connections`           | GoCardless consent and requisition flow  |
-| `accounts`                   | GoCardless account data                  |
-| `balances`                   | GoCardless balances                      |
-| `transactions`               | GoCardless transactions                  |
+| Entity                        | Primary source                           |
+| ----------------------------- | ---------------------------------------- |
+| `auth.users`                  | Supabase Auth                            |
+| `profiles`                    | Supabase Auth and app metadata           |
+| `institutions`                | GoCardless or app-managed reference data |
+| `bank_connections`            | GoCardless consent and requisition flow  |
+| `accounts`                    | GoCardless account data                  |
+| `balances`                    | GoCardless balances                      |
+| `transactions`                | GoCardless transactions                  |
 | `transaction_category_groups` | Manual user setup or app defaults        |
-| `transaction_categories`     | Manual user setup or app defaults        |
-| `transaction_category_rules` | Manual user setup or future suggestions  |
-| `sync_runs`                  | App sync process                         |
-| `consent_events`             | App consent lifecycle tracking           |
-| `manual_assets`              | Manual user input or future import       |
+| `transaction_categories`      | Manual user setup or app defaults        |
+| `transaction_category_rules`  | Manual user setup or future suggestions  |
+| `sync_runs`                   | App sync process                         |
+| `consent_events`              | App consent lifecycle tracking           |
+| `manual_assets`               | Manual user input or future import       |
