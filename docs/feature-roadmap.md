@@ -379,6 +379,8 @@ Implemented result:
 - `docs/data-model.md` now documents the initial executable schema scope.
 - `supabase/migrations/20260704143000_create_initial_schema.sql` creates the
   initial tables, relationships, constraints, indexes, and RLS policies.
+- The initial migration was applied to the linked Supabase project with
+  `npm run db:push`.
 - The initial schema includes profiles, institutions, bank connections,
   accounts, balances, transactions, category groups, categories, sync runs, and
   consent events.
@@ -428,6 +430,8 @@ Goal:
 Implemented result:
 
 - The initial migration enables RLS for every created table.
+- The initial migration is recorded as applied in the remote Supabase migration
+  history.
 - Owner-scoped read policies are defined for user-owned financial tables.
 - Category group and category tables include owner-scoped CRUD policies.
 - `institutions` is readable by authenticated users as non-sensitive reference

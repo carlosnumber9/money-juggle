@@ -2,6 +2,7 @@ node_modules/
 .next/
 out/
 tsconfig.tsbuildinfo
+supabase/.temp/
 
 .env*
 !.env.example

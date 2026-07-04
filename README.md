@@ -39,6 +39,20 @@ Apply that SQL to the Supabase project to create the initial tables, indexes,
 constraints, and RLS policies. After applying it, the tables should appear in
 the Supabase Dashboard Table Editor under the `public` schema.
 
+Prefer applying migrations through the Supabase CLI so the remote migration
+history stays in sync with the repository:
+
+```bash
+npm run db:link
+npm run db:push
+```
+
+If the CLI is not authenticated yet, run `npx supabase login` first. Do not make
+schema changes directly in the remote Table Editor once migrations are in use.
+
+In non-interactive environments, set `SUPABASE_ACCESS_TOKEN` in the shell or CI
+secret store before running the database scripts. Never commit that token.
+
 Start the local Next.js app:
 
 ```bash

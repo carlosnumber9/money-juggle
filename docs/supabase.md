@@ -164,6 +164,35 @@ Both helpers use the publishable key. They do not use the service role key.
 Do not add service role clients until a server-only feature has a documented
 need to bypass RLS.
 
+## Migration Workflow
+
+Database schema changes should be made through SQL files in
+`supabase/migrations/`.
+
+The project uses the Supabase CLI as a local dev dependency. For this Supabase
+project, the helper scripts are:
+
+- `npm run db:link`: links the local repo to the remote Supabase project.
+- `npm run db:push`: applies pending local migrations to the linked remote
+  project.
+- `npm run db:migrations`: lists local and remote migration status.
+
+Current remote migration status:
+
+- `20260704143000_create_initial_schema.sql` is applied to the linked Supabase
+  project.
+
+Run `npx supabase login` once before linking if the CLI is not authenticated.
+In non-interactive environments, provide `SUPABASE_ACCESS_TOKEN` through the
+shell or secret manager instead. Do not commit access tokens.
+
+Do not make schema changes directly in the remote Table Editor or SQL Editor
+once migrations are in use. Direct remote schema changes bypass migration
+history and can make later `db:push` runs fail with sync errors.
+
+Schema deployment should stay manual for now. Automated `db:push` from CI can be
+considered later when production deployment is more formal.
+
 ## Local Development Practices
 
 When local development starts:
