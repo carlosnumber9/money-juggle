@@ -19,6 +19,41 @@ Conceptual flow:
 
 User-visible authentication text should be Spanish when the UI is implemented.
 
+## Supabase Auth Dashboard Configuration
+
+Supabase email authentication methods, including magic links, are enabled by
+default for hosted projects. This project should still make the required Auth
+settings explicit before the login UI is implemented.
+
+In the Supabase Dashboard:
+
+1. Open the project used by `money-juggle`.
+2. Go to Auth configuration.
+3. Keep email authentication enabled.
+4. Configure the Site URL:
+   - Local development: `http://localhost:3000`
+   - Production: the final Vercel production URL when it exists.
+5. Add allowed redirect URLs:
+   - Local callback: `http://localhost:3000/auth/callback`
+   - Production callback: `https://<production-domain>/auth/callback`
+   - Optional Vercel preview callback only when preview deployments need login.
+6. Keep the email template as a magic-link flow unless the app deliberately
+   changes to OTP codes later.
+
+The future login implementation should pass `/auth/callback` as the redirect
+target when requesting a magic link. Supabase will only redirect to URLs that
+match the configured allow list.
+
+The current login implementation passes `/auth/callback` as the redirect target
+and uses `shouldCreateUser: false`. This prevents public self-registration
+through the login form. The owner user must exist in Supabase before the login
+request can succeed.
+
+The app checks `ALLOWED_EMAILS` before requesting a magic link, after the
+callback creates a session, and before rendering private routes. Authentication
+proves the user owns an email inbox; the allowlist decides whether that email
+may access `money-juggle`.
+
 ## Next.js SSR
 
 Future implementation should use Supabase patterns compatible with Next.js App Router and server rendering.
@@ -98,11 +133,11 @@ Current required variables:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `ALLOWED_EMAILS`
 
 Future server-only variables:
 
 - `SUPABASE_SERVICE_ROLE_KEY`
-- `ALLOWED_EMAILS` or `OWNER_EMAIL`
 - `GOCARDLESS_SECRET_ID`
 - `GOCARDLESS_SECRET_KEY`
 
@@ -157,11 +192,14 @@ The first version may support only one owner email.
 
 Conceptual options:
 
-- `OWNER_EMAIL` for a single allowed email.
 - `ALLOWED_EMAILS` for a comma-separated allowlist.
+- `OWNER_EMAIL` for a single allowed email. This is still accepted as a
+  compatibility fallback, but `ALLOWED_EMAILS` is the preferred variable.
 - A future database table for allowed users.
 
-The check must happen server-side after Supabase authentication. UI-only filtering is not sufficient.
+The check happens server-side before email sending, after Supabase
+authentication, and before private route rendering. UI-only filtering is not
+sufficient.
 
 ## Ownership Even For A Personal App
 

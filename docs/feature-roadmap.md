@@ -11,9 +11,9 @@ Use this checklist as the source of truth for what remains to be implemented. Ke
 - [x] 3. Set up Supabase project.
 - [x] 4. Configure quick UI foundation with shadcn/ui.
 - [ ] 5. Configure Supabase Auth.
-- [ ] 6. Implement magic link login.
-- [ ] 7. Add email allowlist.
-- [ ] 8. Create basic private layout.
+- [x] 6. Implement magic link login.
+- [x] 7. Add email allowlist.
+- [x] 8. Create basic private layout.
 - [ ] 9. Design initial database schema.
 - [ ] 10. Enable and test RLS.
 - [ ] 11. Add conceptual GoCardless configuration.
@@ -203,9 +203,21 @@ Do not do yet:
 
 ## 5. Configure Supabase Auth
 
+Status:
+
+- Documented. The actual Supabase Dashboard settings must still be applied and
+  verified outside the repository.
+
 Goal:
 
 - Enable email magic link authentication.
+
+Documented result:
+
+- Required Supabase Auth dashboard settings are listed in `docs/supabase.md`.
+- Local and production callback URL expectations are documented.
+- The distinction between authentication and the future server-side email
+  allowlist is explicit.
 
 Expected result:
 
@@ -231,9 +243,20 @@ Do not do yet:
 
 ## 6. Implement Magic Link Login
 
+Status:
+
+- Completed.
+
 Goal:
 
 - Add a minimal login flow.
+
+Implemented result:
+
+- `app/login/page.tsx` provides a Spanish email form.
+- The form uses a server action to request a Supabase magic link.
+- `app/auth/callback/route.ts` exchanges the Supabase code for a session.
+- New user creation is disabled in magic-link requests.
 
 Expected result:
 
@@ -261,9 +284,21 @@ Do not do yet:
 
 ## 7. Add Email Allowlist
 
+Status:
+
+- Completed.
+
 Goal:
 
 - Restrict access to the owner email or explicit allowlist.
+
+Implemented result:
+
+- `lib/auth/allowlist.ts` reads `ALLOWED_EMAILS` from server-only environment.
+- `OWNER_EMAIL` is still accepted as a compatibility fallback.
+- Login requests are rejected before sending an email when the address is not
+  allowed.
+- The auth callback and private layout also enforce the allowlist server-side.
 
 Expected result:
 
@@ -289,9 +324,20 @@ Do not do yet:
 
 ## 8. Create Basic Private Layout
 
+Status:
+
+- Completed.
+
 Goal:
 
 - Add a minimal authenticated app area.
+
+Implemented result:
+
+- The existing home screen now lives under the private route group at
+  `app/(private)/page.tsx`.
+- `app/(private)/layout.tsx` requires a valid Supabase user and allowed email.
+- A minimal session header and sign-out action are available.
 
 Expected result:
 

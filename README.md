@@ -18,6 +18,15 @@ cp .env.example .env.local
 
 Then fill the Supabase values in `.env.local`.
 
+Configure the allowed login emails as a comma-separated list:
+
+```bash
+ALLOWED_EMAILS=owner@example.com
+```
+
+The owner user must already exist in Supabase Auth because the app disables
+public self-registration for magic links.
+
 Start the local Next.js app:
 
 ```bash

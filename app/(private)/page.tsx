@@ -7,10 +7,10 @@ import {
   CardTitle
 } from "@/components/ui/card";
 
-const nextSteps = [
-  "Configurar acceso con enlace mágico",
-  "Proteger el acceso con una lista de correos permitidos",
-  "Crear el primer espacio privado"
+const implementedSteps = [
+  "Acceso con enlace mágico",
+  "Lista de emails permitidos",
+  "Primera zona privada protegida"
 ];
 
 export default function Home() {
@@ -18,27 +18,28 @@ export default function Home() {
     <main className="home">
       <section className="hero" aria-labelledby="page-title">
         <p className="eyebrow">money-juggle</p>
-        <h1 id="page-title">Tu base financiera ya está lista.</h1>
+        <h1 id="page-title">Tu espacio privado ya está listo.</h1>
         <p className="intro">
-          La app Next.js ya tiene preparada la conexión base con Supabase. La
-          autenticación, los datos financieros y las conexiones bancarias
-          llegarán en pasos pequeños y revisables.
+          La app ya puede pedir enlaces mágicos, validar el callback de Supabase
+          y proteger esta pantalla con una lista de emails permitidos. Los datos
+          financieros y las conexiones bancarias llegarán en pasos pequeños y
+          revisables.
         </p>
       </section>
 
       <Card className="mt-14" aria-labelledby="next-title">
         <CardHeader>
-          <CardTitle id="next-title">Próximos pasos</CardTitle>
+          <CardTitle id="next-title">MVP disponible</CardTitle>
         </CardHeader>
         <CardContent>
           <ul className="grid gap-3">
-            {nextSteps.map((step) => (
+            {implementedSteps.map((step) => (
               <li key={step}>{step}</li>
             ))}
           </ul>
         </CardContent>
         <CardFooter>
-          <Button disabled>Próximo: acceso por email</Button>
+          <Button disabled>Próximo: modelo de datos</Button>
         </CardFooter>
       </Card>
     </main>
