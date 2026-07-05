@@ -22,7 +22,14 @@ export const runtime = "nodejs";
 export async function POST(request: NextRequest) {
   const requestUrl = new URL(request.url);
 
+  console.info("Enable Banking start requested", {
+    origin: requestUrl.origin,
+    path: requestUrl.pathname
+  });
+
   if (isDemoMode()) {
+    console.info("Enable Banking start skipped in demo mode");
+
     return redirectWithStatus(requestUrl, "linked");
   }
 
@@ -32,10 +39,20 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
+    console.warn("Enable Banking start rejected", {
+      reason: "login-required"
+    });
+
     return redirectWithStatus(requestUrl, "login-required");
   }
 
   if (!isEmailAllowed(user.email)) {
+    console.warn("Enable Banking start rejected", {
+      reason: "not-allowed",
+      user_id_suffix: getSuffix(user.id),
+      has_email: Boolean(user.email)
+    });
+
     return redirectWithStatus(requestUrl, "not-allowed");
   }
 
@@ -43,6 +60,13 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const aspspName = getRequiredFormValue(formData, "aspspName");
     const country = getRequiredFormValue(formData, "country");
+
+    console.info("Enable Banking start form parsed", {
+      user_id_suffix: getSuffix(user.id),
+      aspsp_name: aspspName,
+      country
+    });
+
     const aspsp = await findAspsp({ name: aspspName, country });
     const state = randomUUID();
     const callbackUrl = getCallbackUrl(requestUrl);
@@ -64,6 +88,15 @@ export async function POST(request: NextRequest) {
       psu_id: user.id
     });
 
+    console.info("Enable Banking authorization created", {
+      user_id_suffix: getSuffix(user.id),
+      aspsp_name: aspsp.name,
+      country: aspsp.country,
+      state_suffix: getSuffix(state),
+      authorization_id_suffix: getSuffix(authorization.authorization_id),
+      has_redirect_url: Boolean(authorization.url)
+    });
+
     await createLinkingEnableBankingConnection({
       userId: user.id,
       email: user.email ?? "",
@@ -72,6 +105,12 @@ export async function POST(request: NextRequest) {
       redirectUrl: callbackUrl,
       requestedAccess: access,
       authorization
+    });
+
+    console.info("Enable Banking linking connection persisted", {
+      user_id_suffix: getSuffix(user.id),
+      state_suffix: getSuffix(state),
+      authorization_id_suffix: getSuffix(authorization.authorization_id)
     });
 
     return NextResponse.redirect(authorization.url, { status: 303 });
@@ -166,4 +205,8 @@ function getPublicErrorMetadata(error: unknown) {
   }
 
   return {};
+}
+
+function getSuffix(value: string | null | undefined): string | null {
+  return value ? value.slice(-8) : null;
 }

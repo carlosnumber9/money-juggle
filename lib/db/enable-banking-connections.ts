@@ -59,8 +59,26 @@ export async function createLinkingEnableBankingConnection({
   authorization: EnableBankingStartAuthorizationResponse;
 }): Promise<StoredBankConnection> {
   const supabase = createSupabaseServiceRoleClient();
+
+  console.info("Persisting Enable Banking linking connection", {
+    user_id_suffix: getSuffix(userId),
+    aspsp_name: aspsp.name,
+    country: aspsp.country,
+    state_suffix: getSuffix(state),
+    authorization_id_suffix: getSuffix(authorization.authorization_id)
+  });
+
   await ensureProfile({ userId, email });
+  console.info("Enable Banking profile ensured", {
+    user_id_suffix: getSuffix(userId)
+  });
+
   const institutionId = await upsertInstitution(aspsp);
+  console.info("Enable Banking institution ensured", {
+    institution_id_suffix: getSuffix(institutionId),
+    aspsp_name: aspsp.name,
+    country: aspsp.country
+  });
 
   const { data: connection, error } = await supabase
     .from("bank_connections")
@@ -91,6 +109,14 @@ export async function createLinkingEnableBankingConnection({
     throw new Error(`Could not create bank connection: ${error.message}`);
   }
 
+  console.info("Enable Banking bank connection inserted", {
+    bank_connection_id_suffix: getSuffix(connection.id),
+    user_id_suffix: getSuffix(connection.user_id),
+    institution_id_suffix: getSuffix(connection.institution_id),
+    status: connection.status,
+    state_suffix: getSuffix(connection.provider_state)
+  });
+
   await insertConsentEvent({
     userId,
     bankConnectionId: connection.id,
@@ -106,6 +132,11 @@ export async function createLinkingEnableBankingConnection({
     }
   });
 
+  console.info("Enable Banking created consent event inserted", {
+    bank_connection_id_suffix: getSuffix(connection.id),
+    user_id_suffix: getSuffix(userId)
+  });
+
   await insertConsentEvent({
     userId,
     bankConnectionId: connection.id,
@@ -117,6 +148,11 @@ export async function createLinkingEnableBankingConnection({
     }
   });
 
+  console.info("Enable Banking redirected consent event inserted", {
+    bank_connection_id_suffix: getSuffix(connection.id),
+    user_id_suffix: getSuffix(userId)
+  });
+
   return connection;
 }
 
@@ -126,6 +162,11 @@ export async function getLinkingConnectionByState({
   state: string;
 }): Promise<StoredBankConnection | null> {
   const supabase = createSupabaseServiceRoleClient();
+
+  console.info("Loading Enable Banking linking connection by state", {
+    state_suffix: getSuffix(state)
+  });
+
   const { data, error } = await supabase
     .from("bank_connections")
     .select("id,user_id,institution_id,status,provider_state")
@@ -137,6 +178,14 @@ export async function getLinkingConnectionByState({
   if (error) {
     throw new Error(`Could not load bank connection: ${error.message}`);
   }
+
+  console.info("Enable Banking linking connection lookup completed", {
+    state_suffix: getSuffix(state),
+    found: Boolean(data),
+    bank_connection_id_suffix: getSuffix(data?.id),
+    user_id_suffix: getSuffix(data?.user_id),
+    status: data?.status ?? null
+  });
 
   return data;
 }
@@ -155,6 +204,13 @@ export async function failEnableBankingConnection({
   metadata?: Record<string, unknown>;
 }) {
   const supabase = createSupabaseServiceRoleClient();
+
+  console.info("Marking Enable Banking connection as failed", {
+    bank_connection_id_suffix: getSuffix(bankConnectionId),
+    user_id_suffix: getSuffix(userId),
+    provider_status: providerStatus
+  });
+
   const { error } = await supabase
     .from("bank_connections")
     .update({
@@ -192,6 +248,13 @@ export async function completeEnableBankingConnection({
   const supabase = createSupabaseServiceRoleClient();
   const consentExpiresAt = session.access.valid_until;
 
+  console.info("Completing Enable Banking connection", {
+    bank_connection_id_suffix: getSuffix(bankConnectionId),
+    user_id_suffix: getSuffix(userId),
+    session_id_suffix: getSuffix(session.session_id),
+    account_count: session.accounts.length
+  });
+
   const { error: connectionError } = await supabase
     .from("bank_connections")
     .update({
@@ -214,6 +277,12 @@ export async function completeEnableBankingConnection({
     );
   }
 
+  console.info("Enable Banking connection marked linked", {
+    bank_connection_id_suffix: getSuffix(bankConnectionId),
+    user_id_suffix: getSuffix(userId),
+    account_count: session.accounts.length
+  });
+
   if (session.accounts.length > 0) {
     const { error: accountsError } = await supabase.from("accounts").upsert(
       session.accounts.map((account) =>
@@ -229,6 +298,12 @@ export async function completeEnableBankingConnection({
         `Could not store connected accounts: ${accountsError.message}`
       );
     }
+
+    console.info("Enable Banking accounts upserted", {
+      bank_connection_id_suffix: getSuffix(bankConnectionId),
+      user_id_suffix: getSuffix(userId),
+      account_count: session.accounts.length
+    });
   }
 
   await insertConsentEvent({
@@ -249,9 +324,15 @@ export async function completeEnableBankingConnection({
       userId,
       bankConnectionId
     });
+
+    console.info("Initial Enable Banking balance sync completed", {
+      bank_connection_id_suffix: getSuffix(bankConnectionId),
+      user_id_suffix: getSuffix(userId)
+    });
   } catch (error) {
     console.error("Initial Enable Banking balance sync failed", {
-      bankConnectionId,
+      bank_connection_id_suffix: getSuffix(bankConnectionId),
+      user_id_suffix: getSuffix(userId),
       message: error instanceof Error ? error.message : "Unknown error."
     });
   }
@@ -514,6 +595,10 @@ function getCurrency(value: string | undefined): string {
   }
 
   return "EUR";
+}
+
+function getSuffix(value: string | null | undefined): string | null {
+  return value ? value.slice(-8) : null;
 }
 
 function fallbackName(account: EnableBankingAccountResource): string {

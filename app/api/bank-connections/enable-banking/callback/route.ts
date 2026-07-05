@@ -18,7 +18,14 @@ export const runtime = "nodejs";
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
 
+  console.info("Enable Banking callback received", {
+    origin: requestUrl.origin,
+    path: requestUrl.pathname
+  });
+
   if (isDemoMode()) {
+    console.info("Enable Banking callback skipped in demo mode");
+
     return redirectWithStatus(requestUrl, "linked");
   }
 
@@ -27,6 +34,14 @@ export async function GET(request: NextRequest) {
   const providerError = requestUrl.searchParams.get("error");
   const providerErrorDescription =
     requestUrl.searchParams.get("error_description");
+
+  console.info("Enable Banking callback parameters checked", {
+    has_state: Boolean(state),
+    state_suffix: getSuffix(state),
+    has_code: Boolean(code),
+    has_provider_error: Boolean(providerError),
+    provider_error: providerError
+  });
 
   if (!state) {
     return redirectWithStatus(requestUrl, "missing-state");
@@ -38,8 +53,19 @@ export async function GET(request: NextRequest) {
     });
 
     if (!connection) {
+      console.warn("Enable Banking callback state not found", {
+        state_suffix: getSuffix(state)
+      });
+
       return redirectWithStatus(requestUrl, "invalid-state");
     }
+
+    console.info("Enable Banking callback connection found", {
+      bank_connection_id_suffix: getSuffix(connection.id),
+      user_id_suffix: getSuffix(connection.user_id),
+      state_suffix: getSuffix(state),
+      status: connection.status
+    });
 
     if (providerError) {
       await failEnableBankingConnection({
@@ -51,6 +77,12 @@ export async function GET(request: NextRequest) {
           error: providerError,
           error_description: providerErrorDescription
         }
+      });
+
+      console.warn("Enable Banking callback provider error stored", {
+        bank_connection_id_suffix: getSuffix(connection.id),
+        user_id_suffix: getSuffix(connection.user_id),
+        provider_error: providerError
       });
 
       return redirectWithStatus(requestUrl, "provider-cancelled");
@@ -65,15 +97,34 @@ export async function GET(request: NextRequest) {
           "Enable Banking callback did not include an authorization code."
       });
 
+      console.warn("Enable Banking callback missing code stored", {
+        bank_connection_id_suffix: getSuffix(connection.id),
+        user_id_suffix: getSuffix(connection.user_id)
+      });
+
       return redirectWithStatus(requestUrl, "missing-code");
     }
 
     try {
       const session = await authorizeEnableBankingSession(code);
+
+      console.info("Enable Banking session authorized", {
+        bank_connection_id_suffix: getSuffix(connection.id),
+        user_id_suffix: getSuffix(connection.user_id),
+        session_id_suffix: getSuffix(session.session_id),
+        account_count: session.accounts.length
+      });
+
       await completeEnableBankingConnection({
         userId: connection.user_id,
         bankConnectionId: connection.id,
         session
+      });
+
+      console.info("Enable Banking callback completed", {
+        bank_connection_id_suffix: getSuffix(connection.id),
+        user_id_suffix: getSuffix(connection.user_id),
+        account_count: session.accounts.length
       });
     } catch (error) {
       await failEnableBankingConnection({
@@ -136,4 +187,8 @@ function getPublicErrorMetadata(error: unknown) {
   }
 
   return {};
+}
+
+function getSuffix(value: string | null | undefined): string | null {
+  return value ? value.slice(-8) : null;
 }
