@@ -13,7 +13,7 @@ Important assets:
 - Consent state.
 - Manual asset data.
 - Supabase sessions.
-- Supabase service role key.
+- Supabase secret keys.
 - Enable Banking signing keys and provider credentials.
 - Enable Banking access or authorization tokens if used.
 
@@ -23,7 +23,7 @@ Relevant threats:
 - Unauthorized access to financial records.
 - Leaked environment variables.
 - Accidental exposure of server secrets to the browser.
-- Overbroad service role usage.
+- Overbroad secret key usage.
 - Broken RLS policies.
 - Compromised email account.
 - Browser or mobile device compromise.
@@ -61,7 +61,8 @@ Conceptual policy shape:
 - `update`: authenticated user can update rows they own.
 - `delete`: usually restricted or avoided for imported financial history unless a feature requires it.
 
-The service role bypasses RLS and should be treated as highly sensitive.
+Supabase secret keys authorize the built-in Postgres `service_role`, bypass
+RLS, and should be treated as highly sensitive.
 
 ## Secrets Management
 
@@ -71,7 +72,7 @@ Never expose:
 
 - `ENABLE_BANKING_PRIVATE_KEY`
 - Enable Banking access or authorization tokens
-- Supabase service role key
+- Supabase secret keys
 - Internal sync secrets
 - Webhook or cron secrets
 
@@ -83,7 +84,7 @@ High sensitivity:
 
 - Credentials and API secrets.
 - Access tokens and refresh tokens.
-- Supabase service role key.
+- Supabase secret keys.
 
 Financial sensitivity:
 
@@ -108,7 +109,7 @@ Logs should avoid secrets and should minimize financial detail.
 The browser must never receive:
 
 - Enable Banking private key or provider credentials.
-- Supabase service role key.
+- Supabase secret keys.
 - Enable Banking access or authorization tokens.
 - Raw server-side error payloads containing secrets.
 - Credentials for any bank.
@@ -142,7 +143,7 @@ Future mitigations:
 
 ## Leaked Environment Variable Risk
 
-If Enable Banking signing keys, provider tokens, or Supabase service role secrets leak, an attacker may access financial data or external APIs.
+If Enable Banking signing keys, provider tokens, or Supabase secret keys leak, an attacker may access financial data or external APIs.
 
 Mitigations:
 
@@ -152,21 +153,22 @@ Mitigations:
 - Use least-privilege operational patterns.
 - Separate development and production credentials.
 
-## Service Role Risk
+## Secret Key Risk
 
-The Supabase service role bypasses RLS. It should only be used in server-only code when there is a clear reason.
+Supabase secret keys authorize the built-in Postgres `service_role` and bypass
+RLS. They should only be used in server-only code when there is a clear reason.
 
-The Enable Banking connection flow uses the service role only for controlled
+The Enable Banking connection flow uses a secret-key-backed client only for controlled
 provider writes after validating the authenticated user, the email allowlist,
 and the provider callback `state`. Ordinary user-facing reads should continue
 to use the RLS-aware Supabase server client.
 
 Avoid:
 
-- Using service role from client code.
-- Using service role for ordinary user reads.
-- Passing service role powered results without checking ownership.
-- Making service role the default database client.
+- Using secret keys from client code.
+- Using secret keys for ordinary user reads.
+- Passing secret-key-powered results without checking ownership.
+- Making secret-key-backed clients the default database client.
 
 ## Transaction Sync And Categorization Risks
 

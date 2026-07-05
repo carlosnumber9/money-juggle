@@ -472,8 +472,9 @@ Context:
 
 Decision:
 
-- Add a server-only Supabase service role helper.
-- Use the service role only in server-only provider flows where RLS
+- Add a server-only Supabase elevated-access helper backed by
+  `SUPABASE_SECRET_KEYS`.
+- Use elevated Supabase access only in server-only provider flows where RLS
   intentionally blocks browser writes.
 - Validate the authenticated user, email allowlist, and provider callback
   `state` before creating or updating user-owned financial records.
@@ -483,8 +484,8 @@ Decision:
 Consequences:
 
 - Browser clients cannot insert or mutate provider-owned financial rows.
-- Service role usage is easier to audit because it is isolated in server-only
-  modules.
+- Elevated Supabase usage is easier to audit because it is isolated in
+  server-only modules.
 - Future sync jobs may use the same pattern, but each use must preserve
   explicit ownership checks.
 
@@ -589,8 +590,9 @@ Decision:
   `POST /api/sync/balances` request when the private home screen loads and the
   latest stored balance is missing or older than a short freshness window.
 - Let the internal sync route read the authenticated owner's provider-managed
-  connection rows with the service role, scoped by `user_id`, because the route
-  is about to perform controlled provider writes that RLS blocks.
+  connection rows with the secret-key-backed client, scoped by `user_id`,
+  because the route is about to perform controlled provider writes that RLS
+  blocks.
 - Keep the refresh control out of the UI for now.
 - Store each provider response as a new balance snapshot instead of overwriting
   previous snapshots.

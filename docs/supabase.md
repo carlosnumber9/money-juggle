@@ -65,7 +65,7 @@ Important goals:
 
 - Read sessions on the server.
 - Protect private routes.
-- Avoid exposing service role keys.
+- Avoid exposing secret keys or other elevated Supabase credentials.
 - Keep auth callback behavior explicit.
 - Make redirects predictable.
 
@@ -96,22 +96,25 @@ For reference tables:
 - Public read may be acceptable if rows contain no private data.
 - Writes should usually be restricted to server-side operations or admin workflows.
 
-## Anon Key vs Service Role Key
+## Publishable Key vs Secret Key
 
-The anon key:
+The publishable key:
 
 - May be used in the browser.
 - Must rely on RLS for safety.
 - Should not grant broad data access by itself.
 
-The service role key:
+The secret key:
 
 - Bypasses RLS.
 - Must never reach the browser.
 - Must only be used in server-only code.
 - Should not be the default client for normal user reads.
 
-## When Service Role May Be Used
+Supabase secret keys authorize the built-in Postgres `service_role`, so they
+must be treated with the same sensitivity as the legacy service role key.
+
+## When Secret Keys May Be Used
 
 Possible valid cases:
 
@@ -121,9 +124,9 @@ Possible valid cases:
 
 Every use should be intentional and easy to audit.
 
-## When Service Role Must Not Be Used
+## When Secret Keys Must Not Be Used
 
-Do not use service role:
+Do not use secret keys:
 
 - In browser code.
 - In shared modules that may be imported by client components.
@@ -140,7 +143,7 @@ Current required variables:
 
 Future server-only variables:
 
-- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_SECRET_KEYS`
 - `ENABLE_BANKING_APPLICATION_ID`
 - `ENABLE_BANKING_PRIVATE_KEY`
 - Enable Banking provider tokens or authorization secrets if the implementation requires them.
@@ -154,6 +157,18 @@ Supabase now labels browser-safe API keys as publishable keys. This project uses
 `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` instead of the older anon key variable
 name.
 
+Supabase now labels elevated backend API keys as secret keys. This project uses
+`SUPABASE_SECRET_KEYS` instead of the older `SUPABASE_SERVICE_ROLE_KEY`
+variable name. The value is a JSON object keyed by Supabase API key name, for
+example:
+
+```text
+SUPABASE_SECRET_KEYS={"default":"sb_secret_..."}
+```
+
+Use the `default` secret key for the current server-side helper unless a future
+backend component needs its own separately rotatable named key.
+
 ## Client Helpers
 
 The project provides two small Supabase helpers:
@@ -163,10 +178,11 @@ The project provides two small Supabase helpers:
 - `lib/supabase/server.ts` creates a server client for future Server
   Components, Route Handlers, and Server Actions.
 
-Both helpers use the publishable key. They do not use the service role key.
+Both helpers use the publishable key. They do not use secret keys.
 
-Do not add service role clients until a server-only feature has a documented
-need to bypass RLS.
+The server-only elevated helper reads the `default` key from
+`SUPABASE_SECRET_KEYS`. Do not add elevated clients until a server-only feature
+has a documented need to bypass RLS.
 
 ## Migration Workflow
 
@@ -215,7 +231,7 @@ Production should include:
 - RLS enabled before real financial data is stored.
 - Backups.
 - Secret rotation process.
-- Minimal service role usage.
+- Minimal secret key usage.
 - Monitoring for sync failures.
 - Clear handling for consent expiration.
 

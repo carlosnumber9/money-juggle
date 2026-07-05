@@ -666,8 +666,8 @@ Implemented result:
 - Server-only persistence creates the user profile if needed, upserts the
   selected institution, stores a `linking` bank connection, and records
   `created` / `redirected` consent events.
-- `SUPABASE_SERVICE_ROLE_KEY` is now required for controlled server-side
-  provider writes that RLS intentionally blocks for browser clients.
+- `SUPABASE_SECRET_KEYS` is now required for controlled server-side provider
+  writes that RLS intentionally blocks for browser clients.
 
 Goal:
 
