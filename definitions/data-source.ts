@@ -1,5 +1,3 @@
-import "server-only";
-
 export type AppUser = {
   id: string;
   email: string | null;
@@ -49,3 +47,5 @@ export type BankingDataSource = {
   listAvailableInstitutions(): Promise<InstitutionAvailability[]>;
   listBankConnections(userId: string): Promise<BankConnectionSummary[]>;
 };
+
+export const INITIAL_BANK_NAMES = ["CaixaBank", "ING"] as const;

@@ -1,71 +1,16 @@
 import "server-only";
 
+import { BANK_CONNECTION_STATUS_MESSAGES, BANKS } from "@/definitions";
 import type {
   BankingDataSource,
   BankConnectionSummary,
-  InstitutionAvailability
-} from "@/lib/data/banking-data-source";
-import { getBankingDataSource } from "@/lib/data/get-banking-data-source";
-import type {
   BankInstitutionCard,
+  InstitutionAvailability,
   PrivateHomeView,
-  ProviderStatusView
-} from "@/lib/views/private-home-types";
-
-const BANKS = [
-  {
-    slug: "caixabank",
-    name: "CaixaBank",
-    logoPath: "/assets/institutions/caixabank.svg",
-    provider: "enable_banking"
-  },
-  {
-    slug: "ing",
-    name: "ING",
-    logoPath: "/assets/institutions/ing.svg",
-    provider: "enable_banking"
-  },
-  {
-    slug: "trade-republic",
-    name: "Trade Republic",
-    logoPath: "/assets/institutions/trade-republic.svg",
-    provider: "manual"
-  }
-] as const;
-
-const STATUS_MESSAGES: Record<string, string> = {
-  linked: "Banco conectado. Ya puedo ver las cuentas autorizadas.",
-  "provider-cancelled": "La conexión se canceló antes de autorizar el acceso.",
-  "provider-error": "Enable Banking devolvió un error durante la conexión.",
-  "redirect-uri-not-allowed":
-    "La URL de retorno no está autorizada en Enable Banking.",
-  "no-accounts-added":
-    "No hay cuentas permitidas para esta aplicación de Enable Banking.",
-  "wrong-aspsp": "Enable Banking no aceptó el banco seleccionado.",
-  "provider-access-denied":
-    "La aplicación no tiene acceso al servicio solicitado en Enable Banking.",
-  "wrong-request-parameters":
-    "Enable Banking no aceptó los parámetros de la solicitud.",
-  "authorization-code-error":
-    "El código de autorización no es válido o ha caducado.",
-  "psu-header-error":
-    "Enable Banking requiere datos adicionales del navegador para esta operación.",
-  "aspsp-error": "El banco devolvió un error durante la autorización.",
-  "aspsp-rate-limited": "El banco ha limitado temporalmente las solicitudes.",
-  "aspsp-timeout": "El banco tardó demasiado en responder.",
-  "provider-authentication-error":
-    "Enable Banking rechazó la autenticación de la aplicación.",
-  "server-config-error": "Falta configuración privada en el servidor.",
-  "connection-start-error": "No se pudo iniciar la conexión bancaria.",
-  "callback-error": "No se pudo completar la conexión bancaria.",
-  "invalid-state":
-    "La respuesta del banco no coincide con una conexión iniciada.",
-  "missing-code":
-    "La respuesta del banco no incluyó el código de autorización.",
-  "missing-state": "La respuesta del banco no incluyó el estado de seguridad."
-};
-
-type Result<T> = { ok: true; value: T } | { ok: false; reason: string };
+  ProviderStatusView,
+  Result
+} from "@/definitions";
+import { getBankingDataSource } from "@/lib/data/get-banking-data-source";
 
 export async function getPrivateHomeView(
   status?: string
@@ -288,7 +233,11 @@ function applyStatusMessage(
   cards: BankInstitutionCard[],
   status: string | undefined
 ): BankInstitutionCard[] {
-  if (!status || status === "linked" || !STATUS_MESSAGES[status]) {
+  if (
+    !status ||
+    status === "linked" ||
+    !BANK_CONNECTION_STATUS_MESSAGES[status]
+  ) {
     return cards;
   }
 
@@ -300,7 +249,7 @@ function applyStatusMessage(
     return {
       ...card,
       state: "error",
-      tooltip: STATUS_MESSAGES[status]
+      tooltip: BANK_CONNECTION_STATUS_MESSAGES[status]
     };
   });
 }

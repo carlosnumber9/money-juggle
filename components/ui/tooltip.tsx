@@ -1,16 +1,9 @@
 "use client";
 
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip";
-import * as React from "react";
 
+import type { TooltipProps } from "@/definitions";
 import { cn } from "@/lib/utils";
-
-type TooltipProps = {
-  children: React.ReactNode;
-  label: React.ReactNode;
-  triggerLabel: string;
-  triggerClassName?: string;
-};
 
 function Tooltip({
   children,

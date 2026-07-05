@@ -1,13 +1,10 @@
 import { redirect } from "next/navigation";
 
+import type { PrivateLayoutProps } from "@/definitions";
 import { Button } from "@/components/ui/button";
 import { getPrivateLayoutView } from "@/lib/views/private-layout-view";
 
-export default async function PrivateLayout({
-  children
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default async function PrivateLayout({ children }: PrivateLayoutProps) {
   const view = await getPrivateLayoutView();
 
   if (view.kind === "unauthenticated") {

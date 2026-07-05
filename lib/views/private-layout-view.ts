@@ -1,22 +1,8 @@
 import "server-only";
 
+import type { PrivateLayoutView } from "@/definitions";
 import { getBankingDataSource } from "@/lib/data/get-banking-data-source";
 import { isDemoMode } from "@/lib/demo/mode";
-
-export type PrivateLayoutView =
-  | {
-      kind: "unauthenticated";
-    }
-  | {
-      kind: "forbidden";
-    }
-  | {
-      kind: "authenticated";
-      isDemo: boolean;
-      user: {
-        email: string | null;
-      };
-    };
 
 export async function getPrivateLayoutView(): Promise<PrivateLayoutView> {
   const dataSource = getBankingDataSource();

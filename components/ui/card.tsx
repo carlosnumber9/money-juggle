@@ -1,12 +1,9 @@
 import * as React from "react";
 
+import type { CardProps } from "@/definitions";
 import { cn } from "@/lib/utils";
 
-function Card({
-  className,
-  size = "default",
-  ...props
-}: React.ComponentProps<"div"> & { size?: "default" | "sm" }) {
+function Card({ className, size = "default", ...props }: CardProps) {
   return (
     <div
       data-slot="card"

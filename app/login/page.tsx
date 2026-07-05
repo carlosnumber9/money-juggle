@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import type { LoginPageProps } from "@/definitions";
 import { requestMagicLink } from "@/lib/auth/request-magic-link";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,13 +13,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { getLoginView } from "@/lib/views/login-view";
-
-type LoginPageProps = {
-  searchParams: Promise<{
-    email?: string;
-    status?: string;
-  }>;
-};
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { email, status } = await searchParams;

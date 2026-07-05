@@ -1,14 +1,10 @@
 import "server-only";
 
 import { readFileSync } from "node:fs";
-
-type EnableBankingConfig = {
-  apiBaseUrl: string;
-  applicationId: string;
-  privateKey: string;
-};
-
-const DEFAULT_API_BASE_URL = "https://api.enablebanking.com";
+import {
+  DEFAULT_ENABLE_BANKING_API_BASE_URL,
+  type EnableBankingConfig
+} from "@/definitions";
 
 export function getEnableBankingConfig(): EnableBankingConfig {
   const applicationId = process.env.ENABLE_BANKING_APPLICATION_ID;
@@ -25,7 +21,9 @@ export function getEnableBankingConfig(): EnableBankingConfig {
   }
 
   return {
-    apiBaseUrl: process.env.ENABLE_BANKING_API_BASE_URL ?? DEFAULT_API_BASE_URL,
+    apiBaseUrl:
+      process.env.ENABLE_BANKING_API_BASE_URL ??
+      DEFAULT_ENABLE_BANKING_API_BASE_URL,
     applicationId,
     privateKey
   };

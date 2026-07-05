@@ -1,15 +1,12 @@
 import "server-only";
 
 import { createSign } from "node:crypto";
-
-type EnableBankingJwtInput = {
-  applicationId: string;
-  privateKey: string;
-};
-
-const ENABLE_BANKING_ISSUER = "enablebanking.com";
-const ENABLE_BANKING_AUDIENCE = "api.enablebanking.com";
-const TOKEN_TTL_SECONDS = 60 * 60;
+import {
+  ENABLE_BANKING_AUDIENCE,
+  ENABLE_BANKING_ISSUER,
+  ENABLE_BANKING_TOKEN_TTL_SECONDS,
+  type EnableBankingJwtInput
+} from "@/definitions";
 
 export function createEnableBankingJwt({
   applicationId,
@@ -25,7 +22,7 @@ export function createEnableBankingJwt({
     iss: ENABLE_BANKING_ISSUER,
     aud: ENABLE_BANKING_AUDIENCE,
     iat: issuedAt,
-    exp: issuedAt + TOKEN_TTL_SECONDS
+    exp: issuedAt + ENABLE_BANKING_TOKEN_TTL_SECONDS
   };
 
   const unsignedToken = `${base64UrlJson(header)}.${base64UrlJson(payload)}`;

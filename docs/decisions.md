@@ -530,3 +530,39 @@ Possible future revisit trigger:
 
 - If the app introduces additional providers or needs a richer domain service
   layer above the data source adapters.
+
+## ADR-019: Keep Shared Definitions Behind A Root Definitions Entry Point
+
+Status:
+
+- Accepted.
+
+Context:
+
+- Types, view contracts, demo records, provider constants, and status-message
+  maps were starting to live across several feature files.
+- The project is still small, and a single definitions entry point makes
+  imports easy to audit while area-specific files keep definitions navigable.
+
+Decision:
+
+- Keep shared TypeScript types, interfaces, domain constants, demo data, and
+  status maps under the root `definitions/` directory.
+- Group definitions by functional area and re-export them from
+  `definitions/index.ts`.
+- Import definitions from `@/definitions` so feature modules do not depend on
+  the specific definitions file layout.
+- Keep executable behavior, framework-required exports, server-only clients,
+  and UI variant builders in their owning modules.
+
+Consequences:
+
+- Feature modules stay focused on behavior and composition.
+- Shared contracts are easier to find and review.
+- Definitions files must not import server-only modules or expose sensitive
+  credentials.
+
+Possible future revisit trigger:
+
+- If a functional area becomes large enough to need its own documented public
+  contract outside the shared definitions surface.

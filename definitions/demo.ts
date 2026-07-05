@@ -1,11 +1,9 @@
-import "server-only";
-
 import type {
   AppUser,
   BankConnectionSummary,
   InstitutionAvailability,
   ProviderApplication
-} from "@/lib/data/banking-data-source";
+} from "./data-source";
 
 export type DemoBalance = {
   id: string;

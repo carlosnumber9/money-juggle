@@ -5,39 +5,14 @@ import type {
   EnableBankingAccess,
   EnableBankingAspsp,
   EnableBankingAuthorizeSessionResponse,
-  EnableBankingStartAuthorizationResponse
-} from "@/lib/enable-banking/client";
+  EnableBankingStartAuthorizationResponse,
+  StoredBankConnection,
+  UserBankConnectionSummary,
+  ConsentEventType
+} from "@/definitions";
+import { ENABLE_BANKING_PROVIDER } from "@/definitions";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
-
-const ENABLE_BANKING_PROVIDER = "enable_banking";
-
-export type StoredBankConnection = {
-  id: string;
-  user_id: string;
-  institution_id: string;
-  status: string;
-  provider_state: string | null;
-};
-
-export type UserBankConnectionSummary = {
-  id: string;
-  status: string;
-  consent_expires_at: string | null;
-  institution: {
-    name: string;
-    country: string | null;
-    logo_url: string | null;
-  } | null;
-  accounts: Array<{
-    id: string;
-    name: string;
-    currency: string;
-    iban_last4: string | null;
-    account_type: string | null;
-    status: string;
-  }>;
-};
 
 export function getEnableBankingInstitutionProviderId({
   country,
@@ -360,7 +335,7 @@ async function insertConsentEvent({
 }: {
   userId: string;
   bankConnectionId: string;
-  eventType: "created" | "redirected" | "linked" | "failed";
+  eventType: ConsentEventType;
   providerStatus: string;
   message: string;
   metadata?: Record<string, unknown>;

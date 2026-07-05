@@ -1,5 +1,12 @@
 import "server-only";
 
+import {
+  INITIAL_BANK_NAMES,
+  type AppUser,
+  type BankingDataSource,
+  type InstitutionAvailability,
+  type ProviderApplication
+} from "@/definitions";
 import { isEmailAllowed } from "@/lib/auth/allowlist";
 import { listUserEnableBankingConnections } from "@/lib/db/enable-banking-connections";
 import {
@@ -7,14 +14,6 @@ import {
   getEnableBankingAspsps
 } from "@/lib/enable-banking/client";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type {
-  AppUser,
-  BankingDataSource,
-  InstitutionAvailability,
-  ProviderApplication
-} from "@/lib/data/banking-data-source";
-
-const INITIAL_BANK_NAMES = ["CaixaBank", "ING"];
 
 export const realBankingDataSource: BankingDataSource = {
   mode: "real",

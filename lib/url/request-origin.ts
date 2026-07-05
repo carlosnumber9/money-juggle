@@ -1,6 +1,4 @@
-type RequestHeaders = Pick<Headers, "get">;
-
-const LOCALHOST_ORIGIN = "http://localhost:3000";
+import { LOCALHOST_ORIGIN, type RequestHeaders } from "@/definitions";
 
 export function getRequestOrigin(headerStore: RequestHeaders): string {
   const forwardedHost = getFirstHeaderValue(headerStore, "x-forwarded-host");

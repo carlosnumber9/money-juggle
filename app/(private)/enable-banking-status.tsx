@@ -2,15 +2,11 @@
 
 import { CircleAlertIcon, WifiIcon } from "lucide-react";
 
+import type { EnableBankingStatusProps } from "@/definitions";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip } from "@/components/ui/tooltip";
-import type { ProviderStatusView } from "@/lib/views/private-home-types";
 
-export function EnableBankingStatus({
-  status
-}: {
-  status: ProviderStatusView | { status: "loading" };
-}) {
+export function EnableBankingStatus({ status }: EnableBankingStatusProps) {
   if (status.status === "loading") {
     return (
       <Tooltip

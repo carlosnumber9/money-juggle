@@ -1,12 +1,12 @@
 import "server-only";
 
 import {
+  type BankingDataSource,
   DEMO_BANK_CONNECTIONS,
   DEMO_INSTITUTIONS,
   DEMO_PROVIDER_APPLICATION,
   DEMO_USER
-} from "@/lib/demo/financial-data";
-import type { BankingDataSource } from "@/lib/data/banking-data-source";
+} from "@/definitions";
 
 export const demoBankingDataSource: BankingDataSource = {
   mode: "demo",

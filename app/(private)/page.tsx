@@ -1,16 +1,11 @@
 import { redirect } from "next/navigation";
 
+import type { HomeProps } from "@/definitions";
 import { Card, CardContent } from "@/components/ui/card";
 
 import { BankConnectionsPanel } from "@/app/(private)/bank-connections-panel";
 import { EnableBankingStatus } from "@/app/(private)/enable-banking-status";
 import { getPrivateHomeView } from "@/lib/views/private-home-view";
-
-type HomeProps = {
-  searchParams?: Promise<{
-    bank_connection_status?: string;
-  }>;
-};
 
 export default async function Home({ searchParams }: HomeProps) {
   const params = await searchParams;

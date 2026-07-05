@@ -1,7 +1,4 @@
-type SupabasePublicConfig = {
-  url: string;
-  publishableKey: string;
-};
+import type { SupabasePublicConfig } from "@/definitions";
 
 export function getSupabaseConfig(): SupabasePublicConfig {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

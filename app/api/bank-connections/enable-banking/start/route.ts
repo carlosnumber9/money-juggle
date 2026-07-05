@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { type NextRequest, NextResponse } from "next/server";
 
+import { DEFAULT_CONSENT_SECONDS } from "@/definitions";
 import { isEmailAllowed } from "@/lib/auth/allowlist";
 import { isDemoMode } from "@/lib/demo/mode";
 import {
@@ -17,8 +18,6 @@ import {
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
-
-const DEFAULT_CONSENT_SECONDS = 90 * 24 * 60 * 60;
 
 export async function POST(request: NextRequest) {
   const requestUrl = new URL(request.url);

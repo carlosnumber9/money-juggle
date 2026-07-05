@@ -6,11 +6,10 @@ import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip } from "@/components/ui/tooltip";
-import type { BankInstitutionCard } from "@/lib/views/private-home-types";
-
-type BankInstitutionCardsProps = {
-  cards: BankInstitutionCard[];
-};
+import type {
+  BankInstitutionCard,
+  BankInstitutionCardsProps
+} from "@/definitions";
 
 export function BankInstitutionCards({ cards }: BankInstitutionCardsProps) {
   return (
