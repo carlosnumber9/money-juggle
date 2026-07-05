@@ -588,6 +588,9 @@ Decision:
 - Also refresh linked connections through an internal
   `POST /api/sync/balances` request when the private home screen loads and the
   latest stored balance is missing or older than a short freshness window.
+- Let the internal sync route read the authenticated owner's provider-managed
+  connection rows with the service role, scoped by `user_id`, because the route
+  is about to perform controlled provider writes that RLS blocks.
 - Keep the refresh control out of the UI for now.
 - Store each provider response as a new balance snapshot instead of overwriting
   previous snapshots.

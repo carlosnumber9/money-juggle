@@ -260,9 +260,12 @@ export async function completeEnableBankingConnection({
 }
 
 export async function listUserEnableBankingConnections(
-  userId: string
+  userId: string,
+  options: { useServiceRole?: boolean } = {}
 ): Promise<UserBankConnectionSummary[]> {
-  const supabase = await createSupabaseServerClient();
+  const supabase = options.useServiceRole
+    ? createSupabaseServiceRoleClient()
+    : await createSupabaseServerClient();
   const { data: connections, error } = await supabase
     .from("bank_connections")
     .select(
@@ -297,7 +300,8 @@ export async function listUserEnableBankingConnections(
     userId,
     (connections ?? []).flatMap((connection) =>
       (connection.accounts ?? []).map((account) => account.id)
-    )
+    ),
+    options
   );
 
   return (connections ?? []).map((connection) => ({
@@ -316,13 +320,16 @@ export async function listUserEnableBankingConnections(
 
 async function listLatestBalancesByAccountId(
   userId: string,
-  accountIds: string[]
+  accountIds: string[],
+  options: { useServiceRole?: boolean } = {}
 ): Promise<Map<string, AccountBalanceSummary>> {
   if (accountIds.length === 0) {
     return new Map();
   }
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = options.useServiceRole
+    ? createSupabaseServiceRoleClient()
+    : await createSupabaseServerClient();
   const { data: balances, error } = await supabase
     .from("balances")
     .select(

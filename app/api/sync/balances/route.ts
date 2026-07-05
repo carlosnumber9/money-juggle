@@ -27,13 +27,16 @@ export async function POST() {
   }
 
   try {
-    const connections = await listUserEnableBankingConnections(user.id);
+    const connections = await listUserEnableBankingConnections(user.id, {
+      useServiceRole: true
+    });
     const synced = await syncStaleEnableBankingBalances({
       userId: user.id,
       connections
     });
 
     console.info("Balance auto sync completed", {
+      user_id_suffix: user.id.slice(-8),
       connection_count: connections.length,
       synced
     });
