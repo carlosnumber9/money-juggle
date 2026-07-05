@@ -94,7 +94,8 @@ export async function POST(request: NextRequest) {
       country: aspsp.country,
       state_suffix: getSuffix(state),
       authorization_id_suffix: getSuffix(authorization.authorization_id),
-      has_redirect_url: Boolean(authorization.url)
+      has_redirect_url: Boolean(authorization.url),
+      has_authorization_access: Boolean(authorization.access)
     });
 
     await createLinkingEnableBankingConnection({

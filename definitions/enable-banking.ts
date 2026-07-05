@@ -125,7 +125,7 @@ export type EnableBankingStartAuthorizationResponse = {
   url: string;
   authorization_id: string;
   psu_id_hash: string;
-  access: EnableBankingAccess;
+  access?: EnableBankingAccess;
 };
 
 export type EnableBankingAuthorizeSessionResponse = {

@@ -59,13 +59,17 @@ export async function createLinkingEnableBankingConnection({
   authorization: EnableBankingStartAuthorizationResponse;
 }): Promise<StoredBankConnection> {
   const supabase = createSupabaseServiceRoleClient();
+  const consentExpiresAt =
+    authorization.access?.valid_until ?? requestedAccess.valid_until;
 
   console.info("Persisting Enable Banking linking connection", {
     user_id_suffix: getSuffix(userId),
     aspsp_name: aspsp.name,
     country: aspsp.country,
     state_suffix: getSuffix(state),
-    authorization_id_suffix: getSuffix(authorization.authorization_id)
+    authorization_id_suffix: getSuffix(authorization.authorization_id),
+    has_authorization_access: Boolean(authorization.access),
+    consent_expires_at: consentExpiresAt
   });
 
   await ensureProfile({ userId, email });
@@ -90,7 +94,7 @@ export async function createLinkingEnableBankingConnection({
       provider_state: state,
       provider_psu_id_hash: authorization.psu_id_hash,
       status: "linking",
-      consent_expires_at: authorization.access.valid_until,
+      consent_expires_at: consentExpiresAt,
       redirect_url: authorization.url,
       provider_metadata: {
         aspsp: {
