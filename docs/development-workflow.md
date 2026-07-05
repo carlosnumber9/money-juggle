@@ -30,6 +30,24 @@ Prefer small slices such as:
 
 Avoid combining several architectural steps into one large change.
 
+## Local Demo Mode
+
+Local development can use demo mode when external services would slow down UI
+work:
+
+```text
+MONEY_JUGGLE_DEMO_MODE=true
+```
+
+Demo mode must stay local-only. It bypasses Supabase Auth, Supabase Postgres,
+and Enable Banking by using the same app data source contract as the real
+integration, but backed by mock data under `lib/demo/`.
+
+UI components and route TSX files should not decide whether data is real or
+demo. They should receive prepared view props from `lib/views/`. Data access
+should live behind interfaces in `lib/data/`, with one adapter for real services
+and another adapter for demo data.
+
 ## Explain Before Implementing
 
 Important changes should be explained before implementation, especially when they affect:

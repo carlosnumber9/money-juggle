@@ -1,21 +1,13 @@
 import { NextResponse } from "next/server";
 
-import {
-  EnableBankingRequestError,
-  getEnableBankingAspsps
-} from "@/lib/enable-banking/client";
-import { isEmailAllowed } from "@/lib/auth/allowlist";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getBankingDataSource } from "@/lib/data/get-banking-data-source";
+import { EnableBankingRequestError } from "@/lib/enable-banking/client";
 
 export const runtime = "nodejs";
 
-const INITIAL_BANK_NAMES = ["CaixaBank", "ING"];
-
 export async function GET() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
+  const dataSource = getBankingDataSource();
+  const user = await dataSource.getCurrentUser();
 
   if (!user) {
     return NextResponse.json(
@@ -24,7 +16,7 @@ export async function GET() {
     );
   }
 
-  if (!isEmailAllowed(user.email)) {
+  if (!user.isAllowed) {
     return NextResponse.json(
       { ok: false, reason: "Este email no está autorizado." },
       { status: 403 }
@@ -32,25 +24,16 @@ export async function GET() {
   }
 
   try {
-    const aspsps = await getEnableBankingAspsps({
-      country: "ES",
-      psuType: "personal",
-      service: "AIS"
-    });
-    const initialBanks = aspsps.filter((aspsp) =>
-      INITIAL_BANK_NAMES.some((bankName) =>
-        aspsp.name.toLowerCase().includes(bankName.toLowerCase())
-      )
-    );
+    const institutions = await dataSource.listAvailableInstitutions();
 
     return NextResponse.json({
       ok: true,
-      aspsps: initialBanks.map((aspsp) => ({
-        name: aspsp.name,
-        country: aspsp.country,
-        logo: aspsp.logo,
-        beta: aspsp.beta,
-        maximumConsentValidity: aspsp.maximum_consent_validity
+      aspsps: institutions.map((institution) => ({
+        name: institution.name,
+        country: institution.country,
+        logo: institution.logo,
+        beta: institution.beta,
+        maximumConsentValidity: institution.maximumConsentValidity
       }))
     });
   } catch (error) {

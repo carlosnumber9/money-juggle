@@ -58,6 +58,21 @@ lib/supabase/
 
 Do not create these folders until a feature needs them.
 
+## Data Source Boundary
+
+UI components should receive prepared props and should not fetch financial data
+directly. Route TSX files should stay thin and delegate data preparation to
+server-side view functions under `lib/views/`.
+
+Data collection should go through interfaces under `lib/data/`. The current
+pattern is a small ports-and-adapters boundary:
+
+- A real adapter reads Supabase Auth/Postgres and Enable Banking.
+- A demo adapter reads local mock financial data.
+- A single selector chooses the adapter from server-only configuration.
+
+This keeps demo mode, provider details, and persistence details out of UI code.
+
 ## Supabase Responsibilities
 
 Supabase should provide:

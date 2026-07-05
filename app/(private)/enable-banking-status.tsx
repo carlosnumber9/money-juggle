@@ -1,82 +1,17 @@
 "use client";
 
 import { CircleAlertIcon, WifiIcon } from "lucide-react";
-import { useEffect, useState } from "react";
 
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip } from "@/components/ui/tooltip";
+import type { ProviderStatusView } from "@/lib/views/private-home-types";
 
-type ConnectionState =
-  | { status: "loading" }
-  | { status: "success"; applicationName: string }
-  | { status: "error"; reason: string };
-
-type EnableBankingResponse =
-  | {
-      ok: true;
-      application: {
-        name: string;
-      };
-    }
-  | {
-      ok: false;
-      reason: string;
-    };
-
-export function EnableBankingStatus() {
-  const [connectionState, setConnectionState] = useState<ConnectionState>({
-    status: "loading"
-  });
-
-  useEffect(() => {
-    let isActive = true;
-
-    async function checkConnection() {
-      try {
-        const response = await fetch(
-          "/api/integrations/enable-banking/application"
-        );
-        const data = (await response.json()) as EnableBankingResponse;
-
-        if (!isActive) {
-          return;
-        }
-
-        if (!response.ok || !data.ok) {
-          setConnectionState({
-            status: "error",
-            reason:
-              !data.ok && data.reason
-                ? data.reason
-                : "No se pudo comprobar la conexión."
-          });
-          return;
-        }
-
-        setConnectionState({
-          status: "success",
-          applicationName: data.application.name
-        });
-      } catch {
-        if (!isActive) {
-          return;
-        }
-
-        setConnectionState({
-          status: "error",
-          reason: "No se pudo contactar con el servidor."
-        });
-      }
-    }
-
-    void checkConnection();
-
-    return () => {
-      isActive = false;
-    };
-  }, []);
-
-  if (connectionState.status === "loading") {
+export function EnableBankingStatus({
+  status
+}: {
+  status: ProviderStatusView | { status: "loading" };
+}) {
+  if (status.status === "loading") {
     return (
       <Tooltip
         triggerLabel="Comprobando conexión firmada con Enable Banking"
@@ -88,15 +23,15 @@ export function EnableBankingStatus() {
     );
   }
 
-  if (connectionState.status === "error") {
+  if (status.status === "error") {
     return (
       <Tooltip
-        triggerLabel={`No se pudo conectar con Enable Banking. ${connectionState.reason}`}
+        triggerLabel={`No se pudo conectar con Enable Banking. ${status.reason}`}
         label={
           <>
             No se pudo conectar con Enable Banking.
             <br />
-            {connectionState.reason}
+            {status.reason}
           </>
         }
         triggerClassName="text-destructive hover:bg-destructive/10"
@@ -108,8 +43,8 @@ export function EnableBankingStatus() {
 
   return (
     <Tooltip
-      triggerLabel={`Conexión viva con Enable Banking. Aplicación verificada: ${connectionState.applicationName}`}
-      label={`Conexión viva con Enable Banking. Aplicación verificada: ${connectionState.applicationName}.`}
+      triggerLabel={`${status.isDemo ? "Modo demo local" : "Conexión viva con Enable Banking"}. Aplicación verificada: ${status.applicationName}`}
+      label={`${status.isDemo ? "Modo demo local activo" : "Conexión viva con Enable Banking"}. Aplicación verificada: ${status.applicationName}.`}
       triggerClassName="text-green-700 hover:bg-green-50"
     >
       <WifiIcon className="size-5" aria-hidden />

@@ -18,6 +18,16 @@ cp .env.example .env.local
 
 Then fill the Supabase values in `.env.local`.
 
+For local UI development without Supabase or Enable Banking, enable demo mode:
+
+```bash
+MONEY_JUGGLE_DEMO_MODE=true
+```
+
+Demo mode only works during local Next.js development. It serves mock users,
+bank connections, accounts, balances, and transactions through the same app data
+source contract used by the real integration.
+
 Configure the allowed login emails as a comma-separated list:
 
 ```bash

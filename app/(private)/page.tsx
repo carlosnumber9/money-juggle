@@ -1,7 +1,10 @@
+import { redirect } from "next/navigation";
+
 import { Card, CardContent } from "@/components/ui/card";
 
 import { BankConnectionsPanel } from "@/app/(private)/bank-connections-panel";
 import { EnableBankingStatus } from "@/app/(private)/enable-banking-status";
+import { getPrivateHomeView } from "@/lib/views/private-home-view";
 
 type HomeProps = {
   searchParams?: Promise<{
@@ -11,6 +14,15 @@ type HomeProps = {
 
 export default async function Home({ searchParams }: HomeProps) {
   const params = await searchParams;
+  const view = await getPrivateHomeView(params?.bank_connection_status);
+
+  if (view.kind === "unauthenticated") {
+    redirect("/login");
+  }
+
+  if (view.kind === "forbidden") {
+    redirect("/auth/sign-out?status=not-allowed");
+  }
 
   return (
     <main className="mx-auto w-full max-w-5xl px-6 py-14">
@@ -23,11 +35,11 @@ export default async function Home({ searchParams }: HomeProps) {
           aria-label="Estado de conexión con Enable Banking"
         >
           <CardContent className="p-0">
-            <EnableBankingStatus />
+            <EnableBankingStatus status={view.providerStatus} />
           </CardContent>
         </Card>
       </div>
-      <BankConnectionsPanel status={params?.bank_connection_status} />
+      <BankConnectionsPanel cards={view.bankCards} />
     </main>
   );
 }

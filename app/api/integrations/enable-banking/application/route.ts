@@ -1,19 +1,13 @@
 import { NextResponse } from "next/server";
 
-import {
-  EnableBankingRequestError,
-  getEnableBankingApplication
-} from "@/lib/enable-banking/client";
-import { isEmailAllowed } from "@/lib/auth/allowlist";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getBankingDataSource } from "@/lib/data/get-banking-data-source";
+import { EnableBankingRequestError } from "@/lib/enable-banking/client";
 
 export const runtime = "nodejs";
 
 export async function GET() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
+  const dataSource = getBankingDataSource();
+  const user = await dataSource.getCurrentUser();
 
   if (!user) {
     return NextResponse.json(
@@ -22,7 +16,7 @@ export async function GET() {
     );
   }
 
-  if (!isEmailAllowed(user.email)) {
+  if (!user.isAllowed) {
     return NextResponse.json(
       { ok: false, reason: "Este email no está autorizado." },
       { status: 403 }
@@ -30,7 +24,7 @@ export async function GET() {
   }
 
   try {
-    const application = await getEnableBankingApplication();
+    const application = await dataSource.getProviderApplication();
 
     return NextResponse.json({
       ok: true,
@@ -40,7 +34,8 @@ export async function GET() {
         environment: application.environment,
         active: application.active,
         countries: application.countries,
-        services: application.services
+        services: application.services,
+        mode: dataSource.mode
       }
     });
   } catch (error) {

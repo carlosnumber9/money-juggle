@@ -492,3 +492,41 @@ Possible future revisit trigger:
 
 - If SQL security-definer functions or tighter RLS write policies become a
   better fit for provider-controlled writes.
+
+## ADR-018: Use A Data Source Boundary For Real And Demo Data
+
+Status:
+
+- Accepted.
+
+Context:
+
+- Enable Banking production access is limited and not convenient for everyday
+  local UI development.
+- The UI should not know whether data came from Supabase, Enable Banking, or
+  local mocks.
+- Route TSX files should stay thin and avoid embedding data collection logic.
+
+Decision:
+
+- Use a ports-and-adapters style data source boundary under `lib/data/`.
+- Keep local mock financial data under `lib/demo/`.
+- Prepare route-level view props under `lib/views/`.
+- Select demo data only when `MONEY_JUGGLE_DEMO_MODE=true`, Next.js is running
+  in development, and the app is not running on Vercel.
+- Keep demo mode server-only; do not expose a `NEXT_PUBLIC_` demo switch.
+
+Consequences:
+
+- UI components receive props and do not call Supabase, Enable Banking, or
+  internal data endpoints directly.
+- Demo and real data must satisfy the same application-facing contract.
+- Local UI work can proceed without Supabase Auth, Supabase Postgres, or Enable
+  Banking credentials.
+- Production remains on the real adapter and keeps the existing auth, allowlist,
+  RLS, and server-only integration boundaries.
+
+Possible future revisit trigger:
+
+- If the app introduces additional providers or needs a richer domain service
+  layer above the data source adapters.
