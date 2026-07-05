@@ -566,3 +566,40 @@ Possible future revisit trigger:
 
 - If a functional area becomes large enough to need its own documented public
   contract outside the shared definitions surface.
+
+## ADR-020: Sync Balances Automatically On Data Load
+
+Status:
+
+- Accepted.
+
+Context:
+
+- Balance data should appear inside the existing institution cards without
+  asking the owner to press an explicit refresh button.
+- Enable Banking balance calls must remain server-only.
+- The first balance feature should stay small and avoid scheduled sync until
+  transaction idempotency and cron behavior are designed later.
+
+Decision:
+
+- Trigger balance synchronization automatically after a bank connection is
+  completed.
+- Also refresh linked connections when the private home data source loads and
+  the latest stored balance is missing or older than a short freshness window.
+- Keep the refresh control out of the UI for now.
+- Store each provider response as a new balance snapshot instead of overwriting
+  previous snapshots.
+
+Consequences:
+
+- The private home screen can show current balances without a manual action.
+- Provider calls remain behind the server-only data source and database layers.
+- Repeated page loads are rate-limited by the freshness window rather than
+  calling Enable Banking every time.
+- Future scheduled sync can reuse the same server-only synchronization logic.
+
+Possible future revisit trigger:
+
+- If Enable Banking rate limits require a longer freshness window.
+- If the owner wants an explicit manual refresh affordance later.

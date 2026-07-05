@@ -171,8 +171,10 @@ The app stores account metadata returned by the authorized session, including
 Enable Banking account `uid`, display name, currency, account type, and only
 the last four IBAN characters when available.
 
-Balances and transactions are not synchronized yet. Those remain separate
-roadmap items.
+Balances are synchronized automatically by server-only code after a connection
+is completed and when the private home view loads missing or stale balance
+snapshots. Transactions are not synchronized yet and remain a separate roadmap
+item.
 
 ## What To Store
 

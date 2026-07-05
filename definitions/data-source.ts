@@ -21,6 +21,14 @@ export type InstitutionAvailability = {
   maximumConsentValidity?: number;
 };
 
+export type AccountBalanceSummary = {
+  balance_type: string;
+  amount: string;
+  currency: string;
+  reference_date: string | null;
+  fetched_at: string;
+};
+
 export type BankConnectionSummary = {
   id: string;
   status: string;
@@ -37,6 +45,7 @@ export type BankConnectionSummary = {
     iban_last4: string | null;
     account_type: string | null;
     status: string;
+    latest_balance: AccountBalanceSummary | null;
   }>;
 };
 

@@ -4,6 +4,8 @@ import type {
   EnableBankingApplication,
   EnableBankingAspsp,
   EnableBankingAuthorizeSessionResponse,
+  EnableBankingBalancesResponse,
+  EnableBankingBalanceResource,
   EnableBankingErrorResponse,
   EnableBankingStartAuthorizationInput,
   EnableBankingStartAuthorizationResponse
@@ -79,6 +81,16 @@ export async function authorizeEnableBankingSession(
       body: { code }
     }
   );
+}
+
+export async function getEnableBankingAccountBalances(
+  accountId: string
+): Promise<EnableBankingBalanceResource[]> {
+  const response = await requestEnableBanking<EnableBankingBalancesResponse>(
+    `/accounts/${encodeURIComponent(accountId)}/balances`
+  );
+
+  return response.balances;
 }
 
 async function requestEnableBanking<T>(

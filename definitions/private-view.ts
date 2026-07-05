@@ -24,6 +24,24 @@ export type BankInstitutionCard = {
   country?: string;
   state: "loading" | "idle" | "connected" | "linking" | "error" | "unavailable";
   tooltip: string;
+  balanceTotals?: Array<{
+    amount: string;
+    currency: string;
+    fetchedAt: string | null;
+  }>;
+  accounts?: Array<{
+    id: string;
+    name: string;
+    ibanLast4: string | null;
+    accountType: string | null;
+    latestBalance: {
+      amount: string;
+      currency: string;
+      balanceType: string;
+      referenceDate: string | null;
+      fetchedAt: string;
+    } | null;
+  }>;
 };
 
 export type ProviderStatusView =

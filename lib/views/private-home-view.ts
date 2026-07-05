@@ -12,6 +12,9 @@ import type {
 } from "@/definitions";
 import { getBankingDataSource } from "@/lib/data/get-banking-data-source";
 
+const DECIMAL_SCALE = 6;
+const DECIMAL_FACTOR = 1_000_000n;
+
 export async function getPrivateHomeView(
   status?: string
 ): Promise<PrivateHomeView> {
@@ -155,7 +158,23 @@ function buildBankCards({
       return {
         ...bank,
         state: "connected",
-        tooltip: `${bank.name} conectado correctamente.`
+        tooltip: `${bank.name} conectado correctamente.`,
+        balanceTotals: buildBalanceTotals(connection),
+        accounts: connection.accounts.map((account) => ({
+          id: account.id,
+          name: account.name,
+          ibanLast4: account.iban_last4,
+          accountType: account.account_type,
+          latestBalance: account.latest_balance
+            ? {
+                amount: account.latest_balance.amount,
+                currency: account.latest_balance.currency,
+                balanceType: account.latest_balance.balance_type,
+                referenceDate: account.latest_balance.reference_date,
+                fetchedAt: account.latest_balance.fetched_at
+              }
+            : null
+        }))
       };
     }
 
@@ -252,6 +271,70 @@ function applyStatusMessage(
       tooltip: BANK_CONNECTION_STATUS_MESSAGES[status]
     };
   });
+}
+
+function buildBalanceTotals(connection: BankConnectionSummary) {
+  const totalsByCurrency = new Map<
+    string,
+    {
+      amount: bigint;
+      fetchedAt: string | null;
+    }
+  >();
+
+  for (const account of connection.accounts) {
+    const balance = account.latest_balance;
+
+    if (!balance) {
+      continue;
+    }
+
+    const current = totalsByCurrency.get(balance.currency) ?? {
+      amount: 0n,
+      fetchedAt: null
+    };
+
+    totalsByCurrency.set(balance.currency, {
+      amount: current.amount + parseDecimal(balance.amount),
+      fetchedAt:
+        !current.fetchedAt || balance.fetched_at > current.fetchedAt
+          ? balance.fetched_at
+          : current.fetchedAt
+    });
+  }
+
+  return Array.from(totalsByCurrency.entries()).map(([currency, total]) => ({
+    amount: formatDecimal(total.amount),
+    currency,
+    fetchedAt: total.fetchedAt
+  }));
+}
+
+function parseDecimal(value: string): bigint {
+  const trimmed = value.trim();
+  const sign = trimmed.startsWith("-") ? -1n : 1n;
+  const unsigned = trimmed.replace(/^[+-]/, "");
+  const [whole = "0", fraction = ""] = unsigned.split(".");
+  const normalizedFraction = fraction
+    .padEnd(DECIMAL_SCALE, "0")
+    .slice(0, DECIMAL_SCALE);
+
+  return (
+    sign *
+    (BigInt(whole || "0") * DECIMAL_FACTOR + BigInt(normalizedFraction || "0"))
+  );
+}
+
+function formatDecimal(value: bigint): string {
+  const sign = value < 0n ? "-" : "";
+  const absolute = value < 0n ? -value : value;
+  const whole = absolute / DECIMAL_FACTOR;
+  const fraction = (absolute % DECIMAL_FACTOR)
+    .toString()
+    .padStart(DECIMAL_SCALE, "0")
+    .replace(/0+$/, "");
+
+  return `${sign}${whole.toString()}${fraction ? `.${fraction}` : ""}`;
 }
 
 function getPublicErrorReason(error: unknown, fallback: string): string {

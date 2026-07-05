@@ -8,7 +8,7 @@ import type {
 export type DemoBalance = {
   id: string;
   accountId: string;
-  balanceType: "closing_booked" | "interim_available";
+  balanceType: string;
   amount: string;
   currency: string;
   referenceDate: string;
@@ -76,7 +76,14 @@ export const DEMO_BANK_CONNECTIONS: BankConnectionSummary[] = [
         currency: "EUR",
         iban_last4: "1842",
         account_type: "current",
-        status: "active"
+        status: "active",
+        latest_balance: {
+          balance_type: "CLBD",
+          amount: "2840.25",
+          currency: "EUR",
+          reference_date: "2026-07-05",
+          fetched_at: "2026-07-05T08:00:00.000Z"
+        }
       },
       {
         id: "20000000-0000-4000-8000-000000000002",
@@ -84,7 +91,14 @@ export const DEMO_BANK_CONNECTIONS: BankConnectionSummary[] = [
         currency: "EUR",
         iban_last4: "9021",
         account_type: "savings",
-        status: "active"
+        status: "active",
+        latest_balance: {
+          balance_type: "CLBD",
+          amount: "6200.00",
+          currency: "EUR",
+          reference_date: "2026-07-05",
+          fetched_at: "2026-07-05T08:00:00.000Z"
+        }
       }
     ]
   },
@@ -104,7 +118,14 @@ export const DEMO_BANK_CONNECTIONS: BankConnectionSummary[] = [
         currency: "EUR",
         iban_last4: "7710",
         account_type: "current",
-        status: "active"
+        status: "active",
+        latest_balance: {
+          balance_type: "CLBD",
+          amount: "1340.90",
+          currency: "EUR",
+          reference_date: "2026-07-05",
+          fetched_at: "2026-07-05T08:00:00.000Z"
+        }
       }
     ]
   }
@@ -114,7 +135,7 @@ export const DEMO_BALANCES: DemoBalance[] = [
   {
     id: "30000000-0000-4000-8000-000000000001",
     accountId: "20000000-0000-4000-8000-000000000001",
-    balanceType: "closing_booked",
+    balanceType: "CLBD",
     amount: "2840.25",
     currency: "EUR",
     referenceDate: "2026-07-05",
@@ -123,7 +144,7 @@ export const DEMO_BALANCES: DemoBalance[] = [
   {
     id: "30000000-0000-4000-8000-000000000002",
     accountId: "20000000-0000-4000-8000-000000000002",
-    balanceType: "closing_booked",
+    balanceType: "CLBD",
     amount: "6200.00",
     currency: "EUR",
     referenceDate: "2026-07-05",
@@ -132,7 +153,7 @@ export const DEMO_BALANCES: DemoBalance[] = [
   {
     id: "30000000-0000-4000-8000-000000000003",
     accountId: "20000000-0000-4000-8000-000000000003",
-    balanceType: "closing_booked",
+    balanceType: "CLBD",
     amount: "1340.90",
     currency: "EUR",
     referenceDate: "2026-07-05",

@@ -1,6 +1,7 @@
 import "server-only";
 
 import type {
+  AccountBalanceSummary,
   EnableBankingAccountResource,
   EnableBankingAccess,
   EnableBankingAspsp,
@@ -11,8 +12,24 @@ import type {
   ConsentEventType
 } from "@/definitions";
 import { ENABLE_BANKING_PROVIDER } from "@/definitions";
+import { syncEnableBankingConnectionBalances } from "@/lib/db/enable-banking-balances";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
+
+const BALANCE_TYPE_PRIORITY = [
+  "CLBD",
+  "CLAV",
+  "ITBD",
+  "ITAV",
+  "XPCD",
+  "VALU",
+  "INFO",
+  "OPBD",
+  "OPAV",
+  "PRCD",
+  "FWAV",
+  "OTHR"
+];
 
 export function getEnableBankingInstitutionProviderId({
   country,
@@ -228,6 +245,18 @@ export async function completeEnableBankingConnection({
       consent_expires_at: consentExpiresAt
     }
   });
+
+  try {
+    await syncEnableBankingConnectionBalances({
+      userId,
+      bankConnectionId
+    });
+  } catch (error) {
+    console.error("Initial Enable Banking balance sync failed", {
+      bankConnectionId,
+      message: error instanceof Error ? error.message : "Unknown error."
+    });
+  }
 }
 
 export async function listUserEnableBankingConnections(
@@ -264,6 +293,13 @@ export async function listUserEnableBankingConnections(
     throw new Error(`Could not list bank connections: ${error.message}`);
   }
 
+  const latestBalancesByAccountId = await listLatestBalancesByAccountId(
+    userId,
+    (connections ?? []).flatMap((connection) =>
+      (connection.accounts ?? []).map((account) => account.id)
+    )
+  );
+
   return (connections ?? []).map((connection) => ({
     id: connection.id,
     status: connection.status,
@@ -271,8 +307,84 @@ export async function listUserEnableBankingConnections(
     institution: Array.isArray(connection.institutions)
       ? (connection.institutions[0] ?? null)
       : connection.institutions,
-    accounts: connection.accounts ?? []
+    accounts: (connection.accounts ?? []).map((account) => ({
+      ...account,
+      latest_balance: latestBalancesByAccountId.get(account.id) ?? null
+    }))
   }));
+}
+
+async function listLatestBalancesByAccountId(
+  userId: string,
+  accountIds: string[]
+): Promise<Map<string, AccountBalanceSummary>> {
+  if (accountIds.length === 0) {
+    return new Map();
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: balances, error } = await supabase
+    .from("balances")
+    .select(
+      `
+      account_id,
+      balance_type,
+      amount,
+      currency,
+      reference_date,
+      fetched_at
+    `
+    )
+    .eq("user_id", userId)
+    .in("account_id", accountIds)
+    .order("fetched_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`Could not list latest balances: ${error.message}`);
+  }
+
+  const latestBalancesByAccountId = new Map<string, AccountBalanceSummary>();
+
+  for (const balance of balances ?? []) {
+    const current = latestBalancesByAccountId.get(balance.account_id);
+    const candidate = {
+      balance_type: balance.balance_type,
+      amount: String(balance.amount),
+      currency: balance.currency,
+      reference_date: balance.reference_date,
+      fetched_at: balance.fetched_at
+    } satisfies AccountBalanceSummary;
+
+    if (!current || shouldReplaceLatestBalance(current, candidate)) {
+      latestBalancesByAccountId.set(balance.account_id, candidate);
+    }
+  }
+
+  return latestBalancesByAccountId;
+}
+
+function shouldReplaceLatestBalance(
+  current: AccountBalanceSummary,
+  candidate: AccountBalanceSummary
+): boolean {
+  if (candidate.fetched_at > current.fetched_at) {
+    return true;
+  }
+
+  if (candidate.fetched_at < current.fetched_at) {
+    return false;
+  }
+
+  return (
+    getBalanceTypePriority(candidate.balance_type) <
+    getBalanceTypePriority(current.balance_type)
+  );
+}
+
+function getBalanceTypePriority(balanceType: string): number {
+  const index = BALANCE_TYPE_PRIORITY.indexOf(balanceType);
+
+  return index === -1 ? BALANCE_TYPE_PRIORITY.length : index;
 }
 
 async function ensureProfile({

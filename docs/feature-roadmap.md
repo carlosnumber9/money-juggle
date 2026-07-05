@@ -23,7 +23,7 @@ Use this checklist as the source of truth for what remains to be implemented. Ke
 - [x] 15. Store authorization and consent data.
 - [x] 16. Handle Enable Banking callback.
 - [x] 17. Store connected accounts.
-- [ ] 18. Sync balances.
+- [x] 18. Sync balances.
 - [ ] 19. Sync transactions.
 - [ ] 20. Build a basic dashboard.
 - [ ] 21. Add transaction categorization.
@@ -783,6 +783,23 @@ Do not do yet:
 - Build detailed reports.
 
 ## 18. Sync Balances
+
+Status:
+
+- Completed.
+
+Implemented result:
+
+- Linked Enable Banking accounts can fetch account balances through the
+  server-only Enable Banking client.
+- Balance responses are normalized into `balances` snapshots with account
+  ownership preserved through `user_id`.
+- Balance synchronization is triggered automatically after a new connection is
+  completed and when the private home view loads stale or missing balances.
+- The private institution cards show the latest account balances and per-bank
+  totals by currency.
+- Demo mode includes balance data so the UI can be reviewed locally without
+  Supabase or Enable Banking credentials.
 
 Goal:
 

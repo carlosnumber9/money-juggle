@@ -284,6 +284,14 @@ Relationships:
 - Belongs to `accounts`.
 - May be associated with a `sync_run`.
 
+Latest balance selection:
+
+- Balance sync stores provider responses as append-only snapshots.
+- The app displays the newest snapshot per account by `fetched_at`.
+- When multiple balance types are fetched at the same time, display selection
+  prefers booked/available balance types before informational or opening
+  balances.
+
 Ownership model:
 
 - Owned by the authenticated user through `user_id`.

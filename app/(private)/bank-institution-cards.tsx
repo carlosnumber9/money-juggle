@@ -1,6 +1,14 @@
 "use client";
 
-import { CheckCircle2Icon, CircleAlertIcon } from "lucide-react";
+import {
+  BriefcaseBusinessIcon,
+  CheckCircle2Icon,
+  CircleAlertIcon,
+  CircleDollarSignIcon,
+  Clock3Icon,
+  PiggyBankIcon,
+  WalletCardsIcon
+} from "lucide-react";
 import Image from "next/image";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,17 +36,98 @@ export function BankInstitutionCards({ cards }: BankInstitutionCardsProps) {
             width={420}
             height={220}
             aria-hidden
-            className="pointer-events-none absolute right-[-10%] bottom-[8%] z-0 w-[112%] opacity-50"
+            className="pointer-events-none absolute top-[56%] left-1/2 z-0 w-[210%] -translate-x-1/2 -translate-y-1/2 scale-[1.65] opacity-10"
           />
-          <CardContent className="relative z-10 flex min-h-[clamp(160px,18vw,240px)] items-start bg-card/85 p-4 text-left">
-            <span className="max-w-[calc(100%-3rem)] text-base font-semibold">
-              {card.name}
-            </span>
+          <CardContent className="relative z-10 flex min-h-[clamp(160px,18vw,240px)] items-start p-4 text-left">
+            <div className="flex min-h-full w-full flex-col justify-between gap-5">
+              <div className="min-w-0 pr-9">
+                <span className="block truncate text-base font-semibold">
+                  {card.name}
+                </span>
+                <BankBalanceSummary card={card} />
+              </div>
+              <BankAccountList card={card} />
+            </div>
           </CardContent>
           <BankStatusIcon card={card} />
         </Card>
       ))}
     </section>
+  );
+}
+
+function BankBalanceSummary({ card }: { card: BankInstitutionCard }) {
+  if (card.state !== "connected") {
+    return null;
+  }
+
+  if (!card.balanceTotals || card.balanceTotals.length === 0) {
+    return (
+      <p className="mt-6 max-w-48 text-sm text-muted-foreground">
+        Saldo pendiente de sincronizar.
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-5 space-y-1">
+      {card.balanceTotals.map((total) => (
+        <p
+          key={total.currency}
+          className="text-2xl leading-none font-semibold tracking-normal"
+        >
+          {formatCurrency(total.amount, total.currency)}
+        </p>
+      ))}
+      <p className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Clock3Icon className="size-3.5" aria-hidden />
+        {formatLatestDate(card.balanceTotals)}
+      </p>
+    </div>
+  );
+}
+
+function BankAccountList({ card }: { card: BankInstitutionCard }) {
+  if (card.state !== "connected" || !card.accounts?.length) {
+    return null;
+  }
+
+  return (
+    <ul className="space-y-1.5 text-xs">
+      {card.accounts.map((account) => (
+        <li key={account.id} className="flex min-w-0 items-center gap-2 py-1.5">
+          <AccountIcon account={account} />
+          <span className="font-medium">
+            {account.latestBalance
+              ? formatCurrency(
+                  account.latestBalance.amount,
+                  account.latestBalance.currency
+                )
+              : "Sin saldo"}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function AccountIcon({
+  account
+}: {
+  account: NonNullable<BankInstitutionCard["accounts"]>[number];
+}) {
+  const label = account.ibanLast4
+    ? `${account.name}. Cuenta terminada en ${account.ibanLast4}.`
+    : account.name;
+
+  return (
+    <Tooltip
+      triggerLabel={label}
+      label={label}
+      triggerClassName="size-auto border-0 bg-transparent p-0 text-muted-foreground shadow-none hover:bg-transparent focus-visible:ring-ring/20"
+    >
+      {getAccountTypeIcon(account)}
+    </Tooltip>
   );
 }
 
@@ -78,4 +167,61 @@ function getStatusIcon(state: BankInstitutionCard["state"]) {
   }
 
   return <CircleAlertIcon className="size-5" aria-hidden />;
+}
+
+function getAccountTypeIcon({
+  accountType,
+  name
+}: NonNullable<BankInstitutionCard["accounts"]>[number]) {
+  const normalizedType = accountType?.toLowerCase() ?? "";
+  const normalizedName = name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  if (normalizedType.includes("savings") || normalizedType.includes("svgs")) {
+    return <PiggyBankIcon className="size-4" aria-hidden />;
+  }
+
+  if (normalizedName.includes("ahorro")) {
+    return <PiggyBankIcon className="size-4" aria-hidden />;
+  }
+
+  if (normalizedName.includes("nomina")) {
+    return <BriefcaseBusinessIcon className="size-4" aria-hidden />;
+  }
+
+  if (normalizedType.includes("current") || normalizedType.includes("cacc")) {
+    return <WalletCardsIcon className="size-4" aria-hidden />;
+  }
+
+  return <CircleDollarSignIcon className="size-4" aria-hidden />;
+}
+
+function formatCurrency(amount: string, currency: string): string {
+  return new Intl.NumberFormat("es-ES", {
+    style: "currency",
+    currency
+  }).format(Number(amount));
+}
+
+function formatLatestDate(
+  totals: NonNullable<BankInstitutionCard["balanceTotals"]>
+): string {
+  const latestFetchedAt = totals
+    .map((total) => total.fetchedAt)
+    .filter((value): value is string => Boolean(value))
+    .sort()
+    .at(-1);
+
+  if (!latestFetchedAt) {
+    return "recientemente";
+  }
+
+  return new Intl.DateTimeFormat("es-ES", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(new Date(latestFetchedAt));
 }
