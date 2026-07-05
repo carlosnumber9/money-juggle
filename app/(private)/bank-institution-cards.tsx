@@ -144,8 +144,8 @@ function BankStatusIcon({ card }: { card: BankInstitutionCard }) {
         <input type="hidden" name="country" value={card.country} />
         <Tooltip
           triggerType="submit"
-          triggerLabel={`Conectar ${card.name}`}
-          label={`Conectar ${card.name} con Enable Banking.`}
+          triggerLabel={getConnectionActionLabel(card)}
+          label={getConnectionActionLabel(card)}
           triggerClassName={getStatusToneClass(card.state)}
         >
           <LinkIcon className="size-5" aria-hidden />
@@ -175,10 +175,18 @@ function canStartConnection(
 } {
   return (
     card.provider === "enable_banking" &&
-    card.state === "idle" &&
+    (card.state === "idle" || card.state === "error") &&
     Boolean(card.aspspName) &&
     Boolean(card.country)
   );
+}
+
+function getConnectionActionLabel(card: BankInstitutionCard): string {
+  if (card.state === "error") {
+    return `Reintentar conexión con ${card.name}. ${card.tooltip}`;
+  }
+
+  return `Conectar ${card.name} con Enable Banking.`;
 }
 
 function getStatusToneClass(state: BankInstitutionCard["state"]) {

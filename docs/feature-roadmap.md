@@ -624,6 +624,8 @@ Implemented result:
   callback `state`, and the Supabase user ID as the anonymized `psu_id`.
 - Available private bank cards expose a connection icon that submits the
   selected ASPSP to the start route.
+- Failed bank connection cards keep their institution metadata and expose the
+  same connection icon as a retry action.
 - The browser is redirected to the provider authorization URL returned by
   Enable Banking.
 

@@ -189,6 +189,8 @@ function buildBankCards({
     if (connection?.status === "error") {
       return {
         ...bank,
+        aspspName: connection.institution?.name ?? bank.name,
+        country: connection.institution?.country ?? undefined,
         state: "error",
         tooltip: `La conexión con ${bank.name} terminó con error.`
       };
@@ -260,17 +262,7 @@ function applyStatusMessage(
     return cards;
   }
 
-  return cards.map((card) => {
-    if (card.provider !== "enable_banking" || card.state === "connected") {
-      return card;
-    }
-
-    return {
-      ...card,
-      state: "error",
-      tooltip: BANK_CONNECTION_STATUS_MESSAGES[status]
-    };
-  });
+  return cards;
 }
 
 function buildBalanceTotals(connection: BankConnectionSummary) {
