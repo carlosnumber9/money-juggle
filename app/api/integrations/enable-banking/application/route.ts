@@ -44,6 +44,11 @@ export async function GET() {
       }
     });
   } catch (error) {
+    console.error(
+      "Enable Banking application check failed",
+      getErrorMetadata(error)
+    );
+
     const status =
       error instanceof EnableBankingRequestError && error.status
         ? error.status
@@ -64,9 +69,82 @@ function getPublicErrorReason(error: unknown): string {
     return error.message;
   }
 
-  if (error instanceof Error && error.message.startsWith("Missing ")) {
-    return "Falta configuración privada de Enable Banking en el servidor.";
+  if (isPrivateConfigurationError(error)) {
+    return "La configuración privada de Enable Banking no se pudo cargar o firmar.";
   }
 
   return "No se pudo comprobar la conexión con Enable Banking.";
+}
+
+function getErrorMetadata(error: unknown) {
+  if (error instanceof EnableBankingRequestError) {
+    return {
+      status: error.status,
+      provider_error: error.providerError?.error,
+      provider_message: error.providerError?.message
+    };
+  }
+
+  if (!(error instanceof Error)) {
+    return {};
+  }
+
+  return {
+    name: error.name,
+    code: getErrorCode(error),
+    kind: isPrivateConfigurationError(error)
+      ? "private-configuration"
+      : "unexpected",
+    message: getSafeErrorMessage(error)
+  };
+}
+
+function isPrivateConfigurationError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const code = getErrorCode(error);
+
+  return (
+    error.message.startsWith("Missing ") ||
+    code === "ENOENT" ||
+    code === "EACCES" ||
+    code?.startsWith("ERR_OSSL_") ||
+    error.message.includes("DECODER routines") ||
+    error.message.includes("PEM routines") ||
+    error.message.includes("bad decrypt")
+  );
+}
+
+function getErrorCode(error: Error): string | undefined {
+  const code = (error as { code?: unknown }).code;
+
+  return typeof code === "string" ? code : undefined;
+}
+
+function getSafeErrorMessage(error: Error): string {
+  if (!isPrivateConfigurationError(error)) {
+    return error.message;
+  }
+
+  const code = getErrorCode(error);
+
+  if (code === "ENOENT") {
+    return "Enable Banking private key path could not be read.";
+  }
+
+  if (code === "EACCES") {
+    return "Enable Banking private key path is not readable.";
+  }
+
+  if (code?.startsWith("ERR_OSSL_")) {
+    return "Enable Banking private key could not be parsed or used for signing.";
+  }
+
+  if (error.message.startsWith("Missing ")) {
+    return error.message;
+  }
+
+  return "Enable Banking private configuration is invalid.";
 }
