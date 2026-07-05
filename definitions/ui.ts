@@ -4,6 +4,7 @@ export type TooltipProps = {
   children: React.ReactNode;
   label: React.ReactNode;
   triggerLabel: string;
+  triggerType?: "button" | "submit";
   triggerClassName?: string;
 };
 

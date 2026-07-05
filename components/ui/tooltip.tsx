@@ -9,13 +9,14 @@ function Tooltip({
   children,
   label,
   triggerLabel,
+  triggerType = "button",
   triggerClassName
 }: TooltipProps) {
   return (
     <TooltipPrimitive.Provider delay={150} closeDelay={100}>
       <TooltipPrimitive.Root>
         <TooltipPrimitive.Trigger
-          type="button"
+          type={triggerType}
           aria-label={triggerLabel}
           closeOnClick={false}
           className={cn(

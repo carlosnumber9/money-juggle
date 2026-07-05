@@ -6,6 +6,7 @@ import {
   CircleAlertIcon,
   CircleDollarSignIcon,
   Clock3Icon,
+  LinkIcon,
   PiggyBankIcon,
   WalletCardsIcon
 } from "lucide-react";
@@ -132,6 +133,27 @@ function AccountIcon({
 }
 
 function BankStatusIcon({ card }: { card: BankInstitutionCard }) {
+  if (canStartConnection(card)) {
+    return (
+      <form
+        action="/api/bank-connections/enable-banking/start"
+        method="post"
+        className="absolute top-3 right-3 z-20"
+      >
+        <input type="hidden" name="aspspName" value={card.aspspName} />
+        <input type="hidden" name="country" value={card.country} />
+        <Tooltip
+          triggerType="submit"
+          triggerLabel={`Conectar ${card.name}`}
+          label={`Conectar ${card.name} con Enable Banking.`}
+          triggerClassName={getStatusToneClass(card.state)}
+        >
+          <LinkIcon className="size-5" aria-hidden />
+        </Tooltip>
+      </form>
+    );
+  }
+
   return (
     <div className="absolute top-3 right-3 z-20">
       <Tooltip
@@ -142,6 +164,20 @@ function BankStatusIcon({ card }: { card: BankInstitutionCard }) {
         {getStatusIcon(card.state)}
       </Tooltip>
     </div>
+  );
+}
+
+function canStartConnection(
+  card: BankInstitutionCard
+): card is BankInstitutionCard & {
+  aspspName: string;
+  country: string;
+} {
+  return (
+    card.provider === "enable_banking" &&
+    card.state === "idle" &&
+    Boolean(card.aspspName) &&
+    Boolean(card.country)
   );
 }
 
