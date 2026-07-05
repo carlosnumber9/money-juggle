@@ -1,6 +1,6 @@
 import "server-only";
 
-import { BANK_CONNECTION_STATUS_MESSAGES, BANKS } from "@/definitions";
+import { BANKS } from "@/definitions";
 import type {
   BankingDataSource,
   BankConnectionSummary,
@@ -15,9 +15,7 @@ import { getBankingDataSource } from "@/lib/data/get-banking-data-source";
 const DECIMAL_SCALE = 6;
 const DECIMAL_FACTOR = 1_000_000n;
 
-export async function getPrivateHomeView(
-  status?: string
-): Promise<PrivateHomeView> {
+export async function getPrivateHomeView(): Promise<PrivateHomeView> {
   const dataSource = getBankingDataSource();
   const user = await dataSource.getCurrentUser();
 
@@ -44,14 +42,11 @@ export async function getPrivateHomeView(
     providerStatus.status === "success"
       ? await loadInstitutions(dataSource)
       : undefined;
-  const bankCards = applyStatusMessage(
-    buildBankCards({
-      connectionsResult,
-      institutionsResult,
-      providerStatus
-    }),
-    status
-  );
+  const bankCards = buildBankCards({
+    connectionsResult,
+    institutionsResult,
+    providerStatus
+  });
 
   return {
     kind: "ready",
@@ -248,21 +243,6 @@ function buildBankCards({
       tooltip: `${bank.name} disponible en Enable Banking.`
     };
   });
-}
-
-function applyStatusMessage(
-  cards: BankInstitutionCard[],
-  status: string | undefined
-): BankInstitutionCard[] {
-  if (
-    !status ||
-    status === "linked" ||
-    !BANK_CONNECTION_STATUS_MESSAGES[status]
-  ) {
-    return cards;
-  }
-
-  return cards;
 }
 
 function buildBalanceTotals(connection: BankConnectionSummary) {

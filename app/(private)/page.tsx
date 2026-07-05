@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 
-import type { HomeProps } from "@/definitions";
 import { Card, CardContent } from "@/components/ui/card";
 
 import { BalanceAutoSync } from "@/app/(private)/balance-auto-sync";
@@ -8,9 +7,8 @@ import { BankConnectionsPanel } from "@/app/(private)/bank-connections-panel";
 import { EnableBankingStatus } from "@/app/(private)/enable-banking-status";
 import { getPrivateHomeView } from "@/lib/views/private-home-view";
 
-export default async function Home({ searchParams }: HomeProps) {
-  const params = await searchParams;
-  const view = await getPrivateHomeView(params?.bank_connection_status);
+export default async function Home() {
+  const view = await getPrivateHomeView();
 
   if (view.kind === "unauthenticated") {
     redirect("/login");

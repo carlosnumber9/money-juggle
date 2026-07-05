@@ -125,12 +125,6 @@ export const BANK_CONNECTION_STATUS_MESSAGES: Record<string, string> = {
   "missing-state": "La respuesta del banco no incluyó el estado de seguridad."
 };
 
-export type HomeProps = {
-  searchParams?: Promise<{
-    bank_connection_status?: string;
-  }>;
-};
-
 export type PrivateLayoutProps = Readonly<{
   children: React.ReactNode;
 }>;
