@@ -476,8 +476,9 @@ Decision:
   `SUPABASE_SECRET_KEYS`.
 - Use elevated Supabase access only in server-only provider flows where RLS
   intentionally blocks browser writes.
-- Validate the authenticated user, email allowlist, and provider callback
-  `state` before creating or updating user-owned financial records.
+- Validate the authenticated user and email allowlist before starting provider
+  authorization, then validate the provider callback `state` against the
+  pending connection before updating user-owned financial records.
 - Continue using the normal RLS-aware server client for ordinary user-facing
   reads.
 

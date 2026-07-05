@@ -158,10 +158,11 @@ Mitigations:
 Supabase secret keys authorize the built-in Postgres `service_role` and bypass
 RLS. They should only be used in server-only code when there is a clear reason.
 
-The Enable Banking connection flow uses a secret-key-backed client only for controlled
-provider writes after validating the authenticated user, the email allowlist,
-and the provider callback `state`. Ordinary user-facing reads should continue
-to use the RLS-aware Supabase server client.
+The Enable Banking connection flow uses a secret-key-backed client only for
+controlled provider writes. The start step validates the authenticated user and
+email allowlist; the callback step validates the provider `state` against the
+pending connection before updating financial records. Ordinary user-facing reads
+should continue to use the RLS-aware Supabase server client.
 
 Avoid:
 

@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-import { isEmailAllowed } from "@/lib/auth/allowlist";
 import { isDemoMode } from "@/lib/demo/mode";
 import {
   completeEnableBankingConnection,
@@ -13,7 +12,6 @@ import {
   getEnableBankingErrorMetadata,
   getEnableBankingErrorStatus
 } from "@/lib/enable-banking/client";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -30,26 +28,12 @@ export async function GET(request: NextRequest) {
   const providerErrorDescription =
     requestUrl.searchParams.get("error_description");
 
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return redirectWithStatus(requestUrl, "login-required");
-  }
-
-  if (!isEmailAllowed(user.email)) {
-    return redirectWithStatus(requestUrl, "not-allowed");
-  }
-
   if (!state) {
     return redirectWithStatus(requestUrl, "missing-state");
   }
 
   try {
     const connection = await getLinkingConnectionByState({
-      userId: user.id,
       state
     });
 
@@ -59,7 +43,7 @@ export async function GET(request: NextRequest) {
 
     if (providerError) {
       await failEnableBankingConnection({
-        userId: user.id,
+        userId: connection.user_id,
         bankConnectionId: connection.id,
         providerStatus: providerError,
         message: "Enable Banking returned an authorization error.",
@@ -74,7 +58,7 @@ export async function GET(request: NextRequest) {
 
     if (!code) {
       await failEnableBankingConnection({
-        userId: user.id,
+        userId: connection.user_id,
         bankConnectionId: connection.id,
         providerStatus: "missing-code",
         message:
@@ -87,13 +71,13 @@ export async function GET(request: NextRequest) {
     try {
       const session = await authorizeEnableBankingSession(code);
       await completeEnableBankingConnection({
-        userId: user.id,
+        userId: connection.user_id,
         bankConnectionId: connection.id,
         session
       });
     } catch (error) {
       await failEnableBankingConnection({
-        userId: user.id,
+        userId: connection.user_id,
         bankConnectionId: connection.id,
         providerStatus: getPublicErrorStatus(error),
         message: "Enable Banking session authorization failed.",

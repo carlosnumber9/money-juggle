@@ -706,8 +706,9 @@ Implemented result:
 
 - `app/api/bank-connections/enable-banking/callback/route.ts` receives the
   Enable Banking callback at the registered callback path.
-- The route validates the authenticated allowed user and verifies the returned
-  `state` against a pending connection owned by that user.
+- The route verifies the returned `state` against a pending connection created
+  by the authenticated allowed start flow, then uses that stored connection
+  owner for the callback update.
 - Provider errors are stored as failed consent events.
 - Successful callbacks exchange the returned `code` through `POST /sessions`
   and mark the connection as `linked`.

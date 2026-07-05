@@ -161,11 +161,16 @@ The app passes the Supabase user ID as `psu_id` instead of an email address.
 Enable Banking stores only its derived `psu_id_hash`, which the app keeps for
 operational consent tracking.
 
-The callback handler requires:
+The start handler requires:
 
 - An authenticated Supabase user.
 - A server-side email allowlist match.
-- A returned `state` matching a pending connection owned by that user.
+
+The callback handler requires a returned `state` matching a pending connection
+that was created by the authenticated, allowlisted start handler. The callback
+uses that pending connection's stored `user_id` so the bank redirect can
+complete even if the browser does not present a fresh Supabase session on the
+return request.
 
 The app stores account metadata returned by the authorized session, including
 Enable Banking account `uid`, display name, currency, account type, and only

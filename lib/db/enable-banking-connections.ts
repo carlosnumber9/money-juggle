@@ -121,10 +121,8 @@ export async function createLinkingEnableBankingConnection({
 }
 
 export async function getLinkingConnectionByState({
-  userId,
   state
 }: {
-  userId: string;
   state: string;
 }): Promise<StoredBankConnection | null> {
   const supabase = createSupabaseServiceRoleClient();
@@ -133,7 +131,7 @@ export async function getLinkingConnectionByState({
     .select("id,user_id,institution_id,status,provider_state")
     .eq("provider", ENABLE_BANKING_PROVIDER)
     .eq("provider_state", state)
-    .eq("user_id", userId)
+    .eq("status", "linking")
     .maybeSingle();
 
   if (error) {
