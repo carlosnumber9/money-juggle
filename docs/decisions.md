@@ -567,7 +567,7 @@ Possible future revisit trigger:
 - If a functional area becomes large enough to need its own documented public
   contract outside the shared definitions surface.
 
-## ADR-020: Sync Balances Automatically On Data Load
+## ADR-020: Sync Balances Automatically From The Private Home Screen
 
 Status:
 
@@ -585,8 +585,9 @@ Decision:
 
 - Trigger balance synchronization automatically after a bank connection is
   completed.
-- Also refresh linked connections when the private home data source loads and
-  the latest stored balance is missing or older than a short freshness window.
+- Also refresh linked connections through an internal
+  `POST /api/sync/balances` request when the private home screen loads and the
+  latest stored balance is missing or older than a short freshness window.
 - Keep the refresh control out of the UI for now.
 - Store each provider response as a new balance snapshot instead of overwriting
   previous snapshots.
@@ -597,6 +598,8 @@ Consequences:
 - Provider calls remain behind the server-only data source and database layers.
 - Repeated page loads are rate-limited by the freshness window rather than
   calling Enable Banking every time.
+- Production logs expose the internal sync route and sync eligibility decision,
+  making balance refresh behavior easier to diagnose.
 - Future scheduled sync can reuse the same server-only synchronization logic.
 
 Possible future revisit trigger:

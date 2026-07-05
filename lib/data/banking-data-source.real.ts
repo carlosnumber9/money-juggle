@@ -8,7 +8,6 @@ import {
   type ProviderApplication
 } from "@/definitions";
 import { isEmailAllowed } from "@/lib/auth/allowlist";
-import { syncStaleEnableBankingBalances } from "@/lib/db/enable-banking-balances";
 import { listUserEnableBankingConnections } from "@/lib/db/enable-banking-connections";
 import {
   getEnableBankingApplication,
@@ -68,16 +67,6 @@ export const realBankingDataSource: BankingDataSource = {
       }));
   },
   async listBankConnections(userId: string) {
-    const connections = await listUserEnableBankingConnections(userId);
-    const didSync = await syncStaleEnableBankingBalances({
-      userId,
-      connections
-    });
-
-    if (!didSync) {
-      return connections;
-    }
-
     return listUserEnableBankingConnections(userId);
   }
 };

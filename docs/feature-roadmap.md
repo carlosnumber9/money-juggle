@@ -795,7 +795,8 @@ Implemented result:
 - Balance responses are normalized into `balances` snapshots with account
   ownership preserved through `user_id`.
 - Balance synchronization is triggered automatically after a new connection is
-  completed and when the private home view loads stale or missing balances.
+  completed and by an internal `POST /api/sync/balances` call when the private
+  home screen loads stale or missing balances.
 - The private institution cards show the latest account balances and per-bank
   totals by currency.
 - Demo mode includes balance data so the UI can be reviewed locally without

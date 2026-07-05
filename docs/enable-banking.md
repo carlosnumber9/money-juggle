@@ -172,9 +172,9 @@ Enable Banking account `uid`, display name, currency, account type, and only
 the last four IBAN characters when available.
 
 Balances are synchronized automatically by server-only code after a connection
-is completed and when the private home view loads missing or stale balance
-snapshots. Transactions are not synchronized yet and remain a separate roadmap
-item.
+is completed and through an internal `POST /api/sync/balances` request when the
+private home screen detects missing or stale balance snapshots. Transactions are
+not synchronized yet and remain a separate roadmap item.
 
 ## What To Store
 

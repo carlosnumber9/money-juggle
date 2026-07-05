@@ -37,6 +37,11 @@ export async function syncStaleEnableBankingBalances({
     .filter((connection) => shouldRefreshConnection(connection, maxAgeMs))
     .map((connection) => connection.id);
 
+  console.info("Balance sync eligibility checked", {
+    connection_count: connections.length,
+    stale_connection_count: staleConnectionIds.length
+  });
+
   let synced = false;
 
   for (const bankConnectionId of staleConnectionIds) {
@@ -76,6 +81,11 @@ export async function syncEnableBankingConnectionBalances({
     !connection.provider_session_id ||
     connection.accounts.length === 0
   ) {
+    console.info("Balance sync skipped for connection", {
+      reason: getBalanceSyncSkipReason(connection),
+      bank_connection_id: bankConnectionId
+    });
+
     return;
   }
 
@@ -90,6 +100,11 @@ export async function syncEnableBankingConnectionBalances({
 
   for (const account of connection.accounts) {
     try {
+      console.info("Fetching Enable Banking balances", {
+        bank_connection_id: bankConnectionId,
+        account_id: account.id
+      });
+
       const balances = await getEnableBankingAccountBalances(
         account.provider_account_id
       );
@@ -161,6 +176,28 @@ export async function syncEnableBankingConnectionBalances({
   if (failures.length > 0 && rows.length === 0) {
     throw new Error("Could not fetch balances for any linked account.");
   }
+}
+
+function getBalanceSyncSkipReason(
+  connection: StoredConnectionForBalanceSync | null
+): string {
+  if (!connection) {
+    return "connection-not-found";
+  }
+
+  if (connection.status !== "linked") {
+    return "connection-not-linked";
+  }
+
+  if (!connection.provider_session_id) {
+    return "missing-provider-session-id";
+  }
+
+  if (connection.accounts.length === 0) {
+    return "no-accounts";
+  }
+
+  return "unknown";
 }
 
 async function getConnectionForBalanceSync({

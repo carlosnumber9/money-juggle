@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import type { HomeProps } from "@/definitions";
 import { Card, CardContent } from "@/components/ui/card";
 
+import { BalanceAutoSync } from "@/app/(private)/balance-auto-sync";
 import { BankConnectionsPanel } from "@/app/(private)/bank-connections-panel";
 import { EnableBankingStatus } from "@/app/(private)/enable-banking-status";
 import { getPrivateHomeView } from "@/lib/views/private-home-view";
@@ -34,6 +35,12 @@ export default async function Home({ searchParams }: HomeProps) {
           </CardContent>
         </Card>
       </div>
+      <BalanceAutoSync
+        enabled={
+          view.providerStatus.status === "success" &&
+          !view.providerStatus.isDemo
+        }
+      />
       <BankConnectionsPanel cards={view.bankCards} />
     </main>
   );
