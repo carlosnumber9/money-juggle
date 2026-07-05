@@ -13,13 +13,13 @@ export default async function Home({ searchParams }: HomeProps) {
   const params = await searchParams;
 
   return (
-    <main className="accounts-page">
-      <div className="accounts-heading">
-        <h1 className="accounts-title">Tus cuentas</h1>
+    <main className="mx-auto w-full max-w-5xl px-6 py-14">
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="min-w-0 text-3xl leading-tight">Tus cuentas</h1>
 
         <Card
           size="sm"
-          className="accounts-status-card py-0"
+          className="shrink-0 p-1 py-0"
           aria-label="Estado de conexión con Enable Banking"
         >
           <CardContent className="p-0">

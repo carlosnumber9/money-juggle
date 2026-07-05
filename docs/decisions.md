@@ -387,14 +387,16 @@ Context:
 
 - The app needs a quick, consistent UI foundation before building authentication and private screens.
 - The user selected the visual preset through shadcn tooling and provided the preset ID `b6thgHlWC`.
-- The setup should stay small and avoid becoming a full design system or dashboard implementation.
+- The setup should stay small and avoid becoming a parallel hand-built design system.
 
 Decision:
 
 - Use shadcn/ui as the component foundation.
 - Use Tailwind CSS v4 with `@tailwindcss/postcss`.
 - Initialize shadcn/ui with preset `b6thgHlWC`, which generated the `base-sera` style, olive base color, CSS variables, and Lucide icon configuration.
-- Start with only minimal reusable UI components: `button` and `card`.
+- Prefer components from `components/ui/` over custom UI primitives by default.
+- Add additional shadcn/ui components from the selected preset when a feature needs them.
+- Keep custom CSS limited to theme tokens, base rules, and screen-specific composition that cannot reasonably live as Tailwind utilities.
 
 Consequences:
 
@@ -402,7 +404,8 @@ Consequences:
 - UI components live under `components/ui/`.
 - Shared class merging lives in `lib/utils.ts`.
 - The project now depends on the shadcn/Tailwind styling toolchain.
-- Further UI components should be added only when a feature needs them.
+- Further UI components should be added only when a feature needs them, but they should come from the selected shadcn/ui preset by default.
+- Avoid recreating cards, buttons, inputs, tooltips, dialogs, or similar primitives with one-off CSS unless the exception is intentional and documented.
 
 Possible future revisit trigger:
 

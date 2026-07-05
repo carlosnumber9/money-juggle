@@ -97,6 +97,16 @@ Prefer simple, explicit code. Introduce abstractions only when they remove real 
 
 Avoid designing for imagined future complexity before the first useful version exists.
 
+## UI Changes
+
+Use the configured shadcn/ui preset as the default UI path.
+
+- Prefer existing components in `components/ui/` before creating custom UI.
+- Add needed shadcn/ui components from the selected preset instead of hand-rolling common primitives.
+- Keep `app/globals.css` for imports, theme tokens, and base rules.
+- Use Tailwind utilities for page composition instead of building many named global CSS classes.
+- Document any custom UI exception when shadcn/ui cannot reasonably cover the interaction.
+
 ## Learning Notes
 
 When a new concept appears, include a short explanation in the relevant PR summary, commit message, or documentation update.

@@ -23,14 +23,16 @@ The frontend should:
 
 ## UI System
 
-The project does not have a component library yet.
+The project uses shadcn/ui with the selected preset as its default UI foundation.
 
-shadcn/ui should be introduced as its own explicit feature, separate from
-backend, Supabase, or integration work, so the styling, folder aliases, and
-component conventions can be reviewed together.
+Default UI directive:
 
-Keep the first UI system step small: initialize the required configuration and
-add only the minimal starter components needed for upcoming screens.
+- Prefer shadcn/ui components from `components/ui/` before creating custom UI primitives.
+- Add new shadcn/ui components through the configured preset when a feature needs them.
+- Keep `app/globals.css` focused on shadcn imports, theme tokens, and base rules.
+- Avoid building local one-off card, button, input, tooltip, dialog, or layout primitives when a shadcn/ui component can cover the need.
+- Use Tailwind utilities for screen-specific composition and spacing instead of accumulating named global CSS classes.
+- Create custom UI only when the selected preset cannot express a required product interaction, and document that exception.
 
 ## Backend Responsibilities Inside Next.js
 

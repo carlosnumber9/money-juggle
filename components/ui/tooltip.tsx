@@ -36,7 +36,7 @@ function Tooltip({
           <TooltipPrimitive.Positioner
             side="bottom"
             sideOffset={8}
-            className="ui-tooltip-positioner"
+            className="z-50"
           >
             <TooltipPrimitive.Popup className="max-w-64 rounded-md bg-popover px-3 py-2 text-sm leading-relaxed text-popover-foreground shadow-md ring-1 ring-border">
               {label}

@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { hasAllowedEmails, isEmailAllowed } from "@/lib/auth/allowlist";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getRequestOrigin } from "@/lib/url/request-origin";
@@ -141,11 +142,18 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const message = getStatusMessage(status, email);
 
   return (
-    <main className="home">
-      <section className="hero" aria-labelledby="login-title">
-        <p className="eyebrow">money-juggle</p>
-        <h1 id="login-title">Accede con tu email.</h1>
-        <p className="intro">
+    <main className="mx-auto w-full max-w-5xl px-6 py-[72px] max-sm:px-[18px] max-sm:py-12">
+      <section className="max-w-3xl" aria-labelledby="login-title">
+        <p className="mb-4 text-sm font-bold tracking-widest text-primary uppercase">
+          money-juggle
+        </p>
+        <h1
+          id="login-title"
+          className="max-w-2xl text-4xl leading-none sm:text-6xl"
+        >
+          Accede con tu email.
+        </h1>
+        <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
           Te enviaremos un enlace mágico para entrar sin contraseña. Por ahora,
           el usuario debe existir previamente en Supabase.
         </p>
@@ -162,8 +170,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           <CardContent className="grid gap-4">
             <label className="grid gap-2 text-sm font-medium" htmlFor="email">
               Email
-              <input
-                className="h-11 border border-input bg-background px-3 text-base outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+              <Input
                 id="email"
                 name="email"
                 type="email"

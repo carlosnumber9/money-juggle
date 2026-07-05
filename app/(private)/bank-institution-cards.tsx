@@ -1,11 +1,13 @@
 "use client";
 
 import { CheckCircle2Icon, CircleAlertIcon } from "lucide-react";
-import type { CSSProperties } from "react";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 import type { BankInstitutionCard } from "@/app/(private)/bank-connections-panel";
+import { Card, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
+import { Tooltip } from "@/components/ui/tooltip";
 
 type BankInstitutionCardsProps = {
   cards: BankInstitutionCard[];
@@ -147,18 +149,30 @@ export function BankInstitutionCards({ cards }: BankInstitutionCardsProps) {
   }, [cards]);
 
   return (
-    <section className="bank-institution-grid" aria-label="Entidades bancarias">
+    <section
+      className="mt-8 grid w-full grid-cols-3 gap-4 max-sm:grid-cols-1"
+      aria-label="Entidades bancarias"
+    >
       {resolvedCards.map((card) => (
-        <div
+        <Card
           key={card.slug}
-          className="bank-institution-card"
-          style={getLogoStyle(card.logoPath)}
+          className="relative min-h-[clamp(160px,18vw,240px)] overflow-hidden p-0"
         >
-          <div className="bank-institution-card-content">
-            <span className="bank-institution-title">{card.name}</span>
-          </div>
+          <Image
+            src={card.logoPath}
+            alt=""
+            width={420}
+            height={220}
+            aria-hidden
+            className="pointer-events-none absolute right-[-10%] bottom-[8%] z-0 w-[112%] opacity-50"
+          />
+          <CardContent className="relative z-10 flex min-h-[clamp(160px,18vw,240px)] items-start bg-card/85 p-4 text-left">
+            <span className="max-w-[calc(100%-3rem)] text-base font-semibold">
+              {card.name}
+            </span>
+          </CardContent>
           <BankStatusIcon card={card} />
-        </div>
+        </Card>
       ))}
     </section>
   );
@@ -181,39 +195,30 @@ function markLoadingProviderCardsAsError(
   });
 }
 
-function getLogoStyle(logoPath: string): CSSProperties {
-  return {
-    "--bank-logo": `url(${logoPath})`
-  } as CSSProperties;
-}
-
 function BankStatusIcon({ card }: { card: BankInstitutionCard }) {
-  const tone = getStatusTone(card.state);
-
   return (
-    <span
-      className="bank-institution-status"
-      data-tone={tone}
-      aria-label={card.tooltip}
-    >
-      {getStatusIcon(card.state)}
-      <span className="bank-institution-status-tooltip" role="tooltip">
-        {card.tooltip}
-      </span>
-    </span>
+    <div className="absolute top-3 right-3 z-20">
+      <Tooltip
+        triggerLabel={card.tooltip}
+        label={card.tooltip}
+        triggerClassName={getStatusToneClass(card.state)}
+      >
+        {getStatusIcon(card.state)}
+      </Tooltip>
+    </div>
   );
 }
 
-function getStatusTone(state: BankInstitutionCard["state"]) {
+function getStatusToneClass(state: BankInstitutionCard["state"]) {
   if (state === "connected" || state === "idle") {
-    return "success";
+    return "bg-background/90 text-primary backdrop-blur hover:bg-muted";
   }
 
   if (state === "loading" || state === "linking") {
-    return "loading";
+    return "bg-background/90 text-muted-foreground backdrop-blur hover:bg-muted";
   }
 
-  return "error";
+  return "bg-background/90 text-destructive backdrop-blur hover:bg-destructive/10";
 }
 
 function getStatusIcon(state: BankInstitutionCard["state"]) {
