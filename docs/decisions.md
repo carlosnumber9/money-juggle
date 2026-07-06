@@ -612,3 +612,34 @@ Possible future revisit trigger:
 
 - If Enable Banking rate limits require a longer freshness window.
 - If the owner wants an explicit manual refresh affordance later.
+
+## ADR-021: Keep Visual Styling Bound To The Shadcn Preset
+
+Status:
+
+- Accepted.
+
+Context:
+
+- The app uses the shadcn preset as its visual source of truth.
+- Shape and color drift can appear when shared components use fixed utility
+  values instead of theme-backed tokens.
+
+Decision:
+
+- Keep global shape controlled by the shadcn radius token.
+- Use theme-backed Tailwind utilities for shared component radius and colors.
+- Keep the selected sharp-corner preset represented by `--radius: 0rem`.
+- Avoid hardcoded visual colors in app UI unless they are documented as a
+  deliberate exception.
+
+Consequences:
+
+- Existing `rounded-*` utilities resolve to sharp corners through the preset
+  token.
+- Future preset changes can flow through shared components without rewriting
+  every caller.
+
+Possible future revisit trigger:
+
+- If a future design pass chooses a different shadcn radius or color preset.
