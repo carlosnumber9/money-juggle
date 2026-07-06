@@ -157,6 +157,7 @@ function TransactionRow({
   const style = {
     "--institution-color": getInstitutionColor(transaction.institution_slug)
   } as InstitutionColorStyle;
+  const isKnownInstitution = transaction.institution_slug !== "unknown";
   const amount = Number(transaction.amount);
   const isNegative = amount < 0;
   const concept = getTransactionConcept(transaction);
@@ -167,11 +168,12 @@ function TransactionRow({
   return (
     <TableRow
       style={style}
+      data-bank-colored={isKnownInstitution ? "true" : undefined}
       aria-label={`${accountLabel}. ${concept}. ${formatCurrency(
         transaction.amount,
         transaction.currency
       )}.`}
-      className={getTransactionRowClassName(transaction.institution_slug)}
+      className="monthly-transaction-row"
     >
       <TableCell className="pl-4 text-muted-foreground">
         {transaction.booking_date
@@ -205,16 +207,6 @@ function getInstitutionColor(
   }
 
   return "transparent";
-}
-
-function getTransactionRowClassName(
-  slug: MonthlyTransactionSummary["institution_slug"]
-): string {
-  if (slug === "unknown") {
-    return "";
-  }
-
-  return "bg-[color-mix(in_oklch,var(--institution-color)_14%,var(--card))] hover:bg-[color-mix(in_oklch,var(--institution-color)_20%,var(--card))]";
 }
 
 function getTransactionConcept(transaction: MonthlyTransactionSummary): string {

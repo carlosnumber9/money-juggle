@@ -139,3 +139,19 @@
     overflow-wrap: anywhere;
   }
 }
+
+.monthly-transaction-row[data-bank-colored="true"] {
+  background-color: color-mix(
+    in oklch,
+    var(--institution-color) 14%,
+    var(--card)
+  );
+}
+
+.monthly-transaction-row[data-bank-colored="true"]:hover {
+  background-color: color-mix(
+    in oklch,
+    var(--institution-color) 20%,
+    var(--card)
+  );
+}
