@@ -8,6 +8,7 @@ import {
   Clock3Icon,
   LinkIcon,
   PiggyBankIcon,
+  TimerResetIcon,
   WalletCardsIcon
 } from "lucide-react";
 import Image from "next/image";
@@ -148,7 +149,7 @@ function BankStatusIcon({ card }: { card: BankInstitutionCard }) {
           label={getConnectionActionLabel(card)}
           triggerClassName={getStatusToneClass(card.state)}
         >
-          <LinkIcon className="size-7" aria-hidden />
+          {getConnectionActionIcon(card)}
         </Tooltip>
       </form>
     );
@@ -173,7 +174,9 @@ function canStartConnection(
 } {
   return (
     card.provider === "enable_banking" &&
-    (card.state === "idle" || card.state === "error") &&
+    (card.state === "idle" ||
+      card.state === "error" ||
+      card.state === "stale-linking") &&
     Boolean(card.aspspName) &&
     Boolean(card.country)
   );
@@ -184,7 +187,19 @@ function getConnectionActionLabel(card: BankInstitutionCard): string {
     return `Reintentar conexión con ${card.name}. ${card.tooltip}`;
   }
 
+  if (card.state === "stale-linking") {
+    return `Reintentar conexión con ${card.name}. ${card.tooltip}`;
+  }
+
   return `Conectar ${card.name} con Enable Banking.`;
+}
+
+function getConnectionActionIcon(card: BankInstitutionCard) {
+  if (card.state === "stale-linking") {
+    return <TimerResetIcon className="size-7" aria-hidden />;
+  }
+
+  return <LinkIcon className="size-7" aria-hidden />;
 }
 
 function getStatusToneClass(state: BankInstitutionCard["state"]) {
@@ -196,12 +211,20 @@ function getStatusToneClass(state: BankInstitutionCard["state"]) {
     return "size-auto border-0 bg-transparent p-0 text-muted-foreground shadow-none hover:bg-transparent focus-visible:ring-ring/30";
   }
 
+  if (state === "stale-linking") {
+    return "size-auto border-0 bg-transparent p-0 text-primary shadow-none hover:bg-transparent focus-visible:ring-ring/30";
+  }
+
   return "size-auto border-0 bg-transparent p-0 text-destructive shadow-none hover:bg-transparent focus-visible:ring-ring/30";
 }
 
 function getStatusIcon(state: BankInstitutionCard["state"]) {
   if (state === "loading" || state === "linking") {
     return <Spinner className="size-7" aria-hidden />;
+  }
+
+  if (state === "stale-linking") {
+    return <TimerResetIcon className="size-7" aria-hidden />;
   }
 
   if (state === "connected" || state === "idle") {

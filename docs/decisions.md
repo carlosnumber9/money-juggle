@@ -643,3 +643,44 @@ Consequences:
 Possible future revisit trigger:
 
 - If a future design pass chooses a different shadcn radius or color preset.
+
+## ADR-022: Treat Stale Bank Authorization Attempts As Retryable
+
+Status:
+
+- Accepted.
+
+Context:
+
+- Enable Banking authorization starts by storing a `bank_connections` row with
+  `status = linking` before redirecting the owner to the provider flow.
+- If the provider callback never returns, the browser is closed, or the bank
+  flow fails outside the callback path, that row can remain in `linking`.
+- A permanently `linking` row blocks the institution card from starting a new
+  connection attempt.
+
+Decision:
+
+- Treat a `linking` connection as stale when its `updated_at` timestamp is more
+  than 15 minutes old.
+- Present stale linking attempts as a recoverable UI state instead of an
+  indefinite loading state.
+- Allow the owner to retry the connection from that state by using the existing
+  server-side Enable Banking start flow.
+- Do not delete or mutate the stale attempt as part of this first recovery UI;
+  keep the previous row as consent history.
+
+Consequences:
+
+- The owner can recover from abandoned or failed provider redirects without
+  manual database changes.
+- The retry still uses the existing server-only provider flow, so sensitive
+  Enable Banking credentials remain off the browser.
+- Stale authorization rows may remain in the database until a later cleanup or
+  explicit cancellation feature is implemented.
+
+Possible future revisit trigger:
+
+- If stale `linking` rows become noisy enough to require automatic cleanup.
+- If the owner wants an explicit cancel action or audit event for abandoned
+  authorization attempts.

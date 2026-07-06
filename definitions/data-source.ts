@@ -33,6 +33,8 @@ export type BankConnectionSummary = {
   id: string;
   status: string;
   consent_expires_at: string | null;
+  created_at: string;
+  updated_at: string;
   institution: {
     name: string;
     country: string | null;

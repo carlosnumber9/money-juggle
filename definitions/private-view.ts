@@ -22,7 +22,14 @@ export type BankInstitutionCard = {
   provider: "enable_banking" | "manual";
   aspspName?: string;
   country?: string;
-  state: "loading" | "idle" | "connected" | "linking" | "error" | "unavailable";
+  state:
+    | "loading"
+    | "idle"
+    | "connected"
+    | "linking"
+    | "stale-linking"
+    | "error"
+    | "unavailable";
   tooltip: string;
   balanceTotals?: Array<{
     amount: string;

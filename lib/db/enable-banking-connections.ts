@@ -356,6 +356,8 @@ export async function listUserEnableBankingConnections(
       id,
       status,
       consent_expires_at,
+      created_at,
+      updated_at,
       institutions (
         name,
         country,
@@ -391,6 +393,8 @@ export async function listUserEnableBankingConnections(
     id: connection.id,
     status: connection.status,
     consent_expires_at: connection.consent_expires_at,
+    created_at: connection.created_at,
+    updated_at: connection.updated_at,
     institution: Array.isArray(connection.institutions)
       ? (connection.institutions[0] ?? null)
       : connection.institutions,

@@ -64,6 +64,8 @@ export const DEMO_BANK_CONNECTIONS: BankConnectionSummary[] = [
     id: "10000000-0000-4000-8000-000000000001",
     status: "linked",
     consent_expires_at: "2026-12-31T23:59:59.000Z",
+    created_at: "2026-07-05T08:00:00.000Z",
+    updated_at: "2026-07-05T08:00:00.000Z",
     institution: {
       name: "CaixaBank",
       country: "ES",
@@ -106,6 +108,8 @@ export const DEMO_BANK_CONNECTIONS: BankConnectionSummary[] = [
     id: "10000000-0000-4000-8000-000000000002",
     status: "linked",
     consent_expires_at: "2026-12-31T23:59:59.000Z",
+    created_at: "2026-07-05T08:00:00.000Z",
+    updated_at: "2026-07-05T08:00:00.000Z",
     institution: {
       name: "ING",
       country: "ES",

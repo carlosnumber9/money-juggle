@@ -14,6 +14,7 @@ import { getBankingDataSource } from "@/lib/data/get-banking-data-source";
 
 const DECIMAL_SCALE = 6;
 const DECIMAL_FACTOR = 1_000_000n;
+const STALE_LINKING_AFTER_MS = 15 * 60 * 1000;
 
 export async function getPrivateHomeView(): Promise<PrivateHomeView> {
   const dataSource = getBankingDataSource();
@@ -174,10 +175,16 @@ function buildBankCards({
     }
 
     if (connection?.status === "linking") {
+      const isStaleLinking = isStaleLinkingConnection(connection);
+
       return {
         ...bank,
-        state: "linking",
-        tooltip: `Conexión con ${bank.name} en curso.`
+        aspspName: connection.institution?.name ?? bank.name,
+        country: connection.institution?.country ?? undefined,
+        state: isStaleLinking ? "stale-linking" : "linking",
+        tooltip: isStaleLinking
+          ? `La conexión con ${bank.name} parece atascada. Puedes reintentarla.`
+          : `Conexión con ${bank.name} en curso.`
       };
     }
 
@@ -243,6 +250,15 @@ function buildBankCards({
       tooltip: `${bank.name} disponible en Enable Banking.`
     };
   });
+}
+
+function isStaleLinkingConnection(connection: BankConnectionSummary): boolean {
+  const lastChangedAt = new Date(connection.updated_at).getTime();
+
+  return (
+    Number.isFinite(lastChangedAt) &&
+    Date.now() - lastChangedAt > STALE_LINKING_AFTER_MS
+  );
 }
 
 function buildBalanceTotals(connection: BankConnectionSummary) {
