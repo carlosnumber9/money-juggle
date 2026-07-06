@@ -13,15 +13,12 @@ import {
   getEnableBankingApplication,
   getEnableBankingAspsps
 } from "@/lib/enable-banking/client";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentSupabaseUser } from "@/lib/supabase/current-user";
 
 export const realBankingDataSource: BankingDataSource = {
   mode: "real",
   async getCurrentUser() {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
+    const user = await getCurrentSupabaseUser();
 
     if (!user) {
       return null;

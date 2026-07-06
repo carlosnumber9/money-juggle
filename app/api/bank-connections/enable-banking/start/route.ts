@@ -15,7 +15,7 @@ import {
   getEnableBankingAspsps,
   startEnableBankingAuthorization
 } from "@/lib/enable-banking/client";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentSupabaseUser } from "@/lib/supabase/current-user";
 
 export const runtime = "nodejs";
 
@@ -33,10 +33,7 @@ export async function POST(request: NextRequest) {
     return redirectWithStatus(requestUrl, "linked");
   }
 
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
+  const user = await getCurrentSupabaseUser();
 
   if (!user) {
     console.warn("Enable Banking start rejected", {

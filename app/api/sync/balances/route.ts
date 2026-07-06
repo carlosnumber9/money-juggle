@@ -4,7 +4,7 @@ import { isEmailAllowed } from "@/lib/auth/allowlist";
 import { isDemoMode } from "@/lib/demo/mode";
 import { syncStaleEnableBankingBalances } from "@/lib/db/enable-banking-balances";
 import { listUserEnableBankingConnections } from "@/lib/db/enable-banking-connections";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentSupabaseUser } from "@/lib/supabase/current-user";
 
 export const runtime = "nodejs";
 
@@ -13,10 +13,7 @@ export async function POST() {
     return NextResponse.json({ synced: false });
   }
 
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
+  const user = await getCurrentSupabaseUser();
 
   if (!user) {
     return NextResponse.json({ error: "login-required" }, { status: 401 });
