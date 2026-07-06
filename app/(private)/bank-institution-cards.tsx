@@ -25,14 +25,11 @@ import type {
 export function BankInstitutionCards({ cards }: BankInstitutionCardsProps) {
   return (
     <section
-      className="mt-8 grid w-full grid-cols-3 gap-4 max-sm:grid-cols-1"
+      className="mt-8 grid w-full grid-cols-3 items-start gap-4 max-sm:grid-cols-1"
       aria-label="Entidades bancarias"
     >
       {cards.map((card) => (
-        <Card
-          key={card.slug}
-          className="relative min-h-[clamp(160px,18vw,240px)] overflow-hidden p-0"
-        >
+        <Card key={card.slug} className="relative overflow-hidden p-0">
           <Image
             src={card.logoPath}
             alt=""
@@ -41,8 +38,8 @@ export function BankInstitutionCards({ cards }: BankInstitutionCardsProps) {
             aria-hidden
             className="pointer-events-none absolute top-[56%] left-1/2 z-0 w-[210%] -translate-x-1/2 -translate-y-1/2 scale-[1.65] opacity-10"
           />
-          <CardContent className="relative z-10 flex min-h-[clamp(160px,18vw,240px)] items-start p-4 text-left">
-            <div className="flex min-h-full w-full flex-col justify-between gap-5">
+          <CardContent className="relative z-10 p-4 text-left">
+            <div className="flex w-full flex-col gap-4">
               <div className="min-w-0 pr-9">
                 <span className="block truncate text-base font-semibold">
                   {card.name}
@@ -75,10 +72,7 @@ function BankBalanceSummary({ card }: { card: BankInstitutionCard }) {
   return (
     <div className="mt-5 space-y-1">
       {card.balanceTotals.map((total) => (
-        <p
-          key={total.currency}
-          className="text-2xl leading-none font-semibold tracking-normal"
-        >
+        <p key={total.currency} className="text-2xl font-semibold tracking-normal">
           {formatCurrency(total.amount, total.currency)}
         </p>
       ))}
@@ -96,9 +90,9 @@ function BankAccountList({ card }: { card: BankInstitutionCard }) {
   }
 
   return (
-    <ul className="space-y-1.5 text-xs">
+    <ul className="space-y-1 text-xs">
       {card.accounts.map((account) => (
-        <li key={account.id} className="flex min-w-0 items-center gap-2 py-1.5">
+        <li key={account.id} className="flex min-w-0 items-center gap-2 py-1">
           <AccountIcon account={account} />
           <span className="font-medium">
             {account.latestBalance
