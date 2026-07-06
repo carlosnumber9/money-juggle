@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { BalanceAutoSync } from "@/app/(private)/balance-auto-sync";
 import { BankConnectionsPanel } from "@/app/(private)/bank-connections-panel";
 import { EnableBankingStatus } from "@/app/(private)/enable-banking-status";
+import { MonthlyTransactionsPanel } from "@/app/(private)/monthly-transactions-panel";
 import { getPrivateHomeView } from "@/lib/views/private-home-view";
 
 export default async function Home() {
@@ -29,6 +30,15 @@ export default async function Home() {
         }
       />
       <BankConnectionsPanel cards={view.bankCards} />
+      <MonthlyTransactionsPanel
+        enabled={
+          view.providerStatus.status === "success" &&
+          !view.providerStatus.isDemo
+        }
+        transactions={view.monthlyTransactions.rows}
+        range={view.monthlyTransactions.range}
+        error={view.monthlyTransactions.error}
+      />
     </main>
   );
 }

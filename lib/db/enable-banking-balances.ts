@@ -121,6 +121,12 @@ export async function syncEnableBankingConnectionBalances({
         )
       );
     } catch (error) {
+      console.error("Enable Banking balance account fetch failed", {
+        bank_connection_id: bankConnectionId,
+        account_id: account.id,
+        message: getErrorMessage(error)
+      });
+
       failures.push({
         account_id: account.id,
         provider_account_id: account.provider_account_id,

@@ -8,7 +8,9 @@ import type {
   EnableBankingBalanceResource,
   EnableBankingErrorResponse,
   EnableBankingStartAuthorizationInput,
-  EnableBankingStartAuthorizationResponse
+  EnableBankingStartAuthorizationResponse,
+  EnableBankingTransactionResource,
+  EnableBankingTransactionsResponse
 } from "@/definitions";
 import { getEnableBankingConfig } from "@/lib/enable-banking/env";
 import { createEnableBankingJwt } from "@/lib/enable-banking/jwt";
@@ -91,6 +93,27 @@ export async function getEnableBankingAccountBalances(
   );
 
   return response.balances;
+}
+
+export async function getEnableBankingAccountTransactions({
+  accountId,
+  dateFrom,
+  dateTo
+}: {
+  accountId: string;
+  dateFrom: string;
+  dateTo: string;
+}): Promise<EnableBankingTransactionResource[]> {
+  const searchParams = new URLSearchParams({
+    date_from: dateFrom,
+    date_to: dateTo
+  });
+  const response =
+    await requestEnableBanking<EnableBankingTransactionsResponse>(
+      `/accounts/${encodeURIComponent(accountId)}/transactions?${searchParams.toString()}`
+    );
+
+  return Array.isArray(response) ? response : response.transactions;
 }
 
 async function requestEnableBanking<T>(

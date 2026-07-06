@@ -1,5 +1,7 @@
 import type * as React from "react";
 
+import type { MonthlyTransactionSummary } from "./data-source";
+
 export type PrivateLayoutView =
   | {
       kind: "unauthenticated";
@@ -77,6 +79,14 @@ export type PrivateHomeView =
       };
       providerStatus: ProviderStatusView;
       bankCards: BankInstitutionCard[];
+      monthlyTransactions: {
+        range: {
+          from: string;
+          to: string;
+        };
+        rows: MonthlyTransactionSummary[];
+        error: string | null;
+      };
     };
 
 export const BANKS = [
@@ -142,6 +152,16 @@ export type BankInstitutionCardsProps = {
 
 export type BankConnectionsPanelProps = {
   cards: BankInstitutionCard[];
+};
+
+export type MonthlyTransactionsPanelProps = {
+  enabled: boolean;
+  transactions: MonthlyTransactionSummary[];
+  range: {
+    from: string;
+    to: string;
+  };
+  error: string | null;
 };
 
 export type EnableBankingStatusProps = {

@@ -51,12 +51,38 @@ export type BankConnectionSummary = {
   }>;
 };
 
+export type MonthlyTransactionSummary = {
+  id: string;
+  institution_slug: "caixabank" | "ing" | "unknown";
+  institution_name: string;
+  institution_provider_id: string | null;
+  account_id: string;
+  account_name: string;
+  account_iban_last4: string | null;
+  booking_status: "booked" | "pending" | "information";
+  booking_date: string | null;
+  amount: string;
+  currency: string;
+  description: string | null;
+  merchant_name: string | null;
+  counterparty_name: string | null;
+};
+
+export type MonthlyTransactionRange = {
+  from: string;
+  to: string;
+};
+
 export type BankingDataSource = {
   mode: "demo" | "real";
   getCurrentUser(): Promise<AppUser | null>;
   getProviderApplication(): Promise<ProviderApplication>;
   listAvailableInstitutions(): Promise<InstitutionAvailability[]>;
   listBankConnections(userId: string): Promise<BankConnectionSummary[]>;
+  listMonthlyTransactions(
+    userId: string,
+    range: MonthlyTransactionRange
+  ): Promise<MonthlyTransactionSummary[]>;
 };
 
 export const INITIAL_BANK_NAMES = ["CaixaBank", "ING"] as const;

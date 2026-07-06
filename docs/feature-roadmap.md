@@ -24,7 +24,7 @@ Use this checklist as the source of truth for what remains to be implemented. Ke
 - [x] 16. Handle Enable Banking callback.
 - [x] 17. Store connected accounts.
 - [x] 18. Sync balances.
-- [ ] 19. Sync transactions.
+- [x] 19. Sync transactions.
 - [ ] 20. Build a basic dashboard.
 - [ ] 21. Add transaction categorization.
 - [ ] 22. Add monthly reports.
@@ -838,6 +838,23 @@ Do not do yet:
 
 ## 19. Sync Transactions
 
+Status:
+
+- Completed as a first current-month slice.
+
+Implemented result:
+
+- The private home screen now loads cached current-month transactions from
+  Supabase and displays them below the account cards.
+- A client-side refresh triggers `POST /api/sync/transactions`, which runs
+  server-only Enable Banking transaction fetches for each linked account.
+- Transaction sync stores normalized provider-owned fields, stable import keys,
+  identity source, fallback fingerprints, and sync run observability.
+- Re-running the same sync updates rows with the same `user_id`, `account_id`,
+  and `stable_import_key` instead of inserting duplicates.
+- Rows are visually associated with the source institution through corporate
+  row coloring instead of an extra account column.
+
 Goal:
 
 - Fetch and store transactions.
@@ -860,10 +877,8 @@ Concepts learned:
 
 Possible future files:
 
-- Transaction tables.
 - Transaction normalization tests.
 - Transaction identity helpers.
-- Sync persistence logic.
 
 Risks or decisions:
 
@@ -883,6 +898,13 @@ Recommended scope:
 - Reconcile against recent same-account candidates before inserting when the stable key has changed because a pending or incomplete transaction gained stronger identifiers.
 - Preserve app-owned fields such as `category_id` during sync updates.
 - Prefer booked transactions as the source for permanent reports.
+
+Current limitations:
+
+- The first implementation matches existing rows by the computed stable import
+  key. The broader same-account reconciliation path for pending transactions
+  that later gain stronger identifiers is still deferred.
+- Focused transaction identity tests are still deferred.
 
 Suggested acceptance criteria:
 

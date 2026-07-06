@@ -6,11 +6,13 @@ import type {
   BankConnectionSummary,
   BankInstitutionCard,
   InstitutionAvailability,
+  MonthlyTransactionSummary,
   PrivateHomeView,
   ProviderStatusView,
   Result
 } from "@/definitions";
 import { getBankingDataSource } from "@/lib/data/get-banking-data-source";
+import { getCurrentMonthTransactionRange } from "@/lib/domain/transaction-ranges";
 
 const DECIMAL_SCALE = 6;
 const DECIMAL_FACTOR = 1_000_000n;
@@ -28,10 +30,13 @@ export async function getPrivateHomeView(): Promise<PrivateHomeView> {
     return { kind: "forbidden" };
   }
 
-  const [connectionsResult, providerResult] = await Promise.all([
-    loadConnections(dataSource, user.id),
-    loadProviderStatus(dataSource)
-  ]);
+  const transactionRange = getCurrentMonthTransactionRange();
+  const [connectionsResult, providerResult, transactionsResult] =
+    await Promise.all([
+      loadConnections(dataSource, user.id),
+      loadProviderStatus(dataSource),
+      loadMonthlyTransactions(dataSource, user.id, transactionRange)
+    ]);
   const providerStatus: ProviderStatusView = providerResult.ok
     ? providerResult.value
     : {
@@ -48,6 +53,9 @@ export async function getPrivateHomeView(): Promise<PrivateHomeView> {
     institutionsResult,
     providerStatus
   });
+  const monthlyTransactionRows = transactionsResult.ok
+    ? transactionsResult.value
+    : [];
 
   return {
     kind: "ready",
@@ -55,7 +63,12 @@ export async function getPrivateHomeView(): Promise<PrivateHomeView> {
       email: user.email
     },
     providerStatus,
-    bankCards
+    bankCards,
+    monthlyTransactions: {
+      range: transactionRange,
+      rows: monthlyTransactionRows,
+      error: transactionsResult.ok ? null : transactionsResult.reason
+    }
   };
 }
 
@@ -118,6 +131,27 @@ async function loadInstitutions(
       reason: getPublicErrorReason(
         error,
         "No se pudo cargar la lista de bancos."
+      )
+    };
+  }
+}
+
+async function loadMonthlyTransactions(
+  dataSource: BankingDataSource,
+  userId: string,
+  range: { from: string; to: string }
+): Promise<Result<MonthlyTransactionSummary[]>> {
+  try {
+    return {
+      ok: true,
+      value: await dataSource.listMonthlyTransactions(userId, range)
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      reason: getPublicErrorReason(
+        error,
+        "No se pudieron cargar los movimientos."
       )
     };
   }

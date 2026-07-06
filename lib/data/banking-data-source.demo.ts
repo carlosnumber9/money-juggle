@@ -5,6 +5,7 @@ import {
   DEMO_BANK_CONNECTIONS,
   DEMO_INSTITUTIONS,
   DEMO_PROVIDER_APPLICATION,
+  DEMO_TRANSACTIONS,
   DEMO_USER
 } from "@/definitions";
 
@@ -21,5 +22,55 @@ export const demoBankingDataSource: BankingDataSource = {
   },
   async listBankConnections() {
     return DEMO_BANK_CONNECTIONS;
+  },
+  async listMonthlyTransactions(_userId, range) {
+    return DEMO_TRANSACTIONS.filter(
+      (transaction) =>
+        transaction.bookingDate >= range.from &&
+        transaction.bookingDate < range.to
+    ).map((transaction) => {
+      const account = DEMO_BANK_CONNECTIONS.flatMap(
+        (connection) => connection.accounts
+      ).find((candidate) => candidate.id === transaction.accountId);
+      const connection = DEMO_BANK_CONNECTIONS.find((candidate) =>
+        candidate.accounts.some((item) => item.id === transaction.accountId)
+      );
+      const institutionName = connection?.institution?.name ?? "Cuenta";
+
+      return {
+        id: transaction.id,
+        institution_slug: getInstitutionSlug(institutionName),
+        institution_name: institutionName,
+        institution_provider_id: connection?.institution
+          ? `ES:${connection.institution.name}`
+          : null,
+        account_id: transaction.accountId,
+        account_name: account?.name ?? "Cuenta",
+        account_iban_last4: account?.iban_last4 ?? null,
+        booking_status: transaction.bookingStatus,
+        booking_date: transaction.bookingDate,
+        amount: transaction.amount,
+        currency: transaction.currency,
+        description: transaction.description,
+        merchant_name: transaction.merchantName,
+        counterparty_name: transaction.counterpartyName
+      };
+    });
   }
 };
+
+function getInstitutionSlug(
+  institutionName: string
+): "caixabank" | "ing" | "unknown" {
+  const normalized = institutionName.toLowerCase();
+
+  if (normalized.includes("ing")) {
+    return "ing";
+  }
+
+  if (normalized.includes("caixabank") || normalized.includes("caixa")) {
+    return "caixabank";
+  }
+
+  return "unknown";
+}

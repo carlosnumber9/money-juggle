@@ -178,8 +178,13 @@ the last four IBAN characters when available.
 
 Balances are synchronized automatically by server-only code after a connection
 is completed and through an internal `POST /api/sync/balances` request when the
-private home screen detects missing or stale balance snapshots. Transactions are
-not synchronized yet and remain a separate roadmap item.
+private home screen detects missing or stale balance snapshots.
+
+Transactions are synchronized by server-only code through
+`POST /api/sync/transactions`. The first implementation fetches the current
+month for each linked Enable Banking account, normalizes rows into the app's
+`transactions` table, and keeps the private home table responsive by showing
+cached Supabase rows while the refresh runs.
 
 ## What To Store
 

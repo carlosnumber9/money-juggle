@@ -684,3 +684,40 @@ Possible future revisit trigger:
 - If stale `linking` rows become noisy enough to require automatic cleanup.
 - If the owner wants an explicit cancel action or audit event for abandoned
   authorization attempts.
+
+## ADR-023: Identify Transaction Institution By Row Color
+
+Status:
+
+- Accepted.
+
+Context:
+
+- The first transaction table needs to show current-month movements below the
+  account cards.
+- The owner wants a simple table and does not want a separate visible account
+  column in the first version.
+- Transactions still need an immediate visual cue for whether they came from
+  CaixaBank or ING.
+
+Decision:
+
+- Store corporate bank colors as global CSS variables:
+  `--bank-color-caixabank: #0c9cdb` and `--bank-color-ing: #ff6200`.
+- Color each transaction row according to the source institution.
+- Keep account and institution details available in prepared transaction data
+  and accessible row labels, but do not show them as a dedicated column in the
+  first table.
+
+Consequences:
+
+- The table stays compact while preserving source-bank context.
+- Future filters or detail drawers can reuse the account metadata already
+  prepared for each row.
+- Corporate colors are a deliberate exception to the general theme-token-only
+  UI rule.
+
+Possible future revisit trigger:
+
+- If more institutions are added and color alone stops being enough.
+- If accessibility review shows that a visible institution label is needed.
