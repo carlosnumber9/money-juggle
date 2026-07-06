@@ -12,6 +12,7 @@ import {
   WalletCardsIcon
 } from "lucide-react";
 import Image from "next/image";
+import { useRef, useState } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
@@ -134,22 +135,45 @@ function AccountIcon({
 }
 
 function BankStatusIcon({ card }: { card: BankInstitutionCard }) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = useRef(false);
+
   if (canStartConnection(card)) {
+    const label = isSubmitting
+      ? `Conexión con ${card.name} en curso.`
+      : getConnectionActionLabel(card);
+
     return (
       <form
         action="/api/bank-connections/enable-banking/start"
         method="post"
         className="absolute top-3 right-3 z-20"
+        onSubmit={(event) => {
+          if (isSubmittingRef.current) {
+            event.preventDefault();
+            return;
+          }
+
+          isSubmittingRef.current = true;
+          setIsSubmitting(true);
+        }}
       >
         <input type="hidden" name="aspspName" value={card.aspspName} />
         <input type="hidden" name="country" value={card.country} />
         <Tooltip
           triggerType="submit"
-          triggerLabel={getConnectionActionLabel(card)}
-          label={getConnectionActionLabel(card)}
-          triggerClassName={getStatusToneClass(card.state)}
+          triggerLabel={label}
+          label={label}
+          triggerClassName={`${getStatusToneClass(
+            isSubmitting ? "linking" : card.state
+          )} ${isSubmitting ? "" : "cursor-pointer"}`}
+          triggerDisabled={isSubmitting}
         >
-          {getConnectionActionIcon(card)}
+          {isSubmitting ? (
+            <Spinner className="size-7" aria-hidden />
+          ) : (
+            getConnectionActionIcon(card)
+          )}
         </Tooltip>
       </form>
     );

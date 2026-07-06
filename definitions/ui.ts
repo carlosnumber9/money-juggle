@@ -6,6 +6,7 @@ export type TooltipProps = {
   triggerLabel: string;
   triggerType?: "button" | "submit";
   triggerClassName?: string;
+  triggerDisabled?: boolean;
 };
 
 export type CardProps = React.ComponentProps<"div"> & {
