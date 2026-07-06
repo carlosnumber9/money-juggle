@@ -39,7 +39,7 @@ export function BankInstitutionCards({ cards }: BankInstitutionCardsProps) {
             className="pointer-events-none absolute top-[56%] left-1/2 z-0 w-[210%] -translate-x-1/2 -translate-y-1/2 scale-[1.65] opacity-10"
           />
           <CardContent className="relative z-10 p-4 text-left">
-            <div className="flex w-full flex-col gap-4">
+            <div className="flex w-full flex-col gap-3">
               <div className="min-w-0 pr-9">
                 <span className="block truncate text-base font-semibold">
                   {card.name}
@@ -63,16 +63,19 @@ function BankBalanceSummary({ card }: { card: BankInstitutionCard }) {
 
   if (!card.balanceTotals || card.balanceTotals.length === 0) {
     return (
-      <p className="mt-6 max-w-48 text-sm text-muted-foreground">
+      <p className="mt-5 max-w-48 text-sm text-muted-foreground">
         Saldo pendiente de sincronizar.
       </p>
     );
   }
 
   return (
-    <div className="mt-5 space-y-1">
+    <div className="mt-4 space-y-1">
       {card.balanceTotals.map((total) => (
-        <p key={total.currency} className="text-2xl font-semibold tracking-normal">
+        <p
+          key={total.currency}
+          className="text-2xl font-semibold tracking-normal"
+        >
           {formatCurrency(total.amount, total.currency)}
         </p>
       ))}
