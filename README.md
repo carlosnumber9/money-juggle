@@ -26,7 +26,9 @@ MONEY_JUGGLE_DEMO_MODE=true
 
 Demo mode only works during local Next.js development. It serves mock users,
 bank connections, accounts, balances, and transactions through the same app data
-source contract used by the real integration.
+source contract used by the real integration. In demo mode, the login screen
+remains reachable after signing out, and submitting the login form enters the
+home page even when the email field is empty.
 
 Configure the allowed login emails as a comma-separated list:
 
