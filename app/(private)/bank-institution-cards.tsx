@@ -148,22 +148,20 @@ function BankStatusIcon({ card }: { card: BankInstitutionCard }) {
           label={getConnectionActionLabel(card)}
           triggerClassName={getStatusToneClass(card.state)}
         >
-          <LinkIcon className="size-5" aria-hidden />
+          <LinkIcon className="size-7" aria-hidden />
         </Tooltip>
       </form>
     );
   }
 
   return (
-    <div className="absolute top-3 right-3 z-20">
-      <Tooltip
-        triggerLabel={card.tooltip}
-        label={card.tooltip}
-        triggerClassName={getStatusToneClass(card.state)}
-      >
-        {getStatusIcon(card.state)}
-      </Tooltip>
-    </div>
+    <Tooltip
+      triggerLabel={card.tooltip}
+      label={card.tooltip}
+      triggerClassName={`absolute top-3 right-3 z-20 ${getStatusToneClass(card.state)}`}
+    >
+      {getStatusIcon(card.state)}
+    </Tooltip>
   );
 }
 
@@ -191,26 +189,26 @@ function getConnectionActionLabel(card: BankInstitutionCard): string {
 
 function getStatusToneClass(state: BankInstitutionCard["state"]) {
   if (state === "connected" || state === "idle") {
-    return "bg-background/90 text-primary backdrop-blur hover:bg-muted";
+    return "size-auto border-0 bg-transparent p-0 text-primary shadow-none hover:bg-transparent focus-visible:ring-ring/30";
   }
 
   if (state === "loading" || state === "linking") {
-    return "bg-background/90 text-muted-foreground backdrop-blur hover:bg-muted";
+    return "size-auto border-0 bg-transparent p-0 text-muted-foreground shadow-none hover:bg-transparent focus-visible:ring-ring/30";
   }
 
-  return "bg-background/90 text-destructive backdrop-blur hover:bg-destructive/10";
+  return "size-auto border-0 bg-transparent p-0 text-destructive shadow-none hover:bg-transparent focus-visible:ring-ring/30";
 }
 
 function getStatusIcon(state: BankInstitutionCard["state"]) {
   if (state === "loading" || state === "linking") {
-    return <Spinner aria-hidden />;
+    return <Spinner className="size-7" aria-hidden />;
   }
 
   if (state === "connected" || state === "idle") {
-    return <CheckCircle2Icon className="size-5" aria-hidden />;
+    return <CheckCircle2Icon className="size-7" aria-hidden />;
   }
 
-  return <CircleAlertIcon className="size-5" aria-hidden />;
+  return <CircleAlertIcon className="size-7" aria-hidden />;
 }
 
 function getAccountTypeIcon({
