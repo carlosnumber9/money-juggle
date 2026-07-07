@@ -1,0 +1,31 @@
+export const BANK_CONNECTION_STATUS_MESSAGES: Record<string, string> = {
+  linked: "Banco conectado. Ya puedo ver las cuentas autorizadas.",
+  "provider-cancelled": "La conexión se canceló antes de autorizar el acceso.",
+  "provider-error": "Enable Banking devolvió un error durante la conexión.",
+  "redirect-uri-not-allowed":
+    "La URL de retorno no está autorizada en Enable Banking.",
+  "no-accounts-added":
+    "No hay cuentas permitidas para esta aplicación de Enable Banking.",
+  "wrong-aspsp": "Enable Banking no aceptó el banco seleccionado.",
+  "provider-access-denied":
+    "La aplicación no tiene acceso al servicio solicitado en Enable Banking.",
+  "wrong-request-parameters":
+    "Enable Banking no aceptó los parámetros de la solicitud.",
+  "authorization-code-error":
+    "El código de autorización no es válido o ha caducado.",
+  "psu-header-error":
+    "Enable Banking requiere datos adicionales del navegador para esta operación.",
+  "aspsp-error": "El banco devolvió un error durante la autorización.",
+  "aspsp-rate-limited": "El banco ha limitado temporalmente las solicitudes.",
+  "aspsp-timeout": "El banco tardó demasiado en responder.",
+  "provider-authentication-error":
+    "Enable Banking rechazó la autenticación de la aplicación.",
+  "server-config-error": "Falta configuración privada en el servidor.",
+  "connection-start-error": "No se pudo iniciar la conexión bancaria.",
+  "callback-error": "No se pudo completar la conexión bancaria.",
+  "invalid-state":
+    "La respuesta del banco no coincide con una conexión iniciada.",
+  "missing-code":
+    "La respuesta del banco no incluyó el código de autorización.",
+  "missing-state": "La respuesta del banco no incluyó el estado de seguridad."
+};

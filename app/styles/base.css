@@ -1,0 +1,19 @@
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply min-h-full font-sans;
+  }
+  body {
+    @apply min-h-full;
+  }
+  h1,
+  h2,
+  p {
+    overflow-wrap: anywhere;
+  }
+}

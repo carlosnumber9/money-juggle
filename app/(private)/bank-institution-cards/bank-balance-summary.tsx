@@ -1,0 +1,36 @@
+import { Clock3Icon } from "lucide-react";
+
+import type { BankInstitutionCard } from "@/definitions";
+
+import { formatCurrency, formatLatestDate } from "./formatters";
+
+export function BankBalanceSummary({ card }: { card: BankInstitutionCard }) {
+  if (card.state !== "connected") {
+    return null;
+  }
+
+  if (!card.balanceTotals || card.balanceTotals.length === 0) {
+    return (
+      <p className="mt-5 max-w-48 text-sm text-muted-foreground">
+        Saldo pendiente de sincronizar.
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-4 space-y-1">
+      {card.balanceTotals.map((total) => (
+        <p
+          key={total.currency}
+          className="text-2xl font-semibold tracking-normal"
+        >
+          {formatCurrency(total.amount, total.currency)}
+        </p>
+      ))}
+      <p className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Clock3Icon className="size-3.5" aria-hidden />
+        {formatLatestDate(card.balanceTotals)}
+      </p>
+    </div>
+  );
+}

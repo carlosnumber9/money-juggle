@@ -1,0 +1,35 @@
+import Image from "next/image";
+
+import { Card, CardContent } from "@/components/ui/card";
+import type { BankInstitutionCard } from "@/definitions";
+
+import { BankAccountList } from "./bank-account-list";
+import { BankBalanceSummary } from "./bank-balance-summary";
+import { BankStatusIcon } from "./bank-status-icon";
+
+export function BankCard({ card }: { card: BankInstitutionCard }) {
+  return (
+    <Card className="relative overflow-hidden p-0">
+      <Image
+        src={card.logoPath}
+        alt=""
+        width={420}
+        height={220}
+        aria-hidden
+        className="pointer-events-none absolute top-[56%] left-1/2 z-0 w-[210%] -translate-x-1/2 -translate-y-1/2 scale-[1.65] opacity-10"
+      />
+      <CardContent className="relative z-10 p-4 text-left">
+        <div className="flex w-full flex-col gap-3">
+          <div className="min-w-0 pr-9">
+            <span className="block truncate text-base font-semibold">
+              {card.name}
+            </span>
+            <BankBalanceSummary card={card} />
+          </div>
+          <BankAccountList card={card} />
+        </div>
+      </CardContent>
+      <BankStatusIcon card={card} />
+    </Card>
+  );
+}
