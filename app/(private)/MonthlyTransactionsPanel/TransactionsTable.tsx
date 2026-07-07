@@ -2,8 +2,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
-  TableHeader,
   TableRow
 } from "@/components/ui/Table";
 import type { MonthlyTransactionSummary } from "@/definitions";
@@ -21,12 +19,6 @@ export function TransactionsTable({
   return (
     <div className="monthly-transactions-table rounded-lg border bg-card">
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="pl-4">Concepto</TableHead>
-            <TableHead className="w-32 pr-4 text-right">Importe</TableHead>
-          </TableRow>
-        </TableHeader>
         <TableBody>
           {transactionGroups.map((group, index) => (
             <TransactionDateGroup
