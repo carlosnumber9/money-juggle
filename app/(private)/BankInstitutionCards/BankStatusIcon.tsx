@@ -2,8 +2,8 @@
 
 import { useRef, useState } from "react";
 
-import { Spinner } from "@/components/ui/Spinner";
-import { Tooltip } from "@/components/ui/Tooltip";
+import { Spinner } from "@/components/ui/spinner";
+import { Tooltip } from "@/components/ui/tooltip";
 import type { BankInstitutionCard } from "@/definitions";
 
 import {

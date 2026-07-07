@@ -1,4 +1,4 @@
-import { Tooltip } from "@/components/ui/Tooltip";
+import { Tooltip } from "@/components/ui/tooltip";
 import type { BankInstitutionCard } from "@/definitions";
 
 import { getAccountTypeIcon } from "./accountTypeIcon";

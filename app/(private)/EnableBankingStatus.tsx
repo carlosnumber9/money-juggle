@@ -3,8 +3,8 @@
 import { CircleAlertIcon, WifiIcon } from "lucide-react";
 
 import type { EnableBankingStatusProps } from "@/definitions";
-import { Spinner } from "@/components/ui/Spinner";
-import { Tooltip } from "@/components/ui/Tooltip";
+import { Spinner } from "@/components/ui/spinner";
+import { Tooltip } from "@/components/ui/tooltip";
 
 const statusTriggerClassName =
   "size-auto shrink-0 border-0 bg-transparent p-0 shadow-none hover:bg-transparent focus-visible:ring-ring/30";

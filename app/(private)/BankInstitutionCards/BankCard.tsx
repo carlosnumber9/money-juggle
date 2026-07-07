@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-import { Card, CardContent } from "@/components/ui/Card";
+import { Card, CardContent } from "@/components/ui/card";
 import type { BankInstitutionCard } from "@/definitions";
 
 import { BankAccountList } from "./BankAccountList";

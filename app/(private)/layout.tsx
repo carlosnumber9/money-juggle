@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Image from "next/image";
 
 import type { PrivateLayoutProps } from "@/definitions";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { getPrivateLayoutView } from "@/lib/views/privateLayoutView";
 
 export default async function PrivateLayout({ children }: PrivateLayoutProps) {

@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-import { TableCell, TableRow as BaseTableRow } from "@/components/ui/Table";
+import { TableCell, TableRow as BaseTableRow } from "@/components/ui/table";
 import type { MonthlyTransactionSummary } from "@/definitions";
 import { cn } from "@/lib/utils";
 
@@ -27,7 +27,7 @@ export function TransactionRow({
       <TableCell className="w-12 pl-4 pr-0">
         <span
           aria-hidden
-          className="flex size-7 items-center justify-center rounded-full border border-border bg-transparent"
+          className="flex size-7 items-center justify-center overflow-hidden rounded-full border border-border bg-transparent"
           title={logo.label}
         >
           {logo.path ? (

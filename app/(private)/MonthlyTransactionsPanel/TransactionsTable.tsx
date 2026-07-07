@@ -1,4 +1,4 @@
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/Table";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import type { MonthlyTransactionSummary } from "@/definitions";
 
 import { formatTransactionDateHeading } from "./formatters";

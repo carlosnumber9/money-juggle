@@ -5,7 +5,7 @@ import {
   TimerResetIcon
 } from "lucide-react";
 
-import { Spinner } from "@/components/ui/Spinner";
+import { Spinner } from "@/components/ui/spinner";
 import type { BankInstitutionCard } from "@/definitions";
 
 export function canStartConnection(

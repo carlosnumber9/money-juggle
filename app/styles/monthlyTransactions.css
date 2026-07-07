@@ -11,15 +11,15 @@
 
 .monthly-transaction-bank-logo {
   display: block;
-  width: 1.55rem;
-  height: 1.55rem;
+  width: 2.35rem;
+  height: 2.35rem;
   background-color: var(--institution-logo-color);
   mask-image: var(--institution-logo);
   mask-position: center;
   mask-repeat: no-repeat;
-  mask-size: contain;
+  mask-size: 2.35rem 2.35rem;
   -webkit-mask-image: var(--institution-logo);
   -webkit-mask-position: center;
   -webkit-mask-repeat: no-repeat;
-  -webkit-mask-size: contain;
+  -webkit-mask-size: 2.35rem 2.35rem;
 }

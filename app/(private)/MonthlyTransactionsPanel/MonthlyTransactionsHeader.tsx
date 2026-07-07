@@ -1,6 +1,6 @@
 import { RefreshCwIcon } from "lucide-react";
 
-import { Spinner } from "@/components/ui/Spinner";
+import { Spinner } from "@/components/ui/spinner";
 
 export function MonthlyTransactionsHeader({
   message,

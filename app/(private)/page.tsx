@@ -4,7 +4,7 @@ import { BalanceAutoSync } from "@/app/(private)/BalanceAutoSync";
 import { BankConnectionsPanel } from "@/app/(private)/BankConnectionsPanel";
 import { EnableBankingStatus } from "@/app/(private)/EnableBankingStatus";
 import { MonthlyTransactionsPanel } from "@/app/(private)/MonthlyTransactionsPanel";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getPrivateHomeView } from "@/lib/views/privateHomeView";
 
 export default async function Home() {
