@@ -92,7 +92,7 @@ export function MonthlyTransactionsPanel({
   const message = syncError ?? error;
 
   return (
-    <section className="mt-10" aria-labelledby="monthly-transactions-title">
+    <section aria-labelledby="monthly-transactions-title">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <h2
