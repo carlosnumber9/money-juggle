@@ -11,11 +11,14 @@ export function getTransactionConcept(
   );
 }
 
-export function formatTransactionDate(value: string): string {
-  return new Intl.DateTimeFormat("es-ES", {
+export function formatTransactionDateHeading(value: string): string {
+  const formattedDate = new Intl.DateTimeFormat("es-ES", {
+    weekday: "long",
     day: "2-digit",
-    month: "short"
+    month: "long"
   }).format(new Date(`${value}T00:00:00`));
+
+  return formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
 }
 
 export function formatCurrency(amount: string, currency: string): string {

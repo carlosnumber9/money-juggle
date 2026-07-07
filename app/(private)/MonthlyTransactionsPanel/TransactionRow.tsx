@@ -2,11 +2,7 @@ import { TableCell, TableRow as BaseTableRow } from "@/components/ui/Table";
 import type { MonthlyTransactionSummary } from "@/definitions";
 import { cn } from "@/lib/utils";
 
-import {
-  formatCurrency,
-  formatTransactionDate,
-  getTransactionConcept
-} from "./formatters";
+import { formatCurrency, getTransactionConcept } from "./formatters";
 import { getInstitutionColor } from "./institutionColor";
 import type { InstitutionColorStyle } from "./types";
 
@@ -32,12 +28,7 @@ export function TransactionRow({
       )}.`}
       className="monthly-transaction-row"
     >
-      <TableCell className="pl-4 text-muted-foreground">
-        {transaction.booking_date
-          ? formatTransactionDate(transaction.booking_date)
-          : "-"}
-      </TableCell>
-      <TableCell className="min-w-52 whitespace-normal">
+      <TableCell className="min-w-52 whitespace-normal pl-4">
         <span className="line-clamp-2">{concept}</span>
       </TableCell>
       <TableCell
