@@ -12,7 +12,7 @@ export function TransactionsTable({
   const transactionGroups = groupTransactionsByDate(transactions);
 
   return (
-    <div className="monthly-transactions-table rounded-lg border bg-card">
+    <div className="monthly-transactions-table rounded-lg bg-card">
       <Table>
         <TableBody>
           {transactionGroups.map((group, index) => (
