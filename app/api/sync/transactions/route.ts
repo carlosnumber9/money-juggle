@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 
 import { isEmailAllowed } from "@/lib/auth/allowlist";
 import { isDemoMode } from "@/lib/demo/mode";
-import { syncCurrentMonthEnableBankingTransactions } from "@/lib/db/enable-banking-transactions";
-import { getCurrentMonthProviderDateRange } from "@/lib/domain/transaction-ranges";
-import { getCurrentSupabaseUser } from "@/lib/supabase/current-user";
+import { syncCurrentMonthEnableBankingTransactions } from "@/lib/db/enableBankingTransactions";
+import { getCurrentMonthProviderDateRange } from "@/lib/domain/transactionRanges";
+import { getCurrentSupabaseUser } from "@/lib/supabase/currentUser";
 
 export const runtime = "nodejs";
 

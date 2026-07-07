@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { getBankingDataSource } from "@/lib/data/get-banking-data-source";
-import { EnableBankingRequestError } from "@/lib/enable-banking/client";
+import { getBankingDataSource } from "@/lib/data/getBankingDataSource";
+import { EnableBankingRequestError } from "@/lib/enableBanking/client";
 
 export const runtime = "nodejs";
 

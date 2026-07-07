@@ -1,4 +1,4 @@
-export { CardHeader } from "./card/card-header";
-export { CardAction, CardContent, CardFooter } from "./card/card-layout";
-export { Card } from "./card/card-root";
-export { CardDescription, CardTitle } from "./card/card-text";
+export { CardHeader } from "./Card/CardHeader";
+export { CardAction, CardContent, CardFooter } from "./Card/CardLayout";
+export { Card } from "./Card/CardRoot";
+export { CardDescription, CardTitle } from "./Card/CardText";

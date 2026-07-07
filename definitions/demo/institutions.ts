@@ -1,4 +1,4 @@
-import type { InstitutionAvailability } from "../data-source";
+import type { InstitutionAvailability } from "../dataSource";
 
 export const DEMO_INSTITUTIONS: InstitutionAvailability[] = [
   {

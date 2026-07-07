@@ -1,10 +1,10 @@
 import Image from "next/image";
 
 import type { LoginPageProps } from "@/definitions";
-import { requestMagicLink } from "@/lib/auth/request-magic-link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { getLoginView } from "@/lib/views/login-view";
+import { requestMagicLink } from "@/lib/auth/requestMagicLink";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { getLoginView } from "@/lib/views/loginView";
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { email, status } = await searchParams;

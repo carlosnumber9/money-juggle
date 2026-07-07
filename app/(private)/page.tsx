@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 
-import { BalanceAutoSync } from "@/app/(private)/balance-auto-sync";
-import { BankConnectionsPanel } from "@/app/(private)/bank-connections-panel";
-import { EnableBankingStatus } from "@/app/(private)/enable-banking-status";
-import { MonthlyTransactionsPanel } from "@/app/(private)/monthly-transactions-panel";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getPrivateHomeView } from "@/lib/views/private-home-view";
+import { BalanceAutoSync } from "@/app/(private)/BalanceAutoSync";
+import { BankConnectionsPanel } from "@/app/(private)/BankConnectionsPanel";
+import { EnableBankingStatus } from "@/app/(private)/EnableBankingStatus";
+import { MonthlyTransactionsPanel } from "@/app/(private)/MonthlyTransactionsPanel";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
+import { getPrivateHomeView } from "@/lib/views/privateHomeView";
 
 export default async function Home() {
   const view = await getPrivateHomeView();

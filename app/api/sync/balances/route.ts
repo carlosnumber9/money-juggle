@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 
 import { isEmailAllowed } from "@/lib/auth/allowlist";
 import { isDemoMode } from "@/lib/demo/mode";
-import { syncStaleEnableBankingBalances } from "@/lib/db/enable-banking-balances";
-import { listUserEnableBankingConnections } from "@/lib/db/enable-banking-connections";
-import { getCurrentSupabaseUser } from "@/lib/supabase/current-user";
+import { syncStaleEnableBankingBalances } from "@/lib/db/enableBankingBalances";
+import { listUserEnableBankingConnections } from "@/lib/db/enableBankingConnections";
+import { getCurrentSupabaseUser } from "@/lib/supabase/currentUser";
 
 export const runtime = "nodejs";
 

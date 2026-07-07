@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { getBankingDataSource } from "@/lib/data/get-banking-data-source";
+import { getBankingDataSource } from "@/lib/data/getBankingDataSource";
 
-import { getApplicationErrorResponse } from "./utils/error-response";
-import { getErrorMetadata } from "./utils/error-metadata";
-import { getApplicationSuccessResponse } from "./utils/success-response";
+import { getApplicationErrorResponse } from "./utils/errorResponse";
+import { getErrorMetadata } from "./utils/errorMetadata";
+import { getApplicationSuccessResponse } from "./utils/successResponse";
 
 export const runtime = "nodejs";
 

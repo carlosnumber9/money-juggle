@@ -2,7 +2,7 @@ import {
   EnableBankingRequestError,
   getEnableBankingErrorMetadata,
   getEnableBankingErrorStatus
-} from "@/lib/enable-banking/client";
+} from "@/lib/enableBanking/client";
 
 export function getPublicErrorStatus(error: unknown): string {
   if (error instanceof EnableBankingRequestError) {

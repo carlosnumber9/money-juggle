@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 
-import { handleCallbackRequest } from "./utils/callback-flow";
+import { handleCallbackRequest } from "./utils/callbackFlow";
 
 export const runtime = "nodejs";
 

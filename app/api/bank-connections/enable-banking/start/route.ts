@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 
-import { handleStartRequest } from "./utils/start-flow";
+import { handleStartRequest } from "./utils/startFlow";
 
 export const runtime = "nodejs";
 
