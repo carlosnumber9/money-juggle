@@ -2,6 +2,17 @@
   overflow: visible;
 }
 
+.monthly-transaction-filter-chip[aria-pressed="true"] {
+  border-color: olive;
+  background-color: olive;
+  color: white;
+}
+
+.monthly-transaction-filter-chip[aria-pressed="true"]:hover {
+  background-color: color-mix(in oklch, olive, black 10%);
+  color: white;
+}
+
 .monthly-transaction-date-cell {
   position: sticky;
   top: 0;

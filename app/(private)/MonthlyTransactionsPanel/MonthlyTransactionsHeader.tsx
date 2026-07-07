@@ -2,17 +2,26 @@ import { RefreshCwIcon } from "lucide-react";
 
 import { Spinner } from "@/components/ui/spinner";
 
+import {
+  TransactionFilterChips,
+  type TransactionFilterId
+} from "./TransactionFilterChips";
+
 export function MonthlyTransactionsHeader({
   message,
   isSyncing,
-  enabled
+  enabled,
+  activeFilters,
+  onFilterToggle
 }: {
   message: string | null;
   isSyncing: boolean;
   enabled: boolean;
+  activeFilters: TransactionFilterId[];
+  onFilterToggle: (filterId: TransactionFilterId) => void;
 }) {
   return (
-    <div className="mb-4 flex items-center justify-between gap-3">
+    <div className="mb-4 flex items-start justify-between gap-3">
       <div>
         <h2
           id="monthly-transactions-title"
@@ -20,6 +29,10 @@ export function MonthlyTransactionsHeader({
         >
           Movimientos de este mes
         </h2>
+        <TransactionFilterChips
+          activeFilters={activeFilters}
+          onFilterToggle={onFilterToggle}
+        />
         {message ? (
           <p className="mt-1 text-sm text-destructive">{message}</p>
         ) : null}
