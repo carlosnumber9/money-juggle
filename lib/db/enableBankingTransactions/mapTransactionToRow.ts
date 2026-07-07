@@ -5,6 +5,7 @@ import { getRowIdentity } from "./rowIdentity";
 import { getTransactionAmount } from "./transactionAmount";
 import {
   getBookingStatus,
+  getCounterpartyAccountFingerprint,
   getCounterpartyAccountLast4,
   getCounterpartyName,
   getDescription
@@ -14,7 +15,7 @@ import type { TransactionMapperInput, TransactionRow } from "./types";
 
 export function mapTransactionToRow({
   userId,
-  accountId,
+  account,
   transaction
 }: TransactionMapperInput): TransactionRow | null {
   const amount = getTransactionAmount(transaction);
@@ -34,11 +35,20 @@ export function mapTransactionToRow({
   const description = getDescription(transaction);
   const counterpartyName = getCounterpartyName(transaction);
   const merchantName = getTextValue(transaction.merchant_name);
-  const counterpartyAccountLast4 = getCounterpartyAccountLast4(transaction);
+  const counterpartyAccountLast4 = getCounterpartyAccountLast4(
+    transaction,
+    amount.amount,
+    account
+  );
+  const counterpartyAccountFingerprint = getCounterpartyAccountFingerprint(
+    transaction,
+    amount.amount,
+    account
+  );
   const bankTransactionCode = getTextValue(transaction.bank_transaction_code);
   const merchantCategoryCode = getTextValue(transaction.merchant_category_code);
   const identity = getRowIdentity({
-    accountId,
+    accountId: account.id,
     transaction,
     amount,
     description,
@@ -55,7 +65,7 @@ export function mapTransactionToRow({
 
   return {
     user_id: userId,
-    account_id: accountId,
+    account_id: account.id,
     stable_import_key: identity.key,
     identity_source: identity.source,
     provider: ENABLE_BANKING_PROVIDER,
@@ -77,6 +87,7 @@ export function mapTransactionToRow({
     merchant_name: merchantName,
     counterparty_name: counterpartyName,
     counterparty_account_last4: counterpartyAccountLast4,
+    counterparty_account_fingerprint: counterpartyAccountFingerprint,
     bank_transaction_code: bankTransactionCode,
     merchant_category_code: merchantCategoryCode
   };

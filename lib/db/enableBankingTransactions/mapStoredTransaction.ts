@@ -4,7 +4,8 @@ import { getInstitutionSlug } from "./institutionSlug";
 import type { StoredMonthlyTransactionRow } from "./types";
 
 export function mapStoredTransactionToSummary(
-  row: StoredMonthlyTransactionRow
+  row: StoredMonthlyTransactionRow,
+  cashflowType: MonthlyTransactionSummary["cashflow_type"] = "external"
 ): MonthlyTransactionSummary {
   const account = Array.isArray(row.accounts)
     ? (row.accounts[0] ?? null)
@@ -30,6 +31,7 @@ export function mapStoredTransactionToSummary(
     account_iban_last4: account?.iban_last4 ?? null,
     booking_status: row.booking_status,
     booking_date: row.booking_date,
+    cashflow_type: cashflowType,
     amount: String(row.amount),
     currency: row.currency,
     description: row.description,

@@ -1,4 +1,5 @@
 import type { EnableBankingAccountResource } from "@/definitions";
+import { getAccountFingerprint } from "@/lib/db/shared/accountFingerprint";
 
 export function mapEnableBankingAccountToRow({
   userId,
@@ -20,6 +21,7 @@ export function mapEnableBankingAccountToRow({
     provider_account_id: account.uid,
     name,
     iban_last4: ibanLast4,
+    iban_fingerprint: getAccountFingerprint(iban),
     currency: getCurrency(account.currency),
     account_type: account.cash_account_type ?? account.product ?? null,
     status: "active"

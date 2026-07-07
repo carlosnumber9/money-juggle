@@ -47,7 +47,7 @@ export async function syncConnectionTransactions(input: {
           .map((transaction) =>
             mapTransactionToRow({
               userId: input.userId,
-              accountId: account.id,
+              account,
               transaction
             })
           )

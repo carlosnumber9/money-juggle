@@ -1109,8 +1109,12 @@ Implemented so far:
   summary cards.
 - Totals are grouped by currency and use signed transaction amounts: positive
   amounts count as income, negative amounts count as expenses.
+- Detected transfers between the owner's own accounts are excluded from income
+  and expense totals. The first implementation uses server-only account
+  fingerprints when available and a conservative paired last-4 fallback for
+  older rows.
 - This first slice reuses cached Supabase transaction rows and does not add new
-  persistence, report tables, or external integrations.
+  report tables or external integrations.
 
 Goal:
 
@@ -1133,7 +1137,9 @@ Possible future files:
 
 Risks or decisions:
 
-- Handling transfers between own accounts.
+- Internal transfer detection depends on provider counterparty data. When the
+  provider omits the counterparty account identifier, the app should prefer
+  conservative matching over false exclusions.
 
 Do not do yet:
 

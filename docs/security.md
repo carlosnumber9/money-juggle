@@ -195,6 +195,9 @@ Security expectations:
 - Server-side sync may insert or update provider-owned transaction fields.
 - Sync must preserve user-owned metadata such as `category_id` unless an explicit user action changes it.
 - Deduplication identifiers such as `stable_import_key`, provider transaction IDs, and fingerprints should not be exposed beyond authenticated owner views.
+- Full IBAN values should not be stored for internal transfer matching. Store
+  only server-generated HMAC fingerprints and keep the fingerprint secret
+  server-only.
 - Logs should avoid printing full transaction descriptions, raw provider payloads, or large batches of transaction identifiers.
 - Scheduled sync should not run until transaction upsert and deduplication behavior has been tested.
 

@@ -28,7 +28,7 @@ export async function persistTransactionRows(
     }
 
     if (existing) {
-      await updateTransaction(row, existing.id, fetchedAt);
+      await updateTransaction(row, existing, fetchedAt);
       continue;
     }
 
@@ -38,14 +38,17 @@ export async function persistTransactionRows(
 
 async function updateTransaction(
   row: TransactionRow,
-  transactionId: string,
+  existing: { id: string },
   fetchedAt: string
 ) {
   const supabase = createSupabaseServiceRoleClient();
   const { error } = await supabase
     .from("transactions")
-    .update({ ...row, last_seen_at: fetchedAt })
-    .eq("id", transactionId)
+    .update({
+      ...row,
+      last_seen_at: fetchedAt
+    })
+    .eq("id", existing.id)
     .eq("user_id", row.user_id);
 
   if (error) {

@@ -796,3 +796,50 @@ Possible future revisit trigger:
 
 - If the app adds a structured audit log, centralized observability, or stricter
   privacy controls for operational logs.
+
+## ADR-026: Exclude Own-Account Transfers From Monthly Cashflow
+
+Status:
+
+- Accepted.
+
+Context:
+
+- Monthly income and expense cards originally summed current-month transactions
+  by sign only.
+- Transfers between the owner's own connected accounts appear as one negative
+  movement in the source account and one positive movement in the destination
+  account.
+- Counting those movements as spending and income overstates real cashflow.
+- Full IBAN storage would make matching easier but would increase the impact of
+  accidental exposure.
+
+Decision:
+
+- Keep full IBAN values out of the database.
+- Store nullable server-generated HMAC fingerprints for own account identifiers
+  and transaction counterparty identifiers when the provider sends them and the
+  server-only fingerprint secret is configured.
+- Classify own-account transfers before building the monthly cashflow summary.
+- Exclude classified own-account transfers from monthly income and expense
+  totals while keeping the original transactions available for review.
+- Use a conservative paired last-4 fallback for existing or incomplete rows,
+  requiring opposite signed amounts, matching currency, nearby booking dates,
+  different accounts, and reciprocal account suffixes.
+
+Consequences:
+
+- The monthly cards better represent money entering and leaving the owner's
+  financial world instead of money moving between the owner's accounts.
+- Existing rows can still be classified when both sides of a transfer are
+  present and contain reciprocal account suffixes.
+- Future syncs can classify more reliably when account fingerprints are
+  populated.
+- False positives should be rare because weak suffix-only matching is used only
+  for paired reciprocal movements.
+
+Possible future revisit trigger:
+
+- If the provider omits counterparty account identifiers frequently.
+- If transfers need manual review, override, or a visible transaction label.
+- If investment accounts introduce cash movements that need separate treatment.

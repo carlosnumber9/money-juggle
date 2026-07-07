@@ -21,7 +21,8 @@ export async function listConnectionsForTransactionSync(
         id,
         provider_account_id,
         name,
-        iban_last4
+        iban_last4,
+        iban_fingerprint
       )
     `
     )

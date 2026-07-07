@@ -66,6 +66,9 @@ Important constraints in the first migration:
   when those IDs are present.
 - Full IBAN values are not stored; `accounts.iban_last4` keeps only the last
   four characters.
+- Account identifier fingerprints are stored as server-generated HMAC values
+  when the server-only fingerprint secret is configured. They support internal
+  transfer matching without storing the full IBAN.
 - Amounts use `numeric(20, 6)` rather than floating point.
 - Currency values are constrained to three uppercase letters.
 - Category groups and categories are user-owned and unique by `user_id` and
@@ -237,6 +240,8 @@ Probable fields:
 - `provider_account_id`.
 - `name`.
 - `iban_last4`.
+- `iban_fingerprint`: nullable server-generated HMAC fingerprint used for
+  internal transfer matching.
 - `currency`.
 - `account_type`.
 - `status`.
@@ -337,6 +342,8 @@ Probable fields:
 - `merchant_name`.
 - `counterparty_name`.
 - `counterparty_account_last4`.
+- `counterparty_account_fingerprint`: nullable server-generated HMAC
+  fingerprint used for internal transfer matching.
 - `bank_transaction_code`.
 - `merchant_category_code`.
 - `category_id`: nullable, because imported transactions should start uncategorized.

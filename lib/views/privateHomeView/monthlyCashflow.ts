@@ -16,11 +16,21 @@ export function buildMonthlyCashflowSummary(
     const amount = parseDecimal(transaction.amount);
 
     if (amount > 0n) {
+      if (transaction.cashflow_type === "internal_transfer") {
+        income.excludeInternalTransfer();
+        continue;
+      }
+
       income.add(transaction.currency, amount);
       continue;
     }
 
     if (amount < 0n) {
+      if (transaction.cashflow_type === "internal_transfer") {
+        expenses.excludeInternalTransfer();
+        continue;
+      }
+
       expenses.add(transaction.currency, -amount);
     }
   }
@@ -39,8 +49,12 @@ function createCashflowBuilder() {
       transactionCount: number;
     }
   >();
+  let excludedInternalTransferCount = 0;
 
   return {
+    excludeInternalTransfer() {
+      excludedInternalTransferCount += 1;
+    },
     add(currency: string, amount: bigint) {
       const current = totalsByCurrency.get(currency) ?? {
         amount: 0n,
@@ -68,7 +82,8 @@ function createCashflowBuilder() {
         transactionCount: totals.reduce(
           (count, total) => count + total.transactionCount,
           0
-        )
+        ),
+        excludedInternalTransferCount
       };
     }
   };

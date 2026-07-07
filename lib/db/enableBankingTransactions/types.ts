@@ -8,6 +8,7 @@ export type StoredAccountForTransactionSync = {
   provider_account_id: string;
   name: string;
   iban_last4: string | null;
+  iban_fingerprint: string | null;
 };
 
 export type StoredConnectionForTransactionSync = {
@@ -40,13 +41,14 @@ export type TransactionRow = {
   merchant_name: string | null;
   counterparty_name: string | null;
   counterparty_account_last4: string | null;
+  counterparty_account_fingerprint: string | null;
   bank_transaction_code: string | null;
   merchant_category_code: string | null;
 };
 
 export type TransactionMapperInput = {
   userId: string;
-  accountId: string;
+  account: StoredAccountForTransactionSync;
   transaction: EnableBankingTransactionResource;
 };
 
@@ -67,13 +69,22 @@ export type StoredMonthlyTransactionRow = {
   description: string | null;
   merchant_name: string | null;
   counterparty_name: string | null;
+  counterparty_account_last4: string | null;
+  counterparty_account_fingerprint: string | null;
   accounts: StoredMonthlyTransactionAccount | StoredMonthlyTransactionAccount[];
+};
+
+export type StoredOwnAccountForTransferMatching = {
+  id: string;
+  iban_last4: string | null;
+  iban_fingerprint: string | null;
 };
 
 type StoredMonthlyTransactionAccount = {
   id: string;
   name: string;
   iban_last4: string | null;
+  iban_fingerprint: string | null;
   bank_connections:
     | StoredMonthlyTransactionBankConnection
     | StoredMonthlyTransactionBankConnection[];

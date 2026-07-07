@@ -6,8 +6,12 @@ import type {
 } from "@/definitions";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
+import { getInternalTransferTransactionIds } from "./internalTransfers";
 import { mapStoredTransactionToSummary } from "./mapStoredTransaction";
-import type { StoredMonthlyTransactionRow } from "./types";
+import type {
+  StoredMonthlyTransactionRow,
+  StoredOwnAccountForTransferMatching
+} from "./types";
 
 export async function listMonthlyTransactions({
   userId,
@@ -30,10 +34,13 @@ export async function listMonthlyTransactions({
       description,
       merchant_name,
       counterparty_name,
+      counterparty_account_last4,
+      counterparty_account_fingerprint,
       accounts!inner (
         id,
         name,
         iban_last4,
+        iban_fingerprint,
         bank_connections!inner (
           institutions!inner (
             provider_institution_id,
@@ -53,7 +60,35 @@ export async function listMonthlyTransactions({
     throw new Error(`Could not list transactions: ${error.message}`);
   }
 
-  return ((data ?? []) as StoredMonthlyTransactionRow[]).map((row) =>
-    mapStoredTransactionToSummary(row)
+  const rows = (data ?? []) as StoredMonthlyTransactionRow[];
+  const ownAccounts = await listOwnAccountsForTransferMatching(userId);
+  const internalTransferIds = getInternalTransferTransactionIds(
+    rows,
+    ownAccounts
   );
+
+  return rows.map((row) =>
+    mapStoredTransactionToSummary(
+      row,
+      internalTransferIds.has(row.id) ? "internal_transfer" : "external"
+    )
+  );
+}
+
+async function listOwnAccountsForTransferMatching(
+  userId: string
+): Promise<StoredOwnAccountForTransferMatching[]> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("accounts")
+    .select("id, iban_last4, iban_fingerprint")
+    .eq("user_id", userId);
+
+  if (error) {
+    throw new Error(
+      `Could not list accounts for internal transfer matching: ${error.message}`
+    );
+  }
+
+  return (data ?? []) as StoredOwnAccountForTransferMatching[];
 }

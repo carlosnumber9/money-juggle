@@ -49,6 +49,7 @@ export const demoBankingDataSource: BankingDataSource = {
         account_iban_last4: account?.iban_last4 ?? null,
         booking_status: transaction.bookingStatus,
         booking_date: transaction.bookingDate,
+        cashflow_type: "external",
         amount: transaction.amount,
         currency: transaction.currency,
         description: transaction.description,

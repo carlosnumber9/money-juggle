@@ -74,9 +74,6 @@ function MonthlyCashflowCard({
             <Icon className="size-4" aria-hidden />
           </span>
         </div>
-        <p className="mt-4 text-xs text-muted-foreground">
-          {error ?? getTransactionCountLabel(bucket.transactionCount)}
-        </p>
       </CardContent>
     </Card>
   );
@@ -99,14 +96,6 @@ function CashflowAmounts({ bucket }: { bucket: MonthlyCashflowBucket }) {
       {formatCurrency(total.amount, total.currency)}
     </p>
   ));
-}
-
-function getTransactionCountLabel(transactionCount: number): string {
-  if (transactionCount === 1) {
-    return "1 movimiento";
-  }
-
-  return `${transactionCount} movimientos`;
 }
 
 function formatCurrency(amount: string, currency: string): string {
