@@ -932,6 +932,9 @@ Implemented result:
 - The private home screen is a tabbed account area with `Dashboard` and
   `Transacciones` sections.
 - The dashboard tab shows available and connected bank institution cards.
+- The dashboard tab now shows current-month income and expense summary cards
+  before the bank institution cards, computed from the same Supabase transaction
+  rows used by the `Transacciones` tab.
 - Connected bank cards show stored account metadata, latest account balances,
   and per-bank currency totals.
 - The provider status indicator remains visible next to the private page title.
@@ -1095,6 +1098,19 @@ Do not do yet:
 - Build a complex budgeting system.
 
 ## 23. Add Monthly Reports
+
+Status:
+
+- Started as a small dashboard summary, not yet a full reporting system.
+
+Implemented so far:
+
+- Current-month income and expense totals are visible in the dashboard as two
+  summary cards.
+- Totals are grouped by currency and use signed transaction amounts: positive
+  amounts count as income, negative amounts count as expenses.
+- This first slice reuses cached Supabase transaction rows and does not add new
+  persistence, report tables, or external integrations.
 
 Goal:
 

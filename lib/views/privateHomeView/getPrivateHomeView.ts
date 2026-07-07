@@ -11,6 +11,7 @@ import {
   loadMonthlyTransactions,
   loadProviderStatus
 } from "./loaders";
+import { buildMonthlyCashflowSummary } from "./monthlyCashflow";
 
 export async function getPrivateHomeView(): Promise<PrivateHomeView> {
   const dataSource = getBankingDataSource();
@@ -46,6 +47,9 @@ export async function getPrivateHomeView(): Promise<PrivateHomeView> {
       institutionsResult,
       providerStatus
     }),
+    monthlyCashflow: buildMonthlyCashflowSummary(
+      transactionsResult.ok ? transactionsResult.value : []
+    ),
     monthlyTransactions: {
       range: transactionRange,
       rows: transactionsResult.ok ? transactionsResult.value : [],

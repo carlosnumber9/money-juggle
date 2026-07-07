@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { BalanceAutoSync } from "@/app/(private)/BalanceAutoSync";
 import { BankConnectionsPanel } from "@/app/(private)/BankConnectionsPanel";
 import { EnableBankingStatus } from "@/app/(private)/EnableBankingStatus";
+import { MonthlyCashflowCards } from "@/app/(private)/MonthlyCashflowCards";
 import { MonthlyTransactionsPanel } from "@/app/(private)/MonthlyTransactionsPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getPrivateHomeView } from "@/lib/views/privateHomeView";
@@ -38,6 +39,10 @@ export default async function Home() {
           }
         />
         <TabsContent value="dashboard" keepMounted className="mt-0">
+          <MonthlyCashflowCards
+            summary={view.monthlyCashflow}
+            error={view.monthlyTransactions.error}
+          />
           <BankConnectionsPanel cards={view.bankCards} />
         </TabsContent>
         <TabsContent value="transactions" keepMounted>

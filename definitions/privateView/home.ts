@@ -1,5 +1,6 @@
 import type { MonthlyTransactionSummary } from "../dataSource";
 import type { BankInstitutionCard } from "./bankCard";
+import type { MonthlyCashflowSummary } from "./monthlyCashflow";
 import type { ProviderStatusView } from "./providerStatus";
 
 export type PrivateHomeView =
@@ -16,6 +17,7 @@ export type PrivateHomeView =
       };
       providerStatus: ProviderStatusView;
       bankCards: BankInstitutionCard[];
+      monthlyCashflow: MonthlyCashflowSummary;
       monthlyTransactions: {
         range: {
           from: string;

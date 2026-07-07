@@ -1,6 +1,7 @@
 import type * as React from "react";
 
 import type { BankInstitutionCard } from "./bankCard";
+import type { MonthlyCashflowSummary } from "./monthlyCashflow";
 import type { ProviderStatusView } from "./providerStatus";
 
 export type PrivateLayoutProps = Readonly<{
@@ -13,6 +14,11 @@ export type BankInstitutionCardsProps = {
 
 export type BankConnectionsPanelProps = {
   cards: BankInstitutionCard[];
+};
+
+export type MonthlyCashflowCardsProps = {
+  summary: MonthlyCashflowSummary;
+  error: string | null;
 };
 
 export type MonthlyTransactionsPanelProps = {
