@@ -186,6 +186,12 @@ month for each linked Enable Banking account, normalizes rows into the app's
 `transactions` table, and keeps the private home table responsive by showing
 cached Supabase rows while the refresh runs.
 
+The private `Transacciones` tab presents those current-month rows as a review
+surface: transactions are grouped by booking date, marked with the source bank
+logo or fallback, and can be filtered by institution or by income/spending
+direction. This UI does not change the provider sync boundary; Enable Banking
+requests still only happen in server-side code.
+
 ## What To Store
 
 Store enough information to understand and manage consent and synchronization:

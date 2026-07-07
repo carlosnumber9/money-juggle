@@ -25,13 +25,14 @@ Use this checklist as the source of truth for what remains to be implemented. Ke
 - [x] 17. Store connected accounts.
 - [x] 18. Sync balances.
 - [x] 19. Sync transactions.
-- [ ] 20. Build a basic dashboard.
-- [ ] 21. Add transaction categorization.
-- [ ] 22. Add monthly reports.
-- [ ] 23. Add manual assets for Trade Republic / investments.
-- [ ] 24. Add scheduled sync with Vercel Cron.
-- [ ] 25. Add error and reconnection flows.
-- [ ] 26. Security hardening.
+- [x] 20. Build a basic dashboard.
+- [x] 21. Add current-month transaction review.
+- [ ] 22. Add transaction categorization.
+- [ ] 23. Add monthly reports.
+- [ ] 24. Add manual assets for Trade Republic / investments.
+- [ ] 25. Add scheduled sync with Vercel Cron.
+- [ ] 26. Add error and reconnection flows.
+- [ ] 27. Security hardening.
 
 ## 1. Bootstrap The Next.js Project
 
@@ -922,6 +923,22 @@ Do not do yet:
 
 ## 20. Build A Basic Dashboard
 
+Status:
+
+- Completed.
+
+Implemented result:
+
+- The private home screen is a tabbed account area with `Dashboard` and
+  `Transacciones` sections.
+- The dashboard tab shows available and connected bank institution cards.
+- Connected bank cards show stored account metadata, latest account balances,
+  and per-bank currency totals.
+- The provider status indicator remains visible next to the private page title.
+- Balance refresh still runs through the existing server-only synchronization
+  boundary; the dashboard does not call Enable Banking directly from the
+  browser.
+
 Goal:
 
 - Show the first useful financial overview.
@@ -948,7 +965,67 @@ Do not do yet:
 
 - Create advanced analytics.
 
-## 21. Add Transaction Categorization
+## 21. Add Current-Month Transaction Review
+
+Status:
+
+- Completed as a first review UI for synced transactions.
+
+Implemented result:
+
+- The private home screen includes a `Transacciones` tab that shows current-month
+  transactions loaded from Supabase through the app data source boundary.
+- A client-side refresh triggers the existing server-only
+  `POST /api/sync/transactions` route while cached rows remain available for
+  review.
+- Transactions are grouped by booking date instead of using a repeated date
+  column.
+- The table is intentionally compact: no header row, no outer border, and no
+  separate visible account column.
+- Each row shows a bank logo or fallback initial, an accessible account label,
+  the transaction concept, and the signed amount.
+- Filter chips let the owner narrow the current-month view by institution
+  (`ING`, `CaixaBank`) and by direction (`Ingresos`, `Gastos`).
+- Demo mode includes enough transaction data to review the panel without
+  Supabase or Enable Banking credentials.
+
+Goal:
+
+- Make synced transactions reviewable before adding categorization or reports.
+
+Expected result:
+
+- The owner can inspect current-month movements, identify the source bank, and
+  filter income and spending quickly.
+
+Concepts learned:
+
+- Current-month date ranges.
+- Cached data with background refresh.
+- UI filtering over prepared view data.
+- Date grouping for transaction lists.
+- Keeping bank identity visible without adding table clutter.
+
+Possible future files:
+
+- Transaction detail or review state components.
+- Focused tests for filter behavior.
+- Transaction list accessibility refinements.
+
+Risks or decisions:
+
+- Filtering is client-side over already-authorized owner data; it is not an
+  authorization boundary.
+- The current UI is for review, not final reporting.
+- Bank logos and corporate colors are presentational cues and should not be the
+  only way to understand data if more institutions are added.
+
+Do not do yet:
+
+- Treat this as a completed reporting system.
+- Add manual categorization in the same slice.
+
+## 22. Add Transaction Categorization
 
 Goal:
 
@@ -1017,7 +1094,7 @@ Do not do yet:
 - Build machine learning classification.
 - Build a complex budgeting system.
 
-## 22. Add Monthly Reports
+## 23. Add Monthly Reports
 
 Goal:
 
@@ -1046,7 +1123,7 @@ Do not do yet:
 
 - Add tax or accounting features.
 
-## 23. Add Manual Assets For Trade Republic / Investments
+## 24. Add Manual Assets For Trade Republic / Investments
 
 Goal:
 
@@ -1074,7 +1151,7 @@ Do not do yet:
 
 - Scrape Trade Republic.
 
-## 24. Add Scheduled Sync With Vercel Cron
+## 25. Add Scheduled Sync With Vercel Cron
 
 Goal:
 
@@ -1105,7 +1182,7 @@ Do not do yet:
 
 - Run scheduled sync before manual sync is stable.
 
-## 25. Add Error And Reconnection Flows
+## 26. Add Error And Reconnection Flows
 
 Goal:
 
@@ -1133,7 +1210,7 @@ Do not do yet:
 
 - Auto-reconnect without explicit bank consent.
 
-## 26. Security Hardening
+## 27. Security Hardening
 
 Goal:
 

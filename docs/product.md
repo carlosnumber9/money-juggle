@@ -41,6 +41,8 @@ This app should make financial review easier by collecting read-only financial d
 - View connected accounts.
 - Review latest balances.
 - Review transactions.
+- Review current-month transactions grouped by date.
+- Filter current-month transactions by institution and by income or spending.
 - Categorize transactions quickly for personal reporting.
 - Understand monthly income and spending.
 - Track assets that may not be available through PSD2.
@@ -56,8 +58,12 @@ This app should make financial review easier by collecting read-only financial d
 
 ## Initial Limitations
 
-- The first versions should prioritize authentication, ownership, consent tracking, account sync, balance sync, and transaction sync.
-- Transaction sync should be idempotent before scheduled sync is introduced.
+- The current implemented foundation covers authentication, owner allowlist
+  checks, consent tracking, account sync, balance sync, transaction sync, and a
+  first private dashboard.
+- The current transaction review UI is useful for inspection, but it is not yet
+  a monthly reporting system.
+- Transaction sync should gain focused idempotency tests before scheduled sync is introduced.
 - Reporting should start simple and become richer later.
 - Categorization should start as user-owned app metadata before adding automated rules.
 - Investment data should not block the banking foundation.

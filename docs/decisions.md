@@ -721,3 +721,78 @@ Possible future revisit trigger:
 
 - If more institutions are added and color alone stops being enough.
 - If accessibility review shows that a visible institution label is needed.
+
+## ADR-024: Treat Current-Month Transactions As Review UI, Not Reports
+
+Status:
+
+- Accepted.
+
+Context:
+
+- The private home screen now includes a transactions tab with current-month
+  movements.
+- The table groups rows by booking date and supports filters for institution,
+  income, and spending.
+- The app still does not have category assignment, monthly totals by category,
+  trend calculations, or report persistence.
+
+Decision:
+
+- Treat the current transactions tab as a review surface over synced rows.
+- Keep monthly reports as a separate future feature.
+- Keep transaction filters client-side over already-authorized owner data; they
+  improve review speed but are not an authorization boundary.
+- Do not introduce reporting abstractions until categorization and report
+  requirements are clearer.
+
+Consequences:
+
+- The owner can inspect recent data without waiting for the full reporting
+  model.
+- Future report work can build on synced transaction data without being coupled
+  to the current compact table layout.
+- Documentation should avoid marking monthly reports complete merely because
+  current-month transactions are visible.
+
+Possible future revisit trigger:
+
+- If the transactions tab starts showing calculated totals, category rollups,
+  or month-over-month comparisons that become report behavior.
+
+## ADR-025: Keep Authentication Diagnostics Sanitized
+
+Status:
+
+- Accepted.
+
+Context:
+
+- Magic-link authentication can fail for several operational reasons, including
+  missing allowlist configuration, Supabase rate limits, callback exchange
+  errors, and cookie write behavior.
+- Troubleshooting these failures needs server-side visibility.
+- Auth-related logs can easily expose sensitive identifiers if they are not
+  constrained.
+
+Decision:
+
+- Log authentication milestones from server-only code with generated auth log
+  IDs.
+- Mask email addresses before logging them.
+- Sanitize Supabase errors to names, messages, statuses, and codes rather than
+  logging raw objects.
+- Log cookie diagnostics only as counts and booleans, never cookie values.
+- Never log magic-link codes, session tokens, refresh tokens, private keys,
+  Supabase secret keys, or full email addresses.
+
+Consequences:
+
+- Login and callback issues are easier to diagnose in production logs.
+- Auth diagnostics remain separate from a future formal audit log.
+- Future auth changes should preserve the same sanitization rules.
+
+Possible future revisit trigger:
+
+- If the app adds a structured audit log, centralized observability, or stricter
+  privacy controls for operational logs.

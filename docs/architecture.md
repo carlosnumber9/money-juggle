@@ -17,6 +17,8 @@ The frontend should:
 - Render user-visible screens in Spanish.
 - Start authentication and bank connection flows.
 - Show connection, account, balance, transaction, and report states.
+- Render the private account area as separate dashboard and transaction review
+  sections.
 - Call internal Next.js endpoints or server actions when server work is required.
 - Never call Enable Banking directly.
 - Never receive Enable Banking signing keys, provider tokens, service role keys, or raw sensitive integration credentials.
@@ -72,6 +74,20 @@ pattern is a small ports-and-adapters boundary:
 - A single selector chooses the adapter from server-only configuration.
 
 This keeps demo mode, provider details, and persistence details out of UI code.
+
+The current private home view is prepared under `lib/views/privateHomeView/`.
+It loads provider status, bank card state, and current-month transactions before
+the route renders UI components. The current-month range is calculated in
+`lib/domain/transactionRanges.ts`, so the transaction tab receives a prepared
+range and rows instead of querying persistence directly.
+
+The private UI is split into two tabs:
+
+- `Dashboard`: bank institution cards, connected accounts, latest balances, and
+  per-bank balance totals.
+- `Transacciones`: current-month transaction review with date grouping,
+  institution cues, signed amounts, and client-side filters over already-loaded
+  owner data.
 
 ## Supabase Responsibilities
 

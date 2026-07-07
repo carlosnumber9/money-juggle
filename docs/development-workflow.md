@@ -27,6 +27,9 @@ Prefer small slices such as:
 - Make one signed Enable Banking API request server-side.
 - List ASPSPs for Spain.
 - Start one account information authorization flow.
+- Add one private UI view over already-prepared data.
+- Add one focused transaction review interaction, such as filtering the current
+  month by institution or direction.
 
 Avoid combining several architectural steps into one large change.
 
@@ -75,6 +78,8 @@ Use verification appropriate to the feature:
 
 - Type checks for TypeScript changes.
 - Unit tests for domain logic.
+- Focused UI or pure function tests for client-side filters and formatting when
+  the behavior becomes complex enough to regress.
 - Integration checks for server routes.
 - Manual browser testing for flows.
 - SQL policy checks for RLS.

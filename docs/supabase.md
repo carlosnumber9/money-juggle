@@ -57,6 +57,13 @@ callback creates a session, and before rendering private routes. Authentication
 proves the user owns an email inbox; the allowlist decides whether that email
 may access `money-juggle`.
 
+The current auth flow also writes server-side diagnostic logs for magic-link
+requests, callback handling, Supabase auth cookie writes, and rejected access.
+Those logs use generated auth log IDs, masked email addresses, sanitized
+Supabase error details, and boolean cookie diagnostics. They must remain
+server-side and must not include magic-link codes, session tokens, cookie
+values, full email addresses, or secret keys.
+
 ## Next.js SSR
 
 Future implementation should use Supabase patterns compatible with Next.js App Router and server rendering.

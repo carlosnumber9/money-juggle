@@ -38,7 +38,15 @@ The app should:
 - Restrict sign-in to the owner email or an explicit allowlist.
 - Reject unapproved emails after authentication.
 - Keep private routes protected by session checks.
+- Log server-side authentication milestones with a per-request auth log ID,
+  masked email addresses, sanitized Supabase errors, and cookie diagnostics that
+  do not include cookie values.
 - Consider MFA or passkeys later.
+
+Authentication logs are operational diagnostics, not an audit log. They should
+help debug missing allowlist configuration, Supabase rate limits, callback code
+exchange failures, and auth cookie write behavior without exposing secrets,
+magic-link codes, session tokens, or full email addresses.
 
 ## Email Allowlist
 
@@ -103,6 +111,11 @@ Operational sensitivity:
 - Audit trails.
 
 Logs should avoid secrets and should minimize financial detail.
+
+Auth logs may include masked email addresses, request origins, redirect targets,
+boolean cookie diagnostics, sanitized error names or status codes, and generated
+correlation IDs. They must not include full emails, magic-link codes, access
+tokens, refresh tokens, cookie values, private keys, or raw provider payloads.
 
 ## What Must Never Reach The Client
 
