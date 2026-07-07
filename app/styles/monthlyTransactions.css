@@ -7,21 +7,19 @@
   top: 0;
   z-index: 10;
   background-color: var(--card);
-  box-shadow: 0 1px 0 var(--border);
 }
 
-.monthly-transaction-row[data-bank-colored="true"] {
-  background-color: color-mix(
-    in oklch,
-    var(--institution-color) 14%,
-    var(--card)
-  );
-}
-
-.monthly-transaction-row[data-bank-colored="true"]:hover {
-  background-color: color-mix(
-    in oklch,
-    var(--institution-color) 20%,
-    var(--card)
-  );
+.monthly-transaction-bank-logo {
+  display: block;
+  width: 1.25rem;
+  height: 1.25rem;
+  background-color: var(--institution-logo-color);
+  mask-image: var(--institution-logo);
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
+  -webkit-mask-image: var(--institution-logo);
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
 }

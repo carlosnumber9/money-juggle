@@ -1,9 +1,4 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableRow
-} from "@/components/ui/Table";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/Table";
 import type { MonthlyTransactionSummary } from "@/definitions";
 
 import { formatTransactionDateHeading } from "./formatters";
@@ -35,9 +30,9 @@ export function TransactionsTable({
 function TransactionDateGroup({ group }: { group: TransactionDateGroup }) {
   return (
     <>
-      <TableRow className="monthly-transaction-date-row hover:bg-card">
+      <TableRow className="monthly-transaction-date-row border-b-0 hover:bg-card">
         <TableCell
-          colSpan={2}
+          colSpan={3}
           className="monthly-transaction-date-cell px-4 py-2.5 text-xs font-medium text-muted-foreground"
         >
           {group.date
