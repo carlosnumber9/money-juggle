@@ -31,6 +31,7 @@ export function TransactionFilterChips({
     >
       {transactionFilters.map((filter) => {
         const isActive = activeFilters.includes(filter.id);
+        const isDisabled = isFilterDisabled(filter.id, activeFilters);
 
         return (
           <Button
@@ -39,6 +40,7 @@ export function TransactionFilterChips({
             variant="outline"
             size="xs"
             aria-pressed={isActive}
+            disabled={isDisabled}
             className="monthly-transaction-filter-chip normal-case tracking-normal"
             onClick={() => onFilterToggle(filter.id)}
           >
@@ -80,7 +82,9 @@ function matchesInstitutionFilter(
     return false;
   }
 
-  return institutionFilters.includes(transaction.institution_slug);
+  return institutionFilters.every(
+    (institutionFilter) => transaction.institution_slug === institutionFilter
+  );
 }
 
 function matchesAmountFilter(
@@ -96,11 +100,35 @@ function matchesAmountFilter(
 
   const amount = Number(transaction.amount);
 
-  return (showIncome && amount > 0) || (showExpenses && amount < 0);
+  return (!showIncome || amount > 0) && (!showExpenses || amount < 0);
 }
 
 function isInstitutionFilter(
   filterId: TransactionFilterId
 ): filterId is InstitutionFilterId {
   return filterId === "ing" || filterId === "caixabank";
+}
+
+function isFilterDisabled(
+  filterId: TransactionFilterId,
+  activeFilters: TransactionFilterId[]
+): boolean {
+  const oppositeFilter = getOppositeFilter(filterId);
+
+  return oppositeFilter ? activeFilters.includes(oppositeFilter) : false;
+}
+
+function getOppositeFilter(
+  filterId: TransactionFilterId
+): TransactionFilterId | null {
+  switch (filterId) {
+    case "ing":
+      return "caixabank";
+    case "caixabank":
+      return "ing";
+    case "income":
+      return "expense";
+    case "expense":
+      return "income";
+  }
 }
