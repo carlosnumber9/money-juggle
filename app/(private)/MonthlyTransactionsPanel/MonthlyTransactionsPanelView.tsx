@@ -7,9 +7,19 @@ import type { MonthlyTransactionsPanelProps } from "@/definitions";
 import { EmptyTransactionsState } from "./EmptyTransactionsState";
 import { MonthlyTransactionsHeader } from "./MonthlyTransactionsHeader";
 import {
+  clearCategoryFilters,
+  DEFAULT_TRANSACTION_FILTERS,
   filterMonthlyTransactions,
-  type TransactionFilterId
-} from "./TransactionFilterChips";
+  filterTransactionsForCategoryFilterOptions,
+  hasActiveTransactionFilters,
+  removeCategoryFiltersWithoutMatches,
+  toggleCategoryFilter,
+  toggleTransactionChipFilter,
+  toggleUncategorizedFilter,
+  type TransactionFilterId,
+  type TransactionFilters
+} from "./transactionFilters";
+import { getTransactionCategoryGroupsWithMatches } from "./transactionCategoryFilterOptions";
 import { TransactionsTable } from "./TransactionsTable";
 import { useTransactionSync } from "./useTransactionSync";
 
@@ -19,19 +29,55 @@ export function MonthlyTransactionsPanel({
   categoryGroups,
   error
 }: MonthlyTransactionsPanelProps) {
-  const [activeFilters, setActiveFilters] = useState<TransactionFilterId[]>([]);
+  const [transactionFilters, setTransactionFilters] =
+    useState<TransactionFilters>(DEFAULT_TRANSACTION_FILTERS);
   const { isSyncing, syncError } = useTransactionSync(enabled);
   const message = syncError ?? error;
   const filteredTransactions = useMemo(
-    () => filterMonthlyTransactions(transactions, activeFilters),
-    [activeFilters, transactions]
+    () => filterMonthlyTransactions(transactions, transactionFilters),
+    [transactionFilters, transactions]
+  );
+  const categoryFilterTransactions = useMemo(
+    () =>
+      filterTransactionsForCategoryFilterOptions(
+        transactions,
+        transactionFilters.activeChipFilters
+      ),
+    [transactionFilters.activeChipFilters, transactions]
+  );
+  const categoryGroupsWithVisibleTransactions = useMemo(
+    () =>
+      getTransactionCategoryGroupsWithMatches(
+        categoryGroups,
+        categoryFilterTransactions
+      ),
+    [categoryFilterTransactions, categoryGroups]
   );
 
   function handleFilterToggle(filterId: TransactionFilterId) {
-    setActiveFilters((currentFilters) =>
-      currentFilters.includes(filterId)
-        ? currentFilters.filter((currentFilter) => currentFilter !== filterId)
-        : [...currentFilters, filterId]
+    setTransactionFilters((currentFilters) =>
+      removeCategoryFiltersWithoutMatches(
+        toggleTransactionChipFilter(currentFilters, filterId),
+        transactions
+      )
+    );
+  }
+
+  function handleUncategorizedFilterToggle() {
+    setTransactionFilters((currentFilters) =>
+      toggleUncategorizedFilter(currentFilters)
+    );
+  }
+
+  function handleCategoryToggle(categoryId: string) {
+    setTransactionFilters((currentFilters) =>
+      toggleCategoryFilter(currentFilters, categoryId)
+    );
+  }
+
+  function handleClearCategoryFilters() {
+    setTransactionFilters((currentFilters) =>
+      clearCategoryFilters(currentFilters)
     );
   }
 
@@ -41,8 +87,12 @@ export function MonthlyTransactionsPanel({
         message={message}
         isSyncing={isSyncing}
         enabled={enabled}
-        activeFilters={activeFilters}
+        categoryGroups={categoryGroupsWithVisibleTransactions}
+        filters={transactionFilters}
         onFilterToggle={handleFilterToggle}
+        onUncategorizedFilterToggle={handleUncategorizedFilterToggle}
+        onCategoryToggle={handleCategoryToggle}
+        onClearCategoryFilters={handleClearCategoryFilters}
       />
 
       {filteredTransactions.length > 0 ? (
@@ -53,7 +103,7 @@ export function MonthlyTransactionsPanel({
       ) : (
         <EmptyTransactionsState
           isSyncing={isSyncing}
-          hasActiveFilters={activeFilters.length > 0}
+          hasActiveFilters={hasActiveTransactionFilters(transactionFilters)}
         />
       )}
     </section>

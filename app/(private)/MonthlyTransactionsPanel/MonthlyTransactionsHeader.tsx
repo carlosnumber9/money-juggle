@@ -1,24 +1,34 @@
 import { RefreshCwIcon } from "lucide-react";
 
 import { Spinner } from "@/components/ui/spinner";
+import type { TransactionCategoryGroupSummary } from "@/definitions";
 
-import {
-  TransactionFilterChips,
-  type TransactionFilterId
-} from "./TransactionFilterChips";
+import { TransactionFiltersBar } from "./TransactionFiltersBar";
+import type {
+  TransactionFilterId,
+  TransactionFilters
+} from "./transactionFilters";
 
 export function MonthlyTransactionsHeader({
   message,
   isSyncing,
   enabled,
-  activeFilters,
-  onFilterToggle
+  categoryGroups,
+  filters,
+  onFilterToggle,
+  onUncategorizedFilterToggle,
+  onCategoryToggle,
+  onClearCategoryFilters
 }: {
   message: string | null;
   isSyncing: boolean;
   enabled: boolean;
-  activeFilters: TransactionFilterId[];
+  categoryGroups: TransactionCategoryGroupSummary[];
+  filters: TransactionFilters;
   onFilterToggle: (filterId: TransactionFilterId) => void;
+  onUncategorizedFilterToggle: () => void;
+  onCategoryToggle: (categoryId: string) => void;
+  onClearCategoryFilters: () => void;
 }) {
   return (
     <div className="mb-4 flex items-start justify-between gap-3">
@@ -29,9 +39,13 @@ export function MonthlyTransactionsHeader({
         >
           Movimientos de este mes
         </h2>
-        <TransactionFilterChips
-          activeFilters={activeFilters}
+        <TransactionFiltersBar
+          categoryGroups={categoryGroups}
+          filters={filters}
           onFilterToggle={onFilterToggle}
+          onUncategorizedFilterToggle={onUncategorizedFilterToggle}
+          onCategoryToggle={onCategoryToggle}
+          onClearCategoryFilters={onClearCategoryFilters}
         />
         {message ? (
           <p className="mt-1 text-sm text-destructive">{message}</p>
