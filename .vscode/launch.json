@@ -9,7 +9,7 @@
       "runtimeExecutable": "node",
       "runtimeArgs": ["--inspect"],
       "program": "${workspaceFolder}/node_modules/next/dist/bin/next",
-      "args": ["dev"],
+      "args": ["dev", "--experimental-https", "-p", "3001"],
       "console": "integratedTerminal",
       "skipFiles": ["<node_internals>/**"],
       "serverReadyAction": {

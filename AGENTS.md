@@ -178,3 +178,9 @@ A feature is acceptable when:
 Build in small, didactic steps. Prefer clear, explicit code over premature abstractions. Add tests when they clarify behavior, protect financial logic, or reduce regression risk. Keep explanations practical and focused on what the user is learning.
 
 Never generate large parts of the app without the user's confirmation. Explain important changes before implementing them.
+
+## Local App Startup Rule
+
+Do not start the local Next.js app for testing or verification unless the user's prompt explicitly asks for a local app run or browser-based local testing.
+
+Prefer non-server verification such as type checks, linting, formatting checks, unit tests, or focused code inspection. If a change would normally benefit from running the app locally, explain that this was intentionally skipped because local app startup was not requested.

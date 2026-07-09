@@ -31,10 +31,10 @@ In the Supabase Dashboard:
 2. Go to Auth configuration.
 3. Keep email authentication enabled.
 4. Configure the Site URL:
-   - Local development: `http://localhost:3000`
+   - Local development: `https://localhost:3001`
    - Production: the final Vercel production URL when it exists.
 5. Add allowed redirect URLs:
-   - Local callback: `http://localhost:3000/auth/callback`
+   - Local callback: `https://localhost:3001/auth/callback`
    - Production callback: `https://<production-domain>/auth/callback`
    - Optional Vercel preview callback only when preview deployments need login.
 6. Keep the email template as a magic-link flow unless the app deliberately

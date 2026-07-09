@@ -81,9 +81,15 @@ Use verification appropriate to the feature:
 - Focused UI or pure function tests for client-side filters and formatting when
   the behavior becomes complex enough to regress.
 - Integration checks for server routes.
-- Manual browser testing for flows.
+- Manual browser testing for flows only when the user's prompt explicitly asks
+  for a local app run or browser-based local testing.
 - SQL policy checks for RLS.
 - Dry-run, sandbox, or restricted own-account checks for Enable Banking where available.
+
+Do not start the local Next.js app for tests or verification unless the user's
+prompt specifically requests it. If a change would normally benefit from local
+browser verification, document that the local app was intentionally not started
+and use the smallest suitable non-server checks instead.
 
 If verification cannot be run, explain why.
 

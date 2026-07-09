@@ -71,6 +71,10 @@ Start the local Next.js app:
 npm run dev
 ```
 
+This command is for intentional local development. Agents should not start the
+local app for testing or verification unless the prompt specifically asks for a
+local app run or browser-based local testing.
+
 Run the basic checks:
 
 ```bash
