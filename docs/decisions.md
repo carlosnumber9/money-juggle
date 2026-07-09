@@ -843,3 +843,42 @@ Possible future revisit trigger:
 - If the provider omits counterparty account identifiers frequently.
 - If transfers need manual review, override, or a visible transaction label.
 - If investment accounts introduce cash movements that need separate treatment.
+
+## ADR-027: Seed Initial User-Owned Transaction Categories
+
+Status:
+
+- Accepted.
+
+Context:
+
+- The category and category group tables already exist and are owned by
+  `user_id`.
+- The first category set is a personal reporting starting point, not a global
+  taxonomy for all future users.
+- Category names are future user-visible app text and should be Spanish.
+- Internal slugs remain English for code, queries, and migrations.
+
+Decision:
+
+- Seed the initial category groups and categories through a Supabase migration.
+- Create the rows for profiles that already exist when the migration runs.
+- Use stable English slugs and Spanish display names.
+- Keep the seed limited to category metadata only; do not add category UI,
+  category assignment flows, rules, or report rollups in the same step.
+- Use later migrations to add, rename, or archive categories as the owner's
+  personal reporting model changes.
+
+Consequences:
+
+- The app can start from a useful category catalog before visual category
+  management exists.
+- Future profiles will need an explicit seed step if the app becomes multi-user.
+- Used categories should usually be archived instead of deleted, because
+  transactions can reference them through `transactions.category_id`.
+
+Possible future revisit trigger:
+
+- If category defaults need to be created automatically for each new profile.
+- If the app introduces shared household categories or a reusable template
+  catalog.
