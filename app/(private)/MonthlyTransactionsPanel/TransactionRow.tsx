@@ -32,9 +32,11 @@ export function TransactionRow({
       <TableCell className="w-16 pl-4 pr-0">
         <TransactionBankLogo transaction={transaction} />
       </TableCell>
-      <TableCell className="min-w-52 whitespace-normal py-3 pl-4">
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <span className="line-clamp-2">{concept}</span>
+      <TableCell className="monthly-transaction-details-cell min-w-52 whitespace-normal py-3 pl-4">
+        <div className="monthly-transaction-summary min-w-0">
+          <span className="monthly-transaction-description line-clamp-2">
+            {concept}
+          </span>
           <TransactionCategorySelect
             transaction={transaction}
             categoryGroups={categoryGroups}

@@ -24,6 +24,36 @@
   background-color: var(--card);
 }
 
+.monthly-transaction-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem 0.75rem;
+}
+
+.monthly-transaction-description {
+  flex: 0 1 100%;
+  min-width: 0;
+  text-align: center;
+}
+
+.monthly-transaction-category-select {
+  flex: 0 0 auto;
+}
+
+@media (min-width: 768px) {
+  .monthly-transaction-summary {
+    flex-wrap: nowrap;
+    justify-content: space-around;
+  }
+
+  .monthly-transaction-description {
+    flex: 0 1 min(34rem, 62%);
+    text-align: left;
+  }
+}
+
 .monthly-transaction-bank-logo {
   display: block;
   width: 3.35rem;
