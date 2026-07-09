@@ -31,7 +31,8 @@ export function MonthlyTransactionsPanel({
 }: MonthlyTransactionsPanelProps) {
   const [transactionFilters, setTransactionFilters] =
     useState<TransactionFilters>(DEFAULT_TRANSACTION_FILTERS);
-  const { isSyncing, syncError } = useTransactionSync(enabled);
+  const { isSyncing, syncError, syncTransactions } =
+    useTransactionSync(enabled);
   const message = syncError ?? error;
   const filteredTransactions = useMemo(
     () => filterMonthlyTransactions(transactions, transactionFilters),
@@ -93,6 +94,7 @@ export function MonthlyTransactionsPanel({
         onUncategorizedFilterToggle={handleUncategorizedFilterToggle}
         onCategoryToggle={handleCategoryToggle}
         onClearCategoryFilters={handleClearCategoryFilters}
+        onSyncTransactions={syncTransactions}
       />
 
       {filteredTransactions.length > 0 ? (

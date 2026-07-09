@@ -1,5 +1,6 @@
 import { RefreshCwIcon } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import type { TransactionCategoryGroupSummary } from "@/definitions";
 
@@ -18,7 +19,8 @@ export function MonthlyTransactionsHeader({
   onFilterToggle,
   onUncategorizedFilterToggle,
   onCategoryToggle,
-  onClearCategoryFilters
+  onClearCategoryFilters,
+  onSyncTransactions
 }: {
   message: string | null;
   isSyncing: boolean;
@@ -29,6 +31,7 @@ export function MonthlyTransactionsHeader({
   onUncategorizedFilterToggle: () => void;
   onCategoryToggle: (categoryId: string) => void;
   onClearCategoryFilters: () => void;
+  onSyncTransactions: () => void;
 }) {
   return (
     <div className="mb-4 flex items-start justify-between gap-3">
@@ -52,15 +55,30 @@ export function MonthlyTransactionsHeader({
         ) : null}
       </div>
       {isSyncing ? (
-        <p className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          aria-label="Actualizando movimientos"
+          disabled
+          className="text-muted-foreground hover:bg-transparent"
+        >
           <Spinner className="size-4" aria-hidden />
-          Actualizando...
-        </p>
+        </Button>
       ) : enabled ? (
-        <RefreshCwIcon
-          className="size-4 text-muted-foreground"
-          aria-label="Movimientos actualizados recientemente"
-        />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          aria-label="Actualizar movimientos"
+          onClick={onSyncTransactions}
+          className="cursor-pointer text-muted-foreground hover:bg-transparent"
+        >
+          <RefreshCwIcon
+            aria-hidden
+            className="size-4 transition-transform group-hover/button:scale-150"
+          />
+        </Button>
       ) : null}
     </div>
   );
