@@ -67,6 +67,29 @@ export type MonthlyTransactionSummary = {
   description: string | null;
   merchant_name: string | null;
   counterparty_name: string | null;
+  category: MonthlyTransactionCategory | null;
+};
+
+export type MonthlyTransactionCategory = {
+  id: string;
+  name: string;
+  group: {
+    id: string;
+    name: string;
+  };
+};
+
+export type TransactionCategorySummary = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
+export type TransactionCategoryGroupSummary = {
+  id: string;
+  name: string;
+  slug: string;
+  categories: TransactionCategorySummary[];
 };
 
 export type MonthlyTransactionRange = {
@@ -84,6 +107,9 @@ export type BankingDataSource = {
     userId: string,
     range: MonthlyTransactionRange
   ): Promise<MonthlyTransactionSummary[]>;
+  listTransactionCategoryGroups(
+    userId: string
+  ): Promise<TransactionCategoryGroupSummary[]>;
 };
 
 export const INITIAL_BANK_NAMES = ["CaixaBank", "ING"] as const;

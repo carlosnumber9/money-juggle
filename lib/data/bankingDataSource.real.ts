@@ -10,6 +10,7 @@ import {
 import { isEmailAllowed } from "@/lib/auth/allowlist";
 import { listUserEnableBankingConnections } from "@/lib/db/enableBankingConnections";
 import { listMonthlyTransactions } from "@/lib/db/enableBankingTransactions";
+import { listTransactionCategoryGroups } from "@/lib/db/transactionCategories";
 import {
   getEnableBankingApplication,
   getEnableBankingAspsps
@@ -69,5 +70,8 @@ export const realBankingDataSource: BankingDataSource = {
   },
   async listMonthlyTransactions(userId, range) {
     return listMonthlyTransactions({ userId, range });
+  },
+  async listTransactionCategoryGroups(userId) {
+    return listTransactionCategoryGroups({ userId });
   }
 };

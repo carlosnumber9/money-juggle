@@ -16,6 +16,7 @@ import { useTransactionSync } from "./useTransactionSync";
 export function MonthlyTransactionsPanel({
   enabled,
   transactions,
+  categoryGroups,
   error
 }: MonthlyTransactionsPanelProps) {
   const [activeFilters, setActiveFilters] = useState<TransactionFilterId[]>([]);
@@ -45,7 +46,10 @@ export function MonthlyTransactionsPanel({
       />
 
       {filteredTransactions.length > 0 ? (
-        <TransactionsTable transactions={filteredTransactions} />
+        <TransactionsTable
+          transactions={filteredTransactions}
+          categoryGroups={categoryGroups}
+        />
       ) : (
         <EmptyTransactionsState
           isSyncing={isSyncing}

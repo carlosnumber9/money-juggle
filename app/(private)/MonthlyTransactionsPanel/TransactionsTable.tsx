@@ -1,13 +1,18 @@
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
-import type { MonthlyTransactionSummary } from "@/definitions";
+import type {
+  MonthlyTransactionSummary,
+  TransactionCategoryGroupSummary
+} from "@/definitions";
 
 import { formatTransactionDateHeading } from "./formatters";
 import { TransactionRow } from "./TransactionRow";
 
 export function TransactionsTable({
-  transactions
+  transactions,
+  categoryGroups
 }: {
   transactions: MonthlyTransactionSummary[];
+  categoryGroups: TransactionCategoryGroupSummary[];
 }) {
   const transactionGroups = groupTransactionsByDate(transactions);
 
@@ -19,6 +24,7 @@ export function TransactionsTable({
             <TransactionDateGroup
               key={`${group.date ?? "unknown"}-${index}`}
               group={group}
+              categoryGroups={categoryGroups}
             />
           ))}
         </TableBody>
@@ -27,7 +33,13 @@ export function TransactionsTable({
   );
 }
 
-function TransactionDateGroup({ group }: { group: TransactionDateGroup }) {
+function TransactionDateGroup({
+  group,
+  categoryGroups
+}: {
+  group: TransactionDateGroup;
+  categoryGroups: TransactionCategoryGroupSummary[];
+}) {
   return (
     <>
       <TableRow className="monthly-transaction-date-row border-b-0 hover:bg-card">
@@ -41,7 +53,11 @@ function TransactionDateGroup({ group }: { group: TransactionDateGroup }) {
         </TableCell>
       </TableRow>
       {group.transactions.map((transaction) => (
-        <TransactionRow key={transaction.id} transaction={transaction} />
+        <TransactionRow
+          key={transaction.id}
+          transaction={transaction}
+          categoryGroups={categoryGroups}
+        />
       ))}
     </>
   );

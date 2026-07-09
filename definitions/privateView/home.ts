@@ -1,4 +1,7 @@
-import type { MonthlyTransactionSummary } from "../dataSource";
+import type {
+  MonthlyTransactionSummary,
+  TransactionCategoryGroupSummary
+} from "../dataSource";
 import type { BankInstitutionCard } from "./bankCard";
 import type { MonthlyCashflowSummary } from "./monthlyCashflow";
 import type { ProviderStatusView } from "./providerStatus";
@@ -24,6 +27,7 @@ export type PrivateHomeView =
           to: string;
         };
         rows: MonthlyTransactionSummary[];
+        categoryGroups: TransactionCategoryGroupSummary[];
         error: string | null;
       };
     };

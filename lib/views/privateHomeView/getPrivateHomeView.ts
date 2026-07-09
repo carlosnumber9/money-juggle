@@ -9,7 +9,8 @@ import { loadConnections } from "./loadConnections";
 import {
   loadInstitutions,
   loadMonthlyTransactions,
-  loadProviderStatus
+  loadProviderStatus,
+  loadTransactionCategoryGroups
 } from "./loaders";
 import { buildMonthlyCashflowSummary } from "./monthlyCashflow";
 
@@ -26,12 +27,17 @@ export async function getPrivateHomeView(): Promise<PrivateHomeView> {
   }
 
   const transactionRange = getCurrentMonthTransactionRange();
-  const [connectionsResult, providerResult, transactionsResult] =
-    await Promise.all([
-      loadConnections(dataSource, user.id),
-      loadProviderStatus(dataSource),
-      loadMonthlyTransactions(dataSource, user.id, transactionRange)
-    ]);
+  const [
+    connectionsResult,
+    providerResult,
+    transactionsResult,
+    categoryGroupsResult
+  ] = await Promise.all([
+    loadConnections(dataSource, user.id),
+    loadProviderStatus(dataSource),
+    loadMonthlyTransactions(dataSource, user.id, transactionRange),
+    loadTransactionCategoryGroups(dataSource, user.id)
+  ]);
   const providerStatus = getProviderStatus(providerResult, dataSource.mode);
   const institutionsResult =
     providerStatus.status === "success"
@@ -53,9 +59,30 @@ export async function getPrivateHomeView(): Promise<PrivateHomeView> {
     monthlyTransactions: {
       range: transactionRange,
       rows: transactionsResult.ok ? transactionsResult.value : [],
-      error: transactionsResult.ok ? null : transactionsResult.reason
+      categoryGroups: categoryGroupsResult.ok ? categoryGroupsResult.value : [],
+      error: getMonthlyTransactionsError(
+        transactionsResult,
+        categoryGroupsResult
+      )
     }
   };
+}
+
+function getMonthlyTransactionsError(
+  transactionsResult: Awaited<ReturnType<typeof loadMonthlyTransactions>>,
+  categoryGroupsResult: Awaited<
+    ReturnType<typeof loadTransactionCategoryGroups>
+  >
+): string | null {
+  if (!transactionsResult.ok) {
+    return transactionsResult.reason;
+  }
+
+  if (!categoryGroupsResult.ok) {
+    return categoryGroupsResult.reason;
+  }
+
+  return null;
 }
 
 function getProviderStatus(

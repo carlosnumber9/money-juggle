@@ -71,6 +71,11 @@ export type StoredMonthlyTransactionRow = {
   counterparty_name: string | null;
   counterparty_account_last4: string | null;
   counterparty_account_fingerprint: string | null;
+  category_id: string | null;
+  transaction_categories:
+    | StoredMonthlyTransactionCategory
+    | StoredMonthlyTransactionCategory[]
+    | null;
   accounts: StoredMonthlyTransactionAccount | StoredMonthlyTransactionAccount[];
 };
 
@@ -97,5 +102,19 @@ type StoredMonthlyTransactionBankConnection = {
 
 type StoredMonthlyTransactionInstitution = {
   provider_institution_id: string;
+  name: string;
+};
+
+type StoredMonthlyTransactionCategory = {
+  id: string;
+  name: string;
+  transaction_category_groups:
+    | StoredMonthlyTransactionCategoryGroup
+    | StoredMonthlyTransactionCategoryGroup[]
+    | null;
+};
+
+type StoredMonthlyTransactionCategoryGroup = {
+  id: string;
   name: string;
 };

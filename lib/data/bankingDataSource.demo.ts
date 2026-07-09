@@ -5,6 +5,7 @@ import {
   DEMO_BANK_CONNECTIONS,
   DEMO_INSTITUTIONS,
   DEMO_PROVIDER_APPLICATION,
+  DEMO_TRANSACTION_CATEGORY_GROUPS,
   DEMO_TRANSACTIONS,
   DEMO_USER
 } from "@/definitions";
@@ -36,6 +37,7 @@ export const demoBankingDataSource: BankingDataSource = {
         candidate.accounts.some((item) => item.id === transaction.accountId)
       );
       const institutionName = connection?.institution?.name ?? "Cuenta";
+      const category = getDemoTransactionCategory(transaction.categorySlug);
 
       return {
         id: transaction.id,
@@ -54,11 +56,40 @@ export const demoBankingDataSource: BankingDataSource = {
         currency: transaction.currency,
         description: transaction.description,
         merchant_name: transaction.merchantName,
-        counterparty_name: transaction.counterpartyName
+        counterparty_name: transaction.counterpartyName,
+        category
       };
     });
+  },
+  async listTransactionCategoryGroups() {
+    return DEMO_TRANSACTION_CATEGORY_GROUPS;
   }
 };
+
+function getDemoTransactionCategory(categorySlug: string | null) {
+  if (!categorySlug) {
+    return null;
+  }
+
+  for (const group of DEMO_TRANSACTION_CATEGORY_GROUPS) {
+    const category = group.categories.find(
+      (item) => item.slug === categorySlug
+    );
+
+    if (category) {
+      return {
+        id: category.id,
+        name: category.name,
+        group: {
+          id: group.id,
+          name: group.name
+        }
+      };
+    }
+  }
+
+  return null;
+}
 
 function getInstitutionSlug(
   institutionName: string

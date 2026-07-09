@@ -1,15 +1,29 @@
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 import { TableCell, TableRow as BaseTableRow } from "@/components/ui/table";
-import type { MonthlyTransactionSummary } from "@/definitions";
+import type {
+  MonthlyTransactionSummary,
+  TransactionCategoryGroupSummary
+} from "@/definitions";
 import { cn } from "@/lib/utils";
 
 import { formatCurrency, getTransactionConcept } from "./formatters";
 
 export function TransactionRow({
-  transaction
+  transaction,
+  categoryGroups
 }: {
   transaction: MonthlyTransactionSummary;
+  categoryGroups: TransactionCategoryGroupSummary[];
 }) {
   const concept = getTransactionConcept(transaction);
   const amount = Number(transaction.amount);
@@ -24,10 +38,10 @@ export function TransactionRow({
       )}.`}
       className="monthly-transaction-row"
     >
-      <TableCell className="w-12 pl-4 pr-0">
+      <TableCell className="w-16 pl-4 pr-0">
         <span
           aria-hidden
-          className="flex size-7 items-center justify-center overflow-hidden rounded-full border border-border bg-transparent"
+          className="flex size-11 items-center justify-center overflow-hidden rounded-full border border-border bg-transparent"
           title={logo.label}
         >
           {logo.path ? (
@@ -47,8 +61,14 @@ export function TransactionRow({
           )}
         </span>
       </TableCell>
-      <TableCell className="min-w-52 whitespace-normal pl-4">
-        <span className="line-clamp-2">{concept}</span>
+      <TableCell className="min-w-52 whitespace-normal py-3 pl-4">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <span className="line-clamp-2">{concept}</span>
+          <TransactionCategorySelect
+            transaction={transaction}
+            categoryGroups={categoryGroups}
+          />
+        </div>
       </TableCell>
       <TableCell
         className={cn(
@@ -60,6 +80,72 @@ export function TransactionRow({
       </TableCell>
     </BaseTableRow>
   );
+}
+
+function TransactionCategorySelect({
+  transaction,
+  categoryGroups
+}: {
+  transaction: MonthlyTransactionSummary;
+  categoryGroups: TransactionCategoryGroupSummary[];
+}) {
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    transaction.category?.id ?? null
+  );
+
+  return (
+    <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+      <SelectTrigger
+        size="sm"
+        aria-label={`Categoría de ${getTransactionConcept(transaction)}`}
+        className="h-auto max-w-52 py-0 text-xs text-muted-foreground"
+      >
+        <SelectValue placeholder="Sin categoría">
+          {(value) =>
+            getSelectedCategoryLabel(value, categoryGroups, transaction)
+          }
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent align="start" className="min-w-64">
+        {categoryGroups.map((group) => (
+          <SelectGroup key={group.id}>
+            <SelectLabel>{group.name}</SelectLabel>
+            {group.categories.map((category) => (
+              <SelectItem key={category.id} value={category.id}>
+                {category.name}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+function getSelectedCategoryLabel(
+  selectedCategoryId: string | null,
+  categoryGroups: TransactionCategoryGroupSummary[],
+  transaction: MonthlyTransactionSummary
+): string {
+  if (!selectedCategoryId) {
+    return "Sin categoría";
+  }
+
+  if (selectedCategoryId === transaction.category?.id) {
+    return transaction.category.name;
+  }
+
+  for (const group of categoryGroups) {
+    const category = group.categories.find(
+      (candidate) => candidate.id === selectedCategoryId
+    );
+
+    if (category) {
+      return category.name;
+    }
+  }
+
+  return "Sin categoría";
 }
 
 function getAccountLabel(transaction: MonthlyTransactionSummary): string {

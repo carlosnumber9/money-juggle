@@ -36,6 +36,15 @@ export async function listMonthlyTransactions({
       counterparty_name,
       counterparty_account_last4,
       counterparty_account_fingerprint,
+      category_id,
+      transaction_categories (
+        id,
+        name,
+        transaction_category_groups (
+          id,
+          name
+        )
+      ),
       accounts!inner (
         id,
         name,

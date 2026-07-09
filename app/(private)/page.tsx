@@ -52,6 +52,7 @@ export default async function Home() {
               !view.providerStatus.isDemo
             }
             transactions={view.monthlyTransactions.rows}
+            categoryGroups={view.monthlyTransactions.categoryGroups}
             range={view.monthlyTransactions.range}
             error={view.monthlyTransactions.error}
           />

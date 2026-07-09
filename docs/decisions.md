@@ -882,3 +882,35 @@ Possible future revisit trigger:
 - If category defaults need to be created automatically for each new profile.
 - If the app introduces shared household categories or a reusable template
   catalog.
+
+## ADR-028: Show Transaction Categories Inline In The Review Table
+
+Status:
+
+- Accepted.
+
+Context:
+
+- The owner wants category review to happen directly where monthly transactions
+  are already inspected.
+- The schema already links `transactions.category_id` to user-owned
+  `transaction_categories`.
+- Category assignment is user-owned app metadata and should remain separate
+  from provider transaction sync.
+
+Decision:
+
+- Show each transaction category under the transaction description in the
+  monthly transaction row.
+- Use the configured shadcn/ui `Select` component for the category affordance.
+- Group select options by category group, using the group name as a
+  non-selectable label.
+- Keep this first UI slice read-only; a later focused change should add the
+  server-side category update flow.
+
+Consequences:
+
+- The row layout can support category assignment without creating a separate
+  categorization screen.
+- The first implementation can verify data shape and layout before adding a
+  financial-data write path.
