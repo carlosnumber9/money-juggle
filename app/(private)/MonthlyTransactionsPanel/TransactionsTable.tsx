@@ -5,6 +5,10 @@ import type {
 } from "@/definitions";
 
 import { formatTransactionDateHeading } from "./formatters";
+import {
+  groupTransactionsByDate,
+  type TransactionDateGroup
+} from "./transactionDateGroups";
 import { TransactionRow } from "./TransactionRow";
 
 export function TransactionsTable({
@@ -61,31 +65,4 @@ function TransactionDateGroup({
       ))}
     </>
   );
-}
-
-type TransactionDateGroup = {
-  date: string | null;
-  transactions: MonthlyTransactionSummary[];
-};
-
-function groupTransactionsByDate(
-  transactions: MonthlyTransactionSummary[]
-): TransactionDateGroup[] {
-  const groups: TransactionDateGroup[] = [];
-
-  for (const transaction of transactions) {
-    const previousGroup = groups.at(-1);
-
-    if (previousGroup && previousGroup.date === transaction.booking_date) {
-      previousGroup.transactions.push(transaction);
-      continue;
-    }
-
-    groups.push({
-      date: transaction.booking_date,
-      transactions: [transaction]
-    });
-  }
-
-  return groups;
 }
