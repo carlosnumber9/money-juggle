@@ -905,12 +905,16 @@ Decision:
 - Use the configured shadcn/ui `Select` component for the category affordance.
 - Group select options by category group, using the group name as a
   non-selectable label.
-- Keep this first UI slice read-only; a later focused change should add the
-  server-side category update flow.
+- Persist category changes with a small server action.
+- Use a server-only database helper with Supabase service role to update only
+  `transactions.category_id`, after validating that both the transaction and
+  selected category belong to the authenticated owner.
+- Allow assigning `null` again through the `Sin categoría` option.
 
 Consequences:
 
 - The row layout can support category assignment without creating a separate
   categorization screen.
-- The first implementation can verify data shape and layout before adding a
-  financial-data write path.
+- The service role remains contained to a narrow server-only write path because
+  the current transaction RLS policies are read-only.
+- Provider transaction sync remains separate from user-owned category metadata.

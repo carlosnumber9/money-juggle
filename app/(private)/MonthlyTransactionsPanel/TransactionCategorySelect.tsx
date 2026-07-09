@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 import {
   Select,
   SelectContent,
@@ -15,7 +13,11 @@ import type {
 } from "@/definitions";
 
 import { getTransactionConcept } from "./formatters";
-import { getSelectedCategoryLabel } from "./transactionCategoryOptions";
+import {
+  getSelectedCategoryLabel,
+  UNCATEGORIZED_CATEGORY_VALUE
+} from "./transactionCategoryOptions";
+import { useTransactionCategoryAssignment } from "./useTransactionCategoryAssignment";
 
 export function TransactionCategorySelect({
   transaction,
@@ -24,35 +26,52 @@ export function TransactionCategorySelect({
   transaction: MonthlyTransactionSummary;
   categoryGroups: TransactionCategoryGroupSummary[];
 }) {
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
-    transaction.category?.id ?? null
-  );
+  const {
+    isPending,
+    saveError,
+    selectedCategoryValue,
+    updateSelectedCategory
+  } = useTransactionCategoryAssignment(transaction);
 
   return (
-    <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
-      <SelectTrigger
-        size="sm"
-        aria-label={`Categoría de ${getTransactionConcept(transaction)}`}
-        className="h-auto max-w-52 py-0 text-xs text-muted-foreground"
+    <div className="flex min-w-0 flex-col items-start gap-1">
+      <Select
+        value={selectedCategoryValue}
+        onValueChange={updateSelectedCategory}
+        disabled={isPending}
       >
-        <SelectValue placeholder="Sin categoría">
-          {(value) =>
-            getSelectedCategoryLabel(value, categoryGroups, transaction)
-          }
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent align="start" className="min-w-64">
-        {categoryGroups.map((group) => (
-          <SelectGroup key={group.id}>
-            <SelectLabel>{group.name}</SelectLabel>
-            {group.categories.map((category) => (
-              <SelectItem key={category.id} value={category.id}>
-                {category.name}
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        ))}
-      </SelectContent>
-    </Select>
+        <SelectTrigger
+          size="sm"
+          aria-label={`Categoría de ${getTransactionConcept(transaction)}`}
+          className="h-auto max-w-52 py-0 text-xs text-muted-foreground"
+        >
+          <SelectValue placeholder="Sin categoría">
+            {(value) =>
+              getSelectedCategoryLabel(value, categoryGroups, transaction)
+            }
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent align="start" className="min-w-64">
+          <SelectItem value={UNCATEGORIZED_CATEGORY_VALUE}>
+            Sin categoría
+          </SelectItem>
+          {categoryGroups.map((group) => (
+            <SelectGroup key={group.id}>
+              <SelectLabel>{group.name}</SelectLabel>
+              {group.categories.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          ))}
+        </SelectContent>
+      </Select>
+      {saveError ? (
+        <span className="text-xs text-destructive" role="status">
+          {saveError}
+        </span>
+      ) : null}
+    </div>
   );
 }
