@@ -416,13 +416,16 @@ This verifies:
 - Enable Banking accepts the JWT.
 - The application ID and private key match the registered application.
 
-This does not yet verify:
+This verification route itself does not verify:
 
 - CaixaBank or ING account consent.
 - Linked accounts.
 - Balances.
 - Transactions.
 - Any stored bank connection state.
+
+Those capabilities are implemented through the dedicated bank connection,
+balance sync, and transaction sync routes described above.
 
 The internal verification route is:
 
@@ -453,18 +456,17 @@ The UI must not:
 Server-side modules should own the Enable Banking client, request signing,
 request handling, normalization, and persistence.
 
-## Future Implementation Notes
+## Remaining Implementation Notes
 
-When implementation begins, prefer small steps:
+The initial Enable Banking path has now progressed through signed requests,
+ASPSP listing, account information authorization, callback handling, account
+storage, balance sync, and current-month transaction sync. Future work should
+still prefer small steps:
 
-1. Document required environment variables.
-2. Implement one server-only signed API request.
-3. List ASPSPs for Spain.
-4. Confirm CaixaBank and ING identifiers.
-5. Start one account information authorization flow.
-6. Handle callback.
-7. Store linked accounts.
-8. Add balances.
-9. Add transactions.
+1. Add focused tests for transaction identity and sync idempotency.
+2. Improve reconnection flows for expired or failed consents.
+3. Add scheduled sync only after manual and authenticated sync behavior is well
+   understood.
+4. Keep all provider calls server-only and Account Information only.
 
 Each step should be verified before moving to the next one.

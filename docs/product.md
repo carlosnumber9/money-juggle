@@ -59,13 +59,15 @@ This app should make financial review easier by collecting read-only financial d
 ## Initial Limitations
 
 - The current implemented foundation covers authentication, owner allowlist
-  checks, consent tracking, account sync, balance sync, transaction sync, and a
-  first private dashboard.
+  checks, consent tracking, account sync, balance sync, transaction sync, a
+  first private dashboard, current-month transaction review, and inline manual
+  transaction categorization.
 - The current transaction review UI is useful for inspection, but it is not yet
   a monthly reporting system.
 - Transaction sync should gain focused idempotency tests before scheduled sync is introduced.
 - Reporting should start simple and become richer later.
-- Categorization should start as user-owned app metadata before adding automated rules.
+- Categorization has started as user-owned app metadata. Automated rules remain
+  future work.
 - Investment data should not block the banking foundation.
 - Trade Republic may begin as manual assets or another isolated approach.
 - No banking credentials should ever be stored.

@@ -74,7 +74,8 @@ RLS, and should be treated as highly sensitive.
 
 ## Secrets Management
 
-Server-only secrets should be stored in Vercel environment variables and local development secret files when implementation begins.
+Server-only secrets should be stored in Vercel environment variables and local
+development secret files.
 
 Never expose:
 

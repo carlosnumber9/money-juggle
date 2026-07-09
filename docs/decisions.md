@@ -902,7 +902,8 @@ Decision:
 
 - Show each transaction category under the transaction description in the
   monthly transaction row.
-- Use the configured shadcn/ui `Select` component for the category affordance.
+- Use a compact popover affordance with search for the category picker, styled
+  with the existing shadcn/ui button and input primitives.
 - Group select options by category group, using the group name as a
   non-selectable label.
 - Persist category changes with a small server action.
@@ -918,3 +919,9 @@ Consequences:
 - The service role remains contained to a narrow server-only write path because
   the current transaction RLS policies are read-only.
 - Provider transaction sync remains separate from user-owned category metadata.
+
+Possible future revisit trigger:
+
+- If category management becomes complex enough to need a dedicated screen.
+- If keyboard navigation or mobile ergonomics require a different picker
+  primitive.

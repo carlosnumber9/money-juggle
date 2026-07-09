@@ -2,9 +2,12 @@
 
 This document describes the initial data model for `money-juggle`.
 
-The first executable schema is defined in:
+The executable schema is defined by the local migration chain:
 
 - `supabase/migrations/20260704143000_create_initial_schema.sql`
+- `supabase/migrations/20260704170000_add_enable_banking_connection_fields.sql`
+- `supabase/migrations/20260707120000_add_account_fingerprints_for_internal_transfers.sql`
+- `supabase/migrations/20260709120000_seed_initial_transaction_categories.sql`
 
 The model should preserve user ownership even though the app starts as a personal project.
 
@@ -14,11 +17,12 @@ Financial rows should be owned by a Supabase Auth user through `user_id`. RLS po
 
 Shared reference rows, such as institutions, may be global if they do not contain user-specific financial data.
 
-## Initial Schema Scope
+## Implemented Schema Scope
 
-The first migration creates the smallest useful schema for PSD2 bank
-connections, account data, balance snapshots, transactions, categorization, and
-sync observability.
+The current migrations create the smallest useful schema for PSD2 bank
+connections, account data, balance snapshots, transactions, categorization, sync
+observability, internal transfer matching, and the initial owner-scoped category
+catalog.
 
 Included tables:
 
@@ -44,11 +48,17 @@ The first migration also enables RLS for every table it creates. User-owned
 tables use `user_id = auth.uid()` policies. Global `institutions` rows are
 readable by authenticated users only.
 
-For now, financial provider-owned tables such as `bank_connections`, `accounts`,
-`balances`, `transactions`, `sync_runs`, and `consent_events` only expose read
-policies to authenticated owners. Server-controlled write flows will be added
-when Enable Banking synchronization is implemented. User-managed category tables
-allow owner-scoped create, read, update, and delete operations.
+Financial provider-owned tables such as `bank_connections`, `accounts`,
+`balances`, `transactions`, `sync_runs`, and `consent_events` expose read
+policies to authenticated owners. Provider writes are performed by controlled
+server-only flows that validate ownership before using elevated Supabase access.
+User-managed category tables allow owner-scoped create, read, update, and
+delete operations.
+
+The first manual categorization slice updates only `transactions.category_id`
+through a server action. That action validates the current Supabase user and
+email allowlist, verifies that any selected category belongs to the same owner,
+and then updates the owner-scoped transaction row.
 
 Detailed RLS checks with representative rows are deferred until the features
 that create those rows exist. The initial migration still enables RLS from day
@@ -73,6 +83,9 @@ Important constraints in the first migration:
 - Currency values are constrained to three uppercase letters.
 - Category groups and categories are user-owned and unique by `user_id` and
   `slug`.
+- The initial category catalog is seeded for profiles that already exist when
+  `20260709120000_seed_initial_transaction_categories.sql` runs. Category
+  display names are Spanish; slugs remain English.
 
 ## Entities
 
@@ -503,7 +516,8 @@ Security and RLS:
 
 Source:
 
-- Manual user setup, with possible app-provided defaults later.
+- Initial migration seed for existing profiles.
+- Manual user setup or future category management UI.
 
 ### `transaction_categories`
 
@@ -544,7 +558,8 @@ Security and RLS:
 
 Source:
 
-- Manual user setup, with possible app-provided defaults later.
+- Initial migration seed for existing profiles.
+- Manual user setup or future category management UI.
 
 ### `transaction_category_rules`
 

@@ -204,10 +204,15 @@ project, the helper scripts are:
   project.
 - `npm run db:migrations`: lists local and remote migration status.
 
-Current remote migration status:
+Current local migrations:
 
-- `20260704143000_create_initial_schema.sql` is applied to the linked Supabase
-  project.
+- `20260704143000_create_initial_schema.sql`
+- `20260704170000_add_enable_banking_connection_fields.sql`
+- `20260707120000_add_account_fingerprints_for_internal_transfers.sql`
+- `20260709120000_seed_initial_transaction_categories.sql`
+
+Use `npm run db:migrations` to confirm which local migrations are applied to the
+linked remote Supabase project before pushing new schema changes.
 
 Run `npx supabase login` once before linking if the CLI is not authenticated.
 In non-interactive environments, provide `SUPABASE_ACCESS_TOKEN` through the

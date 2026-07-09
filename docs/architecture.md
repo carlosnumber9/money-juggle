@@ -48,17 +48,22 @@ Next.js server-side code should:
 - Keep sensitive environment variables private.
 - Normalize external API responses before persistence.
 
-Future server-side code may live in:
+Server-side code currently lives in:
 
 ```text
 app/api/
 lib/auth/
 lib/domain/
+lib/db/
 lib/enable-banking/
 lib/supabase/
+lib/views/
 ```
 
-Do not create these folders until a feature needs them.
+`app/api/` owns thin Route Handlers. `lib/views/` prepares route-level props.
+`lib/data/` selects the real or demo data source. `lib/db/` owns persistence
+helpers. `lib/enable-banking/` owns server-only provider calls and request
+signing.
 
 ## Data Source Boundary
 
@@ -76,18 +81,19 @@ pattern is a small ports-and-adapters boundary:
 This keeps demo mode, provider details, and persistence details out of UI code.
 
 The current private home view is prepared under `lib/views/privateHomeView/`.
-It loads provider status, bank card state, and current-month transactions before
-the route renders UI components. The current-month range is calculated in
-`lib/domain/transactionRanges.ts`, so the transaction tab receives a prepared
-range and rows instead of querying persistence directly.
+It loads provider status, bank card state, current-month transactions, and
+transaction category groups before the route renders UI components. The
+current-month range is calculated in `lib/domain/transactionRanges.ts`, so the
+transaction tab receives a prepared range and rows instead of querying
+persistence directly.
 
 The private UI is split into two tabs:
 
 - `Dashboard`: bank institution cards, connected accounts, latest balances, and
-  per-bank balance totals.
+  per-bank balance totals, plus current-month income and expense cards.
 - `Transacciones`: current-month transaction review with date grouping,
-  institution cues, signed amounts, and client-side filters over already-loaded
-  owner data.
+  institution cues, signed amounts, client-side filters over already-loaded
+  owner data, category filtering, and inline manual category assignment.
 
 ## Supabase Responsibilities
 
@@ -158,13 +164,12 @@ Conceptual flow:
 
 Scheduled sync may later use Vercel Cron, but it should not be introduced before the manual sync path is understood.
 
-## Suggested Future Folder Separation
+## Current Folder Separation
 
-Potential structure when implementation begins:
+The implemented project now follows this broad separation:
 
 ```text
 app/
-  (auth)/
   (private)/
   api/
 components/
@@ -176,7 +181,6 @@ lib/
   supabase/
 supabase/
   migrations/
-tests/
 ```
 
 Responsibilities:
@@ -197,18 +201,21 @@ Enable Banking credentials, signing keys, provider tokens, and service role oper
 - Environment variables without `NEXT_PUBLIC_` for secrets.
 - Small domain functions that can be tested without external calls.
 
-## Future Route Handler Locations
+## Implemented Route Handler Locations
 
-Possible future Route Handlers:
+The current banking and sync Route Handlers are:
 
 ```text
 app/api/bank-connections/enable-banking/start/route.ts
 app/api/bank-connections/enable-banking/callback/route.ts
+app/api/bank-connections/enable-banking/aspsps/route.ts
+app/api/integrations/enable-banking/application/route.ts
 app/api/sync/balances/route.ts
 app/api/sync/transactions/route.ts
 ```
 
-These are examples only. Do not create them until the relevant feature is requested.
+They must remain thin, authenticated server boundaries. Provider calls,
+normalization, and database writes should stay in server-only helper modules.
 
 ## Future Domain Logic Locations
 

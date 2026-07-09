@@ -2,6 +2,12 @@
 
 A very custom finance tracker for my own accounts.
 
+The current implementation includes a private Next.js App Router application
+with Supabase magic-link authentication, owner email allowlist checks, a
+server-only Enable Banking Account Information integration, connected account
+storage, balance synchronization, current-month transaction synchronization,
+monthly cashflow cards, and inline transaction categorization.
+
 ## Development
 
 Install dependencies:
@@ -41,15 +47,20 @@ public self-registration for magic links.
 
 ## Database Schema
 
-The initial schema is defined in:
+The local migration chain is defined in:
 
 ```text
 supabase/migrations/20260704143000_create_initial_schema.sql
+supabase/migrations/20260704170000_add_enable_banking_connection_fields.sql
+supabase/migrations/20260707120000_add_account_fingerprints_for_internal_transfers.sql
+supabase/migrations/20260709120000_seed_initial_transaction_categories.sql
 ```
 
-Apply that SQL to the Supabase project to create the initial tables, indexes,
-constraints, and RLS policies. After applying it, the tables should appear in
-the Supabase Dashboard Table Editor under the `public` schema.
+Apply pending migrations to the Supabase project to create and evolve the
+tables, indexes, constraints, RLS policies, Enable Banking connection fields,
+internal transfer fingerprints, and initial owner-scoped transaction category
+catalog. After applying them, the tables should appear in the Supabase
+Dashboard Table Editor under the `public` schema.
 
 Prefer applying migrations through the Supabase CLI so the remote migration
 history stays in sync with the repository:

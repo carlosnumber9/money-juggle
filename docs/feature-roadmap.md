@@ -27,7 +27,7 @@ Use this checklist as the source of truth for what remains to be implemented. Ke
 - [x] 19. Sync transactions.
 - [x] 20. Build a basic dashboard.
 - [x] 21. Add current-month transaction review.
-- [ ] 22. Add transaction categorization.
+- [x] 22. Add transaction categorization.
 - [ ] 23. Add monthly reports.
 - [ ] 24. Add manual assets for Trade Republic / investments.
 - [ ] 25. Add scheduled sync with Vercel Cron.
@@ -1030,6 +1030,28 @@ Do not do yet:
 
 ## 22. Add Transaction Categorization
 
+Status:
+
+- Completed as a first manual assignment slice.
+
+Implemented result:
+
+- The initial owner-scoped category group and category catalog is seeded by
+  `20260709120000_seed_initial_transaction_categories.sql` for profiles that
+  already exist when the migration runs.
+- The private home view loads category groups through the same data source
+  boundary used by transactions.
+- Each current-month transaction row shows an inline category affordance under
+  the transaction concept.
+- The category picker is a searchable popover grouped by category group and
+  includes a `Sin categoría` option that stores `null`.
+- Category changes are saved through a small server action that validates input,
+  the current Supabase user, the email allowlist, transaction ownership, and
+  category ownership.
+- Demo mode accepts category changes optimistically without writing to Supabase.
+- Current-month transaction filters can narrow by selected categories or
+  uncategorized transactions.
+
 Goal:
 
 - Categorize transactions for reporting.
@@ -1082,15 +1104,24 @@ Recommended scope:
 
 Suggested acceptance criteria:
 
-- A user can create, update, archive, and list only their own category groups.
-- A user can create, update, archive, and list only their own categories.
-- A user can assign one of their categories to one of their category groups.
+- A user can list only their own category groups and categories in the
+  transaction review UI.
 - A user can assign one of their categories to one of their transactions.
 - Transactions without manual assignment remain uncategorized.
 - A later transaction sync does not erase that assignment.
-- Reports can group transactions by `category_id`.
-- Reports can optionally roll category totals up to `transaction_category_groups`.
-- RLS prevents access to another user's category groups, categories, or category assignments.
+- Current-month transactions can be filtered by category or by uncategorized
+  state.
+- Future reports can group transactions by `category_id`.
+- Future reports can optionally roll category totals up to
+  `transaction_category_groups`.
+- RLS and server-side ownership checks prevent access to another user's
+  category groups, categories, or category assignments.
+
+Current limitations:
+
+- There is no category management UI yet; the first catalog is migration-seeded.
+- There are no automatic categorization rules yet.
+- Category totals and rollups are still part of the future monthly reports work.
 
 Do not do yet:
 
