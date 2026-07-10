@@ -4,6 +4,7 @@ import { BalanceAutoSync } from "@/app/(private)/BalanceAutoSync";
 import { BankConnectionsPanel } from "@/app/(private)/BankConnectionsPanel";
 import { EnableBankingStatus } from "@/app/(private)/EnableBankingStatus";
 import { MonthlyCashflowCards } from "@/app/(private)/MonthlyCashflowCards";
+import { MonthlyEvolutionPanel } from "@/app/(private)/MonthlyEvolutionPanel";
 import { MonthlyTransactionsPanel } from "@/app/(private)/MonthlyTransactionsPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getPrivateHomeView } from "@/lib/views/privateHomeView";
@@ -30,6 +31,7 @@ export default async function Home() {
           <TabsList aria-label="Secciones de tus cuentas">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="transactions">Transacciones</TabsTrigger>
+            <TabsTrigger value="evolution">Evolución</TabsTrigger>
           </TabsList>
         </div>
         <BalanceAutoSync
@@ -55,6 +57,12 @@ export default async function Home() {
             categoryGroups={view.monthlyTransactions.categoryGroups}
             range={view.monthlyTransactions.range}
             error={view.monthlyTransactions.error}
+          />
+        </TabsContent>
+        <TabsContent value="evolution" keepMounted>
+          <MonthlyEvolutionPanel
+            evolution={view.monthlyEvolution.summary}
+            error={view.monthlyEvolution.error}
           />
         </TabsContent>
       </Tabs>

@@ -2,7 +2,10 @@ import "server-only";
 
 import type { PrivateHomeView, ProviderStatusView } from "@/definitions";
 import { getBankingDataSource } from "@/lib/data/getBankingDataSource";
-import { getCurrentMonthTransactionRange } from "@/lib/domain/transactionRanges";
+import {
+  getCurrentMonthTransactionRange,
+  getCurrentYearTransactionRange
+} from "@/lib/domain/transactionRanges";
 
 import { buildBankCards } from "./buildBankCards";
 import { loadConnections } from "./loadConnections";
@@ -13,6 +16,7 @@ import {
   loadTransactionCategoryGroups
 } from "./loaders";
 import { buildMonthlyCashflowSummary } from "./monthlyCashflow";
+import { buildMonthlyEvolutionSummary } from "./monthlyEvolution";
 
 export async function getPrivateHomeView(): Promise<PrivateHomeView> {
   const dataSource = getBankingDataSource();
@@ -27,15 +31,19 @@ export async function getPrivateHomeView(): Promise<PrivateHomeView> {
   }
 
   const transactionRange = getCurrentMonthTransactionRange();
+  const yearlyTransactionRange = getCurrentYearTransactionRange();
+  const reportYear = Number(yearlyTransactionRange.from.slice(0, 4));
   const [
     connectionsResult,
     providerResult,
     transactionsResult,
+    yearlyTransactionsResult,
     categoryGroupsResult
   ] = await Promise.all([
     loadConnections(dataSource, user.id),
     loadProviderStatus(dataSource),
     loadMonthlyTransactions(dataSource, user.id, transactionRange),
+    loadMonthlyTransactions(dataSource, user.id, yearlyTransactionRange),
     loadTransactionCategoryGroups(dataSource, user.id)
   ]);
   const providerStatus = getProviderStatus(providerResult, dataSource.mode);
@@ -56,6 +64,17 @@ export async function getPrivateHomeView(): Promise<PrivateHomeView> {
     monthlyCashflow: buildMonthlyCashflowSummary(
       transactionsResult.ok ? transactionsResult.value : []
     ),
+    monthlyEvolution: {
+      summary: buildMonthlyEvolutionSummary({
+        transactions: yearlyTransactionsResult.ok
+          ? yearlyTransactionsResult.value
+          : [],
+        year: reportYear
+      }),
+      error: yearlyTransactionsResult.ok
+        ? null
+        : yearlyTransactionsResult.reason
+    },
     monthlyTransactions: {
       range: transactionRange,
       rows: transactionsResult.ok ? transactionsResult.value : [],

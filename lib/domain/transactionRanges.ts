@@ -20,6 +20,17 @@ export function getCurrentMonthTransactionRange(
   };
 }
 
+export function getCurrentYearTransactionRange(
+  date = new Date()
+): TransactionDateRange {
+  const today = getDatePartsInAppTimeZone(date);
+
+  return {
+    from: formatDatePart(today.year, 1, 1),
+    to: formatDatePart(today.year + 1, 1, 1)
+  };
+}
+
 export function getCurrentMonthProviderDateRange(date = new Date()) {
   const today = getDatePartsInAppTimeZone(date);
 

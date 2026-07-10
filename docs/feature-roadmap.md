@@ -1132,7 +1132,8 @@ Do not do yet:
 
 Status:
 
-- Started as a small dashboard summary, not yet a full reporting system.
+- Started with a small dashboard summary and a first annual evolution chart,
+  not yet a full reporting system.
 
 Implemented so far:
 
@@ -1144,6 +1145,13 @@ Implemented so far:
   and expense totals. The first implementation uses server-only account
   fingerprints when available and a conservative paired last-4 fallback for
   older rows.
+- The private home screen includes an `Evolución` tab after `Transacciones`.
+  Its first chart shows the current year's 12 monthly points for income and
+  expenses, using cached transaction rows and leaving months without data at
+  zero.
+- The annual chart is titled `Progreso anual`, summarizes annual income and
+  spending in its subtitle, and keeps the lines continuous without permanent
+  point markers.
 - This first slice reuses cached Supabase transaction rows and does not add new
   report tables or external integrations.
 

@@ -87,13 +87,16 @@ current-month range is calculated in `lib/domain/transactionRanges.ts`, so the
 transaction tab receives a prepared range and rows instead of querying
 persistence directly.
 
-The private UI is split into two tabs:
+The private UI is split into three tabs:
 
 - `Dashboard`: bank institution cards, connected accounts, latest balances, and
   per-bank balance totals, plus current-month income and expense cards.
 - `Transacciones`: current-month transaction review with date grouping,
   institution cues, signed amounts, client-side filters over already-loaded
   owner data, category filtering, and inline manual category assignment.
+- `Evolución`: current-year income and expense trend chart with 12 monthly
+  points, annual income and spending totals, and continuous shadcn/Recharts
+  lines currently calculated from cached transaction rows.
 
 ## Supabase Responsibilities
 

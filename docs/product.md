@@ -62,8 +62,9 @@ This app should make financial review easier by collecting read-only financial d
   checks, consent tracking, account sync, balance sync, transaction sync, a
   first private dashboard, current-month transaction review, and inline manual
   transaction categorization.
-- The current transaction review UI is useful for inspection, but it is not yet
-  a monthly reporting system.
+- Reporting has started with current-month cashflow cards and a current-year
+  income/spending evolution chart, but it is not yet a complete monthly
+  reporting system.
 - Transaction sync should gain focused idempotency tests before scheduled sync is introduced.
 - Reporting should start simple and become richer later.
 - Categorization has started as user-owned app metadata. Automated rules remain

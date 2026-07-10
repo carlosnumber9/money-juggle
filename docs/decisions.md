@@ -925,3 +925,50 @@ Possible future revisit trigger:
 - If category management becomes complex enough to need a dedicated screen.
 - If keyboard navigation or mobile ergonomics require a different picker
   primitive.
+
+## ADR-029: Start Reports With A Current-Year Evolution Chart
+
+Status:
+
+- Accepted.
+
+Context:
+
+- The owner wants the next roadmap slice to start monthly reports with a new
+  `Evolución` section after `Transacciones`.
+- The app currently syncs and stores transactions, but it does not have report
+  tables, report snapshots, budgets, or month-over-month persistence.
+- The first useful chart should show 12 monthly points for the current year,
+  even when only the current month has data.
+
+Decision:
+
+- Add `Evolución` as a third private-home tab.
+- Use the configured shadcn/ui chart wrapper and Recharts for the first line
+  chart.
+- Calculate the chart from cached transaction rows for the current year.
+- Keep income and expense values as view-model output, with expenses shown as
+  positive spending amounts.
+- Show `Progreso anual` as the chart title and use the subtitle for total
+  income and total spending in the selected currency.
+- Keep permanent point markers hidden; only interactive points should appear on
+  hover or tap.
+- Exclude detected internal transfers from both lines, matching the monthly
+  dashboard summary.
+- Do not add report persistence, report migrations, or new provider sync paths
+  in this first slice.
+
+Consequences:
+
+- The owner gets an immediate annual trend view without broad architecture
+  changes.
+- Months without stored data remain visible as zero-value points.
+- Future report work can add category rollups, persisted snapshots, or richer
+  currency handling without changing the initial navigation concept.
+
+Possible future revisit trigger:
+
+- If multi-currency accounts need simultaneous chart lines or a currency
+  selector.
+- If reports must remain stable after transaction recategorization or provider
+  data corrections.
