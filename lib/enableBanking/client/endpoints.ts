@@ -67,16 +67,56 @@ export async function getEnableBankingAccountTransactions(input: {
   dateFrom: string;
   dateTo: string;
 }): Promise<EnableBankingTransactionResource[]> {
-  const searchParams = new URLSearchParams({
+  const baseSearchParams = new URLSearchParams({
     date_from: input.dateFrom,
     date_to: input.dateTo
   });
-  const response =
-    await requestEnableBanking<EnableBankingTransactionsResponse>(
-      `/accounts/${encodeURIComponent(input.accountId)}/transactions?${searchParams}`
-    );
+  const transactions: EnableBankingTransactionResource[] = [];
+  const seenContinuationKeys = new Set<string>();
+  let continuationKey: string | null = null;
 
-  return Array.isArray(response) ? response : response.transactions;
+  do {
+    const searchParams = new URLSearchParams(baseSearchParams);
+
+    if (continuationKey) {
+      searchParams.set("continuation_key", continuationKey);
+    }
+
+    const response =
+      await requestEnableBanking<EnableBankingTransactionsResponse>(
+        `/accounts/${encodeURIComponent(input.accountId)}/transactions?${searchParams}`
+      );
+
+    transactions.push(
+      ...(Array.isArray(response) ? response : response.transactions)
+    );
+    continuationKey = getContinuationKey(response);
+
+    if (continuationKey) {
+      if (seenContinuationKeys.has(continuationKey)) {
+        throw new Error(
+          "Enable Banking returned a repeated transaction continuation key."
+        );
+      }
+
+      seenContinuationKeys.add(continuationKey);
+    }
+  } while (continuationKey);
+
+  return transactions;
+}
+
+function getContinuationKey(
+  response: EnableBankingTransactionsResponse
+): string | null {
+  if (Array.isArray(response)) {
+    return null;
+  }
+
+  return typeof response.continuation_key === "string" &&
+    response.continuation_key.length > 0
+    ? response.continuation_key
+    : null;
 }
 
 function setSearchParam(

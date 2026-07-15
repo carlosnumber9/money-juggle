@@ -41,5 +41,6 @@ type EnableBankingCounterpartyAccount = {
 export type EnableBankingTransactionsResponse =
   | {
       transactions: EnableBankingTransactionResource[];
+      continuation_key?: string | null;
     }
   | EnableBankingTransactionResource[];
