@@ -4,6 +4,8 @@ import { createSupabaseServiceRoleClient } from "@/lib/supabase/serviceRole";
 
 import type { TransactionRow } from "./types";
 
+const TRANSACTION_BATCH_SIZE = 100;
+
 export async function persistTransactionRows(
   rows: TransactionRow[],
   fetchedAt: string
@@ -13,58 +15,94 @@ export async function persistTransactionRows(
   }
 
   const supabase = createSupabaseServiceRoleClient();
+  const rowsByUser = groupRowsByUser(deduplicateRows(rows));
+
+  for (const [userId, userRows] of rowsByUser) {
+    for (const batch of chunkRows(userRows, TRANSACTION_BATCH_SIZE)) {
+      const accountIds = [...new Set(batch.map((row) => row.account_id))];
+      const stableImportKeys = [
+        ...new Set(batch.map((row) => row.stable_import_key))
+      ];
+      const { data: existingRows, error: lookupError } = await supabase
+        .from("transactions")
+        .select("account_id, stable_import_key, first_seen_at")
+        .eq("user_id", userId)
+        .in("account_id", accountIds)
+        .in("stable_import_key", stableImportKeys);
+
+      if (lookupError) {
+        throw new Error(
+          `Could not lookup transaction batch: ${lookupError.message}`
+        );
+      }
+
+      const firstSeenByIdentity = new Map(
+        (existingRows ?? []).map((row) => [
+          getIdentityKey({
+            user_id: userId,
+            account_id: row.account_id,
+            stable_import_key: row.stable_import_key
+          }),
+          row.first_seen_at
+        ])
+      );
+      const { error: upsertError } = await supabase.from("transactions").upsert(
+        batch.map((row) => ({
+          ...row,
+          first_seen_at:
+            firstSeenByIdentity.get(getIdentityKey(row)) ?? fetchedAt,
+          last_seen_at: fetchedAt
+        })),
+        {
+          onConflict: "user_id,account_id,stable_import_key",
+          defaultToNull: false
+        }
+      );
+
+      if (upsertError) {
+        throw new Error(
+          `Could not persist transaction batch: ${upsertError.message}`
+        );
+      }
+    }
+  }
+}
+
+function deduplicateRows(rows: TransactionRow[]): TransactionRow[] {
+  const rowsByIdentity = new Map<string, TransactionRow>();
 
   for (const row of rows) {
-    const { data: existing, error: lookupError } = await supabase
-      .from("transactions")
-      .select("id")
-      .eq("user_id", row.user_id)
-      .eq("account_id", row.account_id)
-      .eq("stable_import_key", row.stable_import_key)
-      .maybeSingle();
-
-    if (lookupError) {
-      throw new Error(`Could not lookup transaction: ${lookupError.message}`);
-    }
-
-    if (existing) {
-      await updateTransaction(row, existing, fetchedAt);
-      continue;
-    }
-
-    await insertTransaction(row, fetchedAt);
+    rowsByIdentity.set(getIdentityKey(row), row);
   }
+
+  return [...rowsByIdentity.values()];
 }
 
-async function updateTransaction(
-  row: TransactionRow,
-  existing: { id: string },
-  fetchedAt: string
-) {
-  const supabase = createSupabaseServiceRoleClient();
-  const { error } = await supabase
-    .from("transactions")
-    .update({
-      ...row,
-      last_seen_at: fetchedAt
-    })
-    .eq("id", existing.id)
-    .eq("user_id", row.user_id);
+function groupRowsByUser(rows: TransactionRow[]) {
+  const rowsByUser = new Map<string, TransactionRow[]>();
 
-  if (error) {
-    throw new Error(`Could not update transaction: ${error.message}`);
+  for (const row of rows) {
+    const userRows = rowsByUser.get(row.user_id) ?? [];
+
+    userRows.push(row);
+    rowsByUser.set(row.user_id, userRows);
   }
+
+  return rowsByUser;
 }
 
-async function insertTransaction(row: TransactionRow, fetchedAt: string) {
-  const supabase = createSupabaseServiceRoleClient();
-  const { error } = await supabase.from("transactions").insert({
-    ...row,
-    first_seen_at: fetchedAt,
-    last_seen_at: fetchedAt
-  });
+function chunkRows(rows: TransactionRow[], size: number): TransactionRow[][] {
+  const chunks: TransactionRow[][] = [];
 
-  if (error) {
-    throw new Error(`Could not insert transaction: ${error.message}`);
+  for (let index = 0; index < rows.length; index += size) {
+    chunks.push(rows.slice(index, index + size));
   }
+
+  return chunks;
+}
+
+function getIdentityKey(
+  row: Pick<TransactionRow, "user_id" | "account_id" | "stable_import_key">
+): string {
+  return JSON.stringify([row.user_id, row.account_id, row.stable_import_key]);
 }

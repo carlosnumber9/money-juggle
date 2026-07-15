@@ -192,6 +192,11 @@ the original date parameters and adds only the provider continuation key. A
 repeated continuation key aborts the sync instead of allowing an unbounded
 request loop.
 
+Normalized transaction rows are deduplicated by their owner-scoped stable
+identity and persisted in bounded batches. Each batch preserves the original
+`first_seen_at`, advances `last_seen_at`, and omits user-owned fields such as
+`category_id` from the provider upsert payload.
+
 The private `Transacciones` tab presents those current-month rows as a review
 surface: transactions are grouped by booking date, marked with the source bank
 logo or fallback, and can be filtered by institution or by income/spending
