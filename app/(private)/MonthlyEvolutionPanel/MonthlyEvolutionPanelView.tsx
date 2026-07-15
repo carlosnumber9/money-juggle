@@ -13,6 +13,8 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import type { MonthlyEvolutionPanelProps } from "@/definitions";
 
+import { CategoryExpensesRadarChart } from "./CategoryExpensesRadarChart";
+
 const chartConfig = {
   income: {
     label: "Ingresos",
@@ -26,7 +28,9 @@ const chartConfig = {
 
 export function MonthlyEvolutionPanel({
   evolution,
-  error
+  categoryExpenses,
+  error,
+  categoryExpensesError
 }: MonthlyEvolutionPanelProps) {
   return (
     <section
@@ -106,6 +110,13 @@ export function MonthlyEvolutionPanel({
           </ChartContainer>
         </CardContent>
       </Card>
+      <div className="mt-6 flex w-full">
+        <CategoryExpensesRadarChart
+          summary={categoryExpenses}
+          error={categoryExpensesError}
+          className="lg:w-1/2"
+        />
+      </div>
     </section>
   );
 }

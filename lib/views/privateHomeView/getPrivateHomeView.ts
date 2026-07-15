@@ -16,6 +16,7 @@ import {
   loadTransactionCategoryGroups
 } from "./loaders";
 import { buildMonthlyCashflowSummary } from "./monthlyCashflow";
+import { buildCurrentMonthCategoryExpensesSummary } from "./monthlyCategoryExpenses";
 import { buildMonthlyEvolutionSummary } from "./monthlyEvolution";
 
 export async function getPrivateHomeView(): Promise<PrivateHomeView> {
@@ -73,7 +74,14 @@ export async function getPrivateHomeView(): Promise<PrivateHomeView> {
       }),
       error: yearlyTransactionsResult.ok
         ? null
-        : yearlyTransactionsResult.reason
+        : yearlyTransactionsResult.reason,
+      categoryExpenses: buildCurrentMonthCategoryExpensesSummary({
+        transactions: transactionsResult.ok ? transactionsResult.value : [],
+        periodStart: transactionRange.from
+      }),
+      categoryExpensesError: transactionsResult.ok
+        ? null
+        : transactionsResult.reason
     },
     monthlyTransactions: {
       range: transactionRange,

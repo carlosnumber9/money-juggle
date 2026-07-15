@@ -62,7 +62,9 @@ export default async function Home() {
         <TabsContent value="evolution" keepMounted>
           <MonthlyEvolutionPanel
             evolution={view.monthlyEvolution.summary}
+            categoryExpenses={view.monthlyEvolution.categoryExpenses}
             error={view.monthlyEvolution.error}
+            categoryExpensesError={view.monthlyEvolution.categoryExpensesError}
           />
         </TabsContent>
       </Tabs>

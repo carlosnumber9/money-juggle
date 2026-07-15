@@ -12,3 +12,21 @@ export type MonthlyEvolutionSummary = {
   transactionCount: number;
   excludedInternalTransferCount: number;
 };
+
+export type MonthlyCategoryExpensePoint = {
+  categoryId: string;
+  categoryName: string;
+  categoryGroupName: string;
+  expenses: number;
+  transactionCount: number;
+};
+
+export type CurrentMonthCategoryExpensesSummary = {
+  monthLabel: string;
+  currency: string;
+  points: MonthlyCategoryExpensePoint[];
+  totalExpenses: number;
+  transactionCount: number;
+  uncategorizedExpenseCount: number;
+  excludedInternalTransferCount: number;
+};

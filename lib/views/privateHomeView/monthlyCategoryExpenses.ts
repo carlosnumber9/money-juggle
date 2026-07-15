@@ -1,0 +1,131 @@
+import type {
+  CurrentMonthCategoryExpensesSummary,
+  MonthlyTransactionSummary
+} from "@/definitions";
+
+import { formatDecimal, parseDecimal } from "./decimal";
+
+export function buildCurrentMonthCategoryExpensesSummary({
+  transactions,
+  periodStart
+}: {
+  transactions: MonthlyTransactionSummary[];
+  periodStart: string;
+}): CurrentMonthCategoryExpensesSummary {
+  const currency = getPrimaryCurrency(transactions) ?? "EUR";
+  const totalsByCategory = new Map<
+    string,
+    {
+      categoryName: string;
+      categoryGroupName: string;
+      expenses: bigint;
+      transactionCount: number;
+    }
+  >();
+  let transactionCount = 0;
+  let totalExpenses = 0n;
+  let uncategorizedExpenseCount = 0;
+  let excludedInternalTransferCount = 0;
+
+  for (const transaction of transactions) {
+    if (transaction.currency !== currency) {
+      continue;
+    }
+
+    const amount = parseDecimal(transaction.amount);
+
+    if (amount >= 0n) {
+      continue;
+    }
+
+    if (transaction.cashflow_type === "internal_transfer") {
+      excludedInternalTransferCount += 1;
+      continue;
+    }
+
+    if (!transaction.category) {
+      uncategorizedExpenseCount += 1;
+      continue;
+    }
+
+    const expenses = -amount;
+    const current = totalsByCategory.get(transaction.category.id) ?? {
+      categoryName: transaction.category.name,
+      categoryGroupName: transaction.category.group.name,
+      expenses: 0n,
+      transactionCount: 0
+    };
+
+    totalsByCategory.set(transaction.category.id, {
+      ...current,
+      expenses: current.expenses + expenses,
+      transactionCount: current.transactionCount + 1
+    });
+    totalExpenses += expenses;
+    transactionCount += 1;
+  }
+
+  return {
+    monthLabel: formatMonthLabel(periodStart),
+    currency,
+    points: Array.from(totalsByCategory.entries())
+      .sort(([, leftTotal], [, rightTotal]) => {
+        const expenseDifference =
+          rightTotal.expenses > leftTotal.expenses
+            ? 1
+            : rightTotal.expenses < leftTotal.expenses
+              ? -1
+              : 0;
+
+        return (
+          expenseDifference ||
+          leftTotal.categoryName.localeCompare(rightTotal.categoryName)
+        );
+      })
+      .map(([categoryId, total]) => ({
+        categoryId,
+        categoryName: total.categoryName,
+        categoryGroupName: total.categoryGroupName,
+        expenses: Number(formatDecimal(total.expenses)),
+        transactionCount: total.transactionCount
+      })),
+    totalExpenses: Number(formatDecimal(totalExpenses)),
+    transactionCount,
+    uncategorizedExpenseCount,
+    excludedInternalTransferCount
+  };
+}
+
+function getPrimaryCurrency(
+  transactions: MonthlyTransactionSummary[]
+): string | null {
+  const currencyCounts = new Map<string, number>();
+
+  for (const transaction of transactions) {
+    currencyCounts.set(
+      transaction.currency,
+      (currencyCounts.get(transaction.currency) ?? 0) + 1
+    );
+  }
+
+  return (
+    Array.from(currencyCounts.entries()).sort(
+      ([leftCurrency, leftCount], [rightCurrency, rightCount]) =>
+        rightCount - leftCount || leftCurrency.localeCompare(rightCurrency)
+    )[0]?.[0] ?? null
+  );
+}
+
+function formatMonthLabel(periodStart: string): string {
+  const [year, month] = periodStart.split("-").map(Number);
+
+  if (!year || !month) {
+    return "mes actual";
+  }
+
+  return new Intl.DateTimeFormat("es-ES", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC"
+  }).format(new Date(Date.UTC(year, month - 1, 1)));
+}

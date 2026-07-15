@@ -2,7 +2,10 @@ import type * as React from "react";
 
 import type { BankInstitutionCard } from "./bankCard";
 import type { MonthlyCashflowSummary } from "./monthlyCashflow";
-import type { MonthlyEvolutionSummary } from "./monthlyEvolution";
+import type {
+  CurrentMonthCategoryExpensesSummary,
+  MonthlyEvolutionSummary
+} from "./monthlyEvolution";
 import type { ProviderStatusView } from "./providerStatus";
 
 export type PrivateLayoutProps = Readonly<{
@@ -35,7 +38,9 @@ export type MonthlyTransactionsPanelProps = {
 
 export type MonthlyEvolutionPanelProps = {
   evolution: MonthlyEvolutionSummary;
+  categoryExpenses: CurrentMonthCategoryExpensesSummary;
   error: string | null;
+  categoryExpensesError: string | null;
 };
 
 export type EnableBankingStatusProps = {

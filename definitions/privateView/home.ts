@@ -4,7 +4,10 @@ import type {
 } from "../dataSource";
 import type { BankInstitutionCard } from "./bankCard";
 import type { MonthlyCashflowSummary } from "./monthlyCashflow";
-import type { MonthlyEvolutionSummary } from "./monthlyEvolution";
+import type {
+  CurrentMonthCategoryExpensesSummary,
+  MonthlyEvolutionSummary
+} from "./monthlyEvolution";
 import type { ProviderStatusView } from "./providerStatus";
 
 export type PrivateHomeView =
@@ -25,6 +28,8 @@ export type PrivateHomeView =
       monthlyEvolution: {
         summary: MonthlyEvolutionSummary;
         error: string | null;
+        categoryExpenses: CurrentMonthCategoryExpensesSummary;
+        categoryExpensesError: string | null;
       };
       monthlyTransactions: {
         range: {
