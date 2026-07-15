@@ -204,6 +204,13 @@ the longest available history at or after the requested lower boundary. Sync
 runs retain their mode, requested range, account count, transaction count, and
 any account-level failures after completion.
 
+The owner-only `POST /api/sync/transactions/backfill` route requests the current
+calendar year through the current day. It skips bank connections that already
+have a successful transaction backfill run. Failed and partial connection runs
+remain eligible for an idempotent retry. The route is server-only, requires an
+authenticated allowlisted user, and does not expose provider responses or
+credentials to the browser.
+
 The private `Transacciones` tab presents those current-month rows as a review
 surface: transactions are grouped by booking date, marked with the source bank
 logo or fallback, and can be filtered by institution or by income/spending

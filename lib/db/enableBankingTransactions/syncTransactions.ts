@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getErrorMessage } from "../shared/getErrorMessage";
+import { listCompletedTransactionBackfillConnectionIds } from "./listCompletedBackfills";
 import { listConnectionsForTransactionSync } from "./listConnections";
 import { syncConnectionTransactions } from "./syncConnectionTransactions";
 import type { TransactionSyncMode, TransactionSyncResult } from "./types";
@@ -17,6 +18,10 @@ export async function syncEnableBankingTransactions({
   mode: TransactionSyncMode;
 }): Promise<TransactionSyncResult> {
   const connections = await listConnectionsForTransactionSync(userId);
+  const completedBackfillConnectionIds =
+    mode === "backfill"
+      ? await listCompletedTransactionBackfillConnectionIds(userId)
+      : new Set<string>();
   const result: TransactionSyncResult = {
     synced: false,
     attemptedAccountCount: 0,
@@ -25,7 +30,10 @@ export async function syncEnableBankingTransactions({
   };
 
   for (const connection of connections) {
-    if (!shouldSyncConnection(connection)) {
+    if (
+      !shouldSyncConnection(connection) ||
+      completedBackfillConnectionIds.has(connection.id)
+    ) {
       continue;
     }
 

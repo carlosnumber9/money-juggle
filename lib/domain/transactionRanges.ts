@@ -40,6 +40,15 @@ export function getCurrentMonthProviderDateRange(date = new Date()) {
   };
 }
 
+export function getCurrentYearProviderDateRange(date = new Date()) {
+  const today = getDatePartsInAppTimeZone(date);
+
+  return {
+    from: formatDatePart(today.year, 1, 1),
+    to: formatDatePart(today.year, today.month, today.day)
+  };
+}
+
 function getDatePartsInAppTimeZone(date: Date) {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: APP_TIME_ZONE,
