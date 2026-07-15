@@ -8,6 +8,7 @@ import type {
   EnableBankingBalanceResource,
   EnableBankingStartAuthorizationInput,
   EnableBankingStartAuthorizationResponse,
+  EnableBankingTransactionsFetchStrategy,
   EnableBankingTransactionResource,
   EnableBankingTransactionsResponse
 } from "@/definitions";
@@ -66,10 +67,12 @@ export async function getEnableBankingAccountTransactions(input: {
   accountId: string;
   dateFrom: string;
   dateTo: string;
+  strategy: EnableBankingTransactionsFetchStrategy;
 }): Promise<EnableBankingTransactionResource[]> {
   const baseSearchParams = new URLSearchParams({
     date_from: input.dateFrom,
-    date_to: input.dateTo
+    date_to: input.dateTo,
+    strategy: input.strategy
   });
   const transactions: EnableBankingTransactionResource[] = [];
   const seenContinuationKeys = new Set<string>();

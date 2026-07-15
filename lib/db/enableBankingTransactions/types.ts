@@ -59,6 +59,8 @@ export type TransactionSyncResult = {
   failedAccountCount: number;
 };
 
+export type TransactionSyncMode = "incremental" | "backfill";
+
 export type StoredMonthlyTransactionRow = {
   id: string;
   account_id: string;

@@ -197,6 +197,13 @@ identity and persisted in bounded batches. Each batch preserves the original
 `first_seen_at`, advances `last_seen_at`, and omits user-owned fields such as
 `category_id` from the provider upsert payload.
 
+The server-side transaction sync accepts an explicit date range and mode.
+Incremental syncs use Enable Banking's `default` transaction strategy for
+recent updates. Historical backfills use `longest`, which asks the provider for
+the longest available history at or after the requested lower boundary. Sync
+runs retain their mode, requested range, account count, transaction count, and
+any account-level failures after completion.
+
 The private `Transacciones` tab presents those current-month rows as a review
 surface: transactions are grouped by booking date, marked with the source bank
 logo or fallback, and can be filtered by institution or by income/spending

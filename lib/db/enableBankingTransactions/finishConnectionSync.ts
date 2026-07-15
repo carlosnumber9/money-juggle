@@ -6,7 +6,8 @@ import { finishSyncRun } from "./syncRuns";
 import { updateConnectionSyncTimestamp } from "./updateSyncTimestamp";
 import type {
   StoredConnectionForTransactionSync,
-  TransactionRow
+  TransactionRow,
+  TransactionSyncMode
 } from "./types";
 
 type FinishConnectionSyncInput = {
@@ -14,6 +15,9 @@ type FinishConnectionSyncInput = {
   connection: StoredConnectionForTransactionSync;
   syncRunId: string;
   fetchedAt: string;
+  dateFrom: string;
+  dateTo: string;
+  mode: TransactionSyncMode;
   rows: TransactionRow[];
   failures: unknown[];
 };
@@ -29,6 +33,10 @@ export async function persistRowsAndFinishRun(
       status: "failed",
       errorCode: "transaction-upsert-failed",
       errorMessage: getErrorMessage(error),
+      accountCount: input.connection.accounts.length,
+      dateFrom: input.dateFrom,
+      dateTo: input.dateTo,
+      mode: input.mode,
       metadata: {
         transaction_count: input.rows.length,
         failures: input.failures
@@ -51,6 +59,10 @@ async function finishSuccessfulRun(input: FinishConnectionSyncInput) {
   await finishSyncRun({
     syncRunId: input.syncRunId,
     status,
+    accountCount: input.connection.accounts.length,
+    dateFrom: input.dateFrom,
+    dateTo: input.dateTo,
+    mode: input.mode,
     metadata: {
       transaction_count: input.rows.length,
       failures: input.failures

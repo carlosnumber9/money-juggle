@@ -10,7 +10,8 @@ import { mapTransactionToRow } from "./mapTransactionToRow";
 import { createSyncRun } from "./syncRuns";
 import type {
   StoredConnectionForTransactionSync,
-  TransactionRow
+  TransactionRow,
+  TransactionSyncMode
 } from "./types";
 
 export async function syncConnectionTransactions(input: {
@@ -18,13 +19,15 @@ export async function syncConnectionTransactions(input: {
   connection: StoredConnectionForTransactionSync;
   dateFrom: string;
   dateTo: string;
+  mode: TransactionSyncMode;
 }) {
   const syncRunId = await createSyncRun({
     userId: input.userId,
     bankConnectionId: input.connection.id,
     accountCount: input.connection.accounts.length,
     dateFrom: input.dateFrom,
-    dateTo: input.dateTo
+    dateTo: input.dateTo,
+    mode: input.mode
   });
   const fetchedAt = new Date().toISOString();
   const rows: TransactionRow[] = [];
@@ -39,7 +42,8 @@ export async function syncConnectionTransactions(input: {
       const transactions = await getEnableBankingAccountTransactions({
         accountId: account.provider_account_id,
         dateFrom: input.dateFrom,
-        dateTo: input.dateTo
+        dateTo: input.dateTo,
+        strategy: input.mode === "backfill" ? "longest" : "default"
       });
 
       rows.push(

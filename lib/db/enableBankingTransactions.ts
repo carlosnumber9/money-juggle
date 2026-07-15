@@ -1,4 +1,4 @@
 import "server-only";
 
 export { listMonthlyTransactions } from "./enableBankingTransactions/listMonthlyTransactions";
-export { syncCurrentMonthEnableBankingTransactions } from "./enableBankingTransactions/syncCurrentMonth";
+export { syncEnableBankingTransactions } from "./enableBankingTransactions/syncTransactions";

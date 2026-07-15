@@ -44,3 +44,5 @@ export type EnableBankingTransactionsResponse =
       continuation_key?: string | null;
     }
   | EnableBankingTransactionResource[];
+
+export type EnableBankingTransactionsFetchStrategy = "default" | "longest";

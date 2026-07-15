@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { isEmailAllowed } from "@/lib/auth/allowlist";
 import { isDemoMode } from "@/lib/demo/mode";
-import { syncCurrentMonthEnableBankingTransactions } from "@/lib/db/enableBankingTransactions";
+import { syncEnableBankingTransactions } from "@/lib/db/enableBankingTransactions";
 import { getCurrentMonthProviderDateRange } from "@/lib/domain/transactionRanges";
 import { getCurrentSupabaseUser } from "@/lib/supabase/currentUser";
 
@@ -25,16 +25,18 @@ export async function POST() {
 
   try {
     const range = getCurrentMonthProviderDateRange();
-    const result = await syncCurrentMonthEnableBankingTransactions({
+    const result = await syncEnableBankingTransactions({
       userId: user.id,
       dateFrom: range.from,
-      dateTo: range.to
+      dateTo: range.to,
+      mode: "incremental"
     });
 
     console.info("Transaction sync completed", {
       user_id_suffix: user.id.slice(-8),
       date_from: range.from,
       date_to: range.to,
+      mode: "incremental",
       synced: result.synced,
       attempted_account_count: result.attemptedAccountCount,
       succeeded_account_count: result.succeededAccountCount,

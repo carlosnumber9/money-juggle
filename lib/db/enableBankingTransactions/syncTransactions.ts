@@ -3,16 +3,18 @@ import "server-only";
 import { getErrorMessage } from "../shared/getErrorMessage";
 import { listConnectionsForTransactionSync } from "./listConnections";
 import { syncConnectionTransactions } from "./syncConnectionTransactions";
-import type { TransactionSyncResult } from "./types";
+import type { TransactionSyncMode, TransactionSyncResult } from "./types";
 
-export async function syncCurrentMonthEnableBankingTransactions({
+export async function syncEnableBankingTransactions({
   userId,
   dateFrom,
-  dateTo
+  dateTo,
+  mode
 }: {
   userId: string;
   dateFrom: string;
   dateTo: string;
+  mode: TransactionSyncMode;
 }): Promise<TransactionSyncResult> {
   const connections = await listConnectionsForTransactionSync(userId);
   const result: TransactionSyncResult = {
@@ -32,7 +34,8 @@ export async function syncCurrentMonthEnableBankingTransactions({
         userId,
         connection,
         dateFrom,
-        dateTo
+        dateTo,
+        mode
       });
 
       mergeSyncResult(result, connectionResult);
@@ -41,6 +44,7 @@ export async function syncCurrentMonthEnableBankingTransactions({
       result.failedAccountCount += connection.accounts.length;
       console.error("Enable Banking transaction sync failed", {
         bank_connection_id: connection.id,
+        mode,
         message: getErrorMessage(error)
       });
     }
