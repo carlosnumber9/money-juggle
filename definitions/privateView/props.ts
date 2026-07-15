@@ -7,6 +7,7 @@ import type {
   MonthlyEvolutionSummary
 } from "./monthlyEvolution";
 import type { ProviderStatusView } from "./providerStatus";
+import type { TransactionBackfillView } from "./transactionBackfill";
 
 export type PrivateLayoutProps = Readonly<{
   children: React.ReactNode;
@@ -18,6 +19,10 @@ export type BankInstitutionCardsProps = {
 
 export type BankConnectionsPanelProps = {
   cards: BankInstitutionCard[];
+};
+
+export type TransactionBackfillPanelProps = {
+  view: TransactionBackfillView;
 };
 
 export type MonthlyCashflowCardsProps = {

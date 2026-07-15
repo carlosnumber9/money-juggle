@@ -57,6 +57,24 @@ export async function loadMonthlyTransactions(
   }
 }
 
+export async function loadCompletedTransactionBackfillConnectionIds(
+  dataSource: BankingDataSource,
+  userId: string
+): Promise<Result<string[]>> {
+  try {
+    return {
+      ok: true,
+      value:
+        await dataSource.listCompletedTransactionBackfillConnectionIds(userId)
+    };
+  } catch (error) {
+    return getFailedResult(
+      error,
+      "No se pudo comprobar el estado de la importación histórica."
+    );
+  }
+}
+
 export async function loadTransactionCategoryGroups(
   dataSource: BankingDataSource,
   userId: string

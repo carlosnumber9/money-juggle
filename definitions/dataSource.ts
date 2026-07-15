@@ -103,6 +103,9 @@ export type BankingDataSource = {
   getProviderApplication(): Promise<ProviderApplication>;
   listAvailableInstitutions(): Promise<InstitutionAvailability[]>;
   listBankConnections(userId: string): Promise<BankConnectionSummary[]>;
+  listCompletedTransactionBackfillConnectionIds(
+    userId: string
+  ): Promise<string[]>;
   listMonthlyTransactions(
     userId: string,
     range: MonthlyTransactionRange

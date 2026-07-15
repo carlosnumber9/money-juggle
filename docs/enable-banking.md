@@ -211,6 +211,12 @@ remain eligible for an idempotent retry. The route is server-only, requires an
 authenticated allowlisted user, and does not expose provider responses or
 credentials to the browser.
 
+The private dashboard shows an `Importar historial` button below the bank cards
+only when at least one linked connection has accounts and no successful
+transaction backfill. The button reports progress and retry state through its
+label, refreshes the private view from Supabase after the request, and
+disappears once every eligible connection has completed its initial backfill.
+
 The private `Transacciones` tab presents those current-month rows as a review
 surface: transactions are grouped by booking date, marked with the source bank
 logo or fallback, and can be filtered by institution or by income/spending

@@ -9,6 +9,7 @@ import type {
   MonthlyEvolutionSummary
 } from "./monthlyEvolution";
 import type { ProviderStatusView } from "./providerStatus";
+import type { TransactionBackfillView } from "./transactionBackfill";
 
 export type PrivateHomeView =
   | {
@@ -24,6 +25,7 @@ export type PrivateHomeView =
       };
       providerStatus: ProviderStatusView;
       bankCards: BankInstitutionCard[];
+      transactionBackfill: TransactionBackfillView;
       monthlyCashflow: MonthlyCashflowSummary;
       monthlyEvolution: {
         summary: MonthlyEvolutionSummary;

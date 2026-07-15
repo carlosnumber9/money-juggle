@@ -6,6 +6,7 @@ import { EnableBankingStatus } from "@/app/(private)/EnableBankingStatus";
 import { MonthlyCashflowCards } from "@/app/(private)/MonthlyCashflowCards";
 import { MonthlyEvolutionPanel } from "@/app/(private)/MonthlyEvolutionPanel";
 import { MonthlyTransactionsPanel } from "@/app/(private)/MonthlyTransactionsPanel";
+import { TransactionBackfillPanel } from "@/app/(private)/TransactionBackfillPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getPrivateHomeView } from "@/lib/views/privateHomeView";
 
@@ -46,6 +47,7 @@ export default async function Home() {
             error={view.monthlyTransactions.error}
           />
           <BankConnectionsPanel cards={view.bankCards} />
+          <TransactionBackfillPanel view={view.transactionBackfill} />
         </TabsContent>
         <TabsContent value="transactions" keepMounted>
           <MonthlyTransactionsPanel

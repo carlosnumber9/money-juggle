@@ -10,6 +10,7 @@ import {
 import { buildBankCards } from "./buildBankCards";
 import { loadConnections } from "./loadConnections";
 import {
+  loadCompletedTransactionBackfillConnectionIds,
   loadInstitutions,
   loadMonthlyTransactions,
   loadProviderStatus,
@@ -18,6 +19,7 @@ import {
 import { buildMonthlyCashflowSummary } from "./monthlyCashflow";
 import { buildCurrentMonthCategoryExpensesSummary } from "./monthlyCategoryExpenses";
 import { buildMonthlyEvolutionSummary } from "./monthlyEvolution";
+import { buildTransactionBackfillView } from "./transactionBackfill";
 
 export async function getPrivateHomeView(): Promise<PrivateHomeView> {
   const dataSource = getBankingDataSource();
@@ -37,12 +39,14 @@ export async function getPrivateHomeView(): Promise<PrivateHomeView> {
   const [
     connectionsResult,
     providerResult,
+    completedBackfillConnectionIdsResult,
     transactionsResult,
     yearlyTransactionsResult,
     categoryGroupsResult
   ] = await Promise.all([
     loadConnections(dataSource, user.id),
     loadProviderStatus(dataSource),
+    loadCompletedTransactionBackfillConnectionIds(dataSource, user.id),
     loadMonthlyTransactions(dataSource, user.id, transactionRange),
     loadMonthlyTransactions(dataSource, user.id, yearlyTransactionRange),
     loadTransactionCategoryGroups(dataSource, user.id)
@@ -60,6 +64,11 @@ export async function getPrivateHomeView(): Promise<PrivateHomeView> {
     bankCards: buildBankCards({
       connectionsResult,
       institutionsResult,
+      providerStatus
+    }),
+    transactionBackfill: buildTransactionBackfillView({
+      connectionsResult,
+      completedConnectionIdsResult: completedBackfillConnectionIdsResult,
       providerStatus
     }),
     monthlyCashflow: buildMonthlyCashflowSummary(

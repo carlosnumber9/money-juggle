@@ -9,7 +9,10 @@ import {
 } from "@/definitions";
 import { isEmailAllowed } from "@/lib/auth/allowlist";
 import { listUserEnableBankingConnections } from "@/lib/db/enableBankingConnections";
-import { listMonthlyTransactions } from "@/lib/db/enableBankingTransactions";
+import {
+  listCompletedTransactionBackfillConnectionIds,
+  listMonthlyTransactions
+} from "@/lib/db/enableBankingTransactions";
 import { listTransactionCategoryGroups } from "@/lib/db/transactionCategories";
 import {
   getEnableBankingApplication,
@@ -67,6 +70,9 @@ export const realBankingDataSource: BankingDataSource = {
   },
   async listBankConnections(userId: string) {
     return listUserEnableBankingConnections(userId);
+  },
+  async listCompletedTransactionBackfillConnectionIds(userId) {
+    return [...(await listCompletedTransactionBackfillConnectionIds(userId))];
   },
   async listMonthlyTransactions(userId, range) {
     return listMonthlyTransactions({ userId, range });

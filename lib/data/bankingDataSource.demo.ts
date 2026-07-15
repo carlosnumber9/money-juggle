@@ -24,6 +24,9 @@ export const demoBankingDataSource: BankingDataSource = {
   async listBankConnections() {
     return DEMO_BANK_CONNECTIONS;
   },
+  async listCompletedTransactionBackfillConnectionIds() {
+    return [];
+  },
   async listMonthlyTransactions(_userId, range) {
     return DEMO_TRANSACTIONS.filter(
       (transaction) =>
