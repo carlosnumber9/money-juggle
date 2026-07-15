@@ -6,7 +6,8 @@ The current implementation includes a private Next.js App Router application
 with Supabase magic-link authentication, owner email allowlist checks, a
 server-only Enable Banking Account Information integration, connected account
 storage, balance synchronization, current-month transaction synchronization,
-monthly cashflow cards, and inline transaction categorization.
+monthly cashflow cards, current-year evolution charts, category expense
+visualization, and inline transaction categorization.
 
 ## Development
 

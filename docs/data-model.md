@@ -40,6 +40,10 @@ Included tables:
 Deferred tables:
 
 - `transaction_category_rules`: useful later, after manual categorization exists.
+- `transaction_labels` and `transaction_label_assignments`: useful later for
+  optional cross-category grouping such as trips, events, or projects.
+- Cobee integration tables: useful later after API access and desired
+  consumption granularity are confirmed.
 - `manual_assets`: useful later for Trade Republic and other non-PSD2 assets.
 - Report cache or materialized report tables.
 - Advanced sync scheduler metadata.
@@ -83,6 +87,9 @@ Important constraints in the first migration:
 - Currency values are constrained to three uppercase letters.
 - Category groups and categories are user-owned and unique by `user_id` and
   `slug`.
+- Future labels should also be user-owned and unique by `user_id` and `slug`.
+  A transaction may have zero labels and, when labels are introduced, should be
+  able to have more than one label if a real use case appears.
 - The initial category catalog is seeded for profiles that already exist when
   `20260709120000_seed_initial_transaction_categories.sql` runs. Category
   display names are Spanish; slugs remain English.
@@ -482,6 +489,34 @@ Recommended approach:
 - Allow future rule-based suggestions without making them mandatory.
 - Do not split the category model into separate income and expense trees at first. Reports can use signed transaction amounts or transaction direction, which allows reimbursements or shared payments to reduce the net total of the same category.
 
+#### App-Owned Labels
+
+Transaction labels are planned app-owned metadata for ad hoc reporting slices.
+They are different from categories:
+
+- A category answers what kind of movement it is, such as restaurant, rent, or
+  salary.
+- A label answers what context the movement belongs to, such as a trip, wedding,
+  house project, or one-off reimbursement.
+
+Recommended terminology:
+
+- Use `labels` internally.
+- Use `Etiquetas` as the Spanish user-visible text.
+- Avoid `tags` internally unless the UI later strongly prefers that word,
+  because `labels` reads more clearly in the data model beside categories.
+
+Recommended approach:
+
+- Keep labels optional; most transactions should remain unlabeled.
+- Store labels in a separate user-owned `transaction_labels` table.
+- Store assignments in a join table such as `transaction_label_assignments`.
+- Do not add a single nullable `label_id` to `transactions` unless the product
+  intentionally decides that each transaction can have only one label.
+- Do not let provider sync overwrite label assignments.
+- Let future reports filter or group by labels across categories and
+  institutions.
+
 ### `transaction_category_groups`
 
 Purpose:
@@ -599,6 +634,79 @@ Source:
 
 - Manual user setup or future assisted categorization.
 
+### `transaction_labels`
+
+Purpose:
+
+- Stores optional user-defined labels for ad hoc transaction grouping.
+- Enables reporting across existing categories, for example all movements
+  related to one trip.
+
+Probable fields:
+
+- `id`.
+- `user_id`.
+- `name`.
+- `slug`.
+- `color`.
+- `icon`.
+- `is_archived`.
+- `created_at`.
+- `updated_at`.
+
+Relationships:
+
+- Belongs to `profiles`.
+- Has many `transactions` through `transaction_label_assignments`.
+
+Ownership model:
+
+- Owned by the authenticated user through `user_id`.
+
+Security and RLS:
+
+- User can read and manage only their own labels.
+- Labels may reveal sensitive plans or events and should be treated as
+  user-owned financial metadata.
+
+Source:
+
+- Manual user setup.
+
+### `transaction_label_assignments`
+
+Purpose:
+
+- Links transactions to optional labels.
+- Allows a transaction to remain unlabeled, or to carry one or more labels if
+  future use cases require it.
+
+Probable fields:
+
+- `transaction_id`.
+- `label_id`.
+- `user_id`.
+- `created_at`.
+
+Relationships:
+
+- Belongs to `transactions`.
+- Belongs to `transaction_labels`.
+
+Ownership model:
+
+- Owned by the authenticated user through `user_id`.
+
+Security and RLS:
+
+- User can manage assignments only for their own transactions and labels.
+- Foreign keys should include `user_id` where useful so a transaction cannot be
+  assigned another user's label.
+
+Source:
+
+- Manual user action.
+
 ### `sync_runs`
 
 Purpose:
@@ -708,20 +816,50 @@ Source:
 
 - Manual input or future safe import/integration.
 
+### Future Cobee Integration Entities
+
+Cobee by Pluxee should be modeled as a separate external data source from PSD2
+banking. The current public API documentation centers the likely read path on
+companies, employees, payroll cycles, and employee consumption reports.
+
+Possible future entities:
+
+- `external_connections`: provider-level connection and credential metadata,
+  or a Cobee-specific equivalent if a generic table is premature.
+- `cobee_companies`: company identifiers available to the authenticated Cobee
+  API credentials.
+- `cobee_employees`: employee identifiers needed to request the owner's
+  consumption reports.
+- `cobee_consumption_reports`: normalized consumption totals by payroll cycle,
+  benefit category, behavior, and sum type.
+
+Important modeling notes:
+
+- Do not mix Cobee rows into PSD2 `bank_connections`; Cobee is not a bank
+  Account Information provider.
+- Store only the identifiers and normalized report data needed for the app.
+- Keep Cobee credentials and JWTs out of the browser and, unless a future
+  design requires persistence, out of the database.
+- Treat Cobee consumption data as financial data owned by `user_id` and protect
+  it with RLS.
+
 ## Data Source Summary
 
-| Entity                        | Primary source                                      |
-| ----------------------------- | --------------------------------------------------- |
-| `auth.users`                  | Supabase Auth                                       |
-| `profiles`                    | Supabase Auth and app metadata                      |
-| `institutions`                | Enable Banking ASPSPs or app-managed reference data |
-| `bank_connections`            | Enable Banking consent and authorization flow       |
-| `accounts`                    | Enable Banking account data                         |
-| `balances`                    | Enable Banking balances                             |
-| `transactions`                | Enable Banking transactions                         |
-| `transaction_category_groups` | Manual user setup or app defaults                   |
-| `transaction_categories`      | Manual user setup or app defaults                   |
-| `transaction_category_rules`  | Manual user setup or future suggestions             |
-| `sync_runs`                   | App sync process                                    |
-| `consent_events`              | App consent lifecycle tracking                      |
-| `manual_assets`               | Manual user input or future import                  |
+| Entity                          | Primary source                                      |
+| ------------------------------- | --------------------------------------------------- |
+| `auth.users`                    | Supabase Auth                                       |
+| `profiles`                      | Supabase Auth and app metadata                      |
+| `institutions`                  | Enable Banking ASPSPs or app-managed reference data |
+| `bank_connections`              | Enable Banking consent and authorization flow       |
+| `accounts`                      | Enable Banking account data                         |
+| `balances`                      | Enable Banking balances                             |
+| `transactions`                  | Enable Banking transactions                         |
+| `transaction_category_groups`   | Manual user setup or app defaults                   |
+| `transaction_categories`        | Manual user setup or app defaults                   |
+| `transaction_category_rules`    | Manual user setup or future suggestions             |
+| `transaction_labels`            | Manual user setup                                   |
+| `transaction_label_assignments` | Manual user action                                  |
+| `sync_runs`                     | App sync process                                    |
+| `consent_events`                | App consent lifecycle tracking                      |
+| `manual_assets`                 | Manual user input or future import                  |
+| Future Cobee report rows        | Cobee by Pluxee Public API                          |

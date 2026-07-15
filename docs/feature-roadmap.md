@@ -33,6 +33,9 @@ Use this checklist as the source of truth for what remains to be implemented. Ke
 - [ ] 25. Add scheduled sync with Vercel Cron.
 - [ ] 26. Add error and reconnection flows.
 - [ ] 27. Security hardening.
+- [ ] 28. Add transaction labels for trips, events, and ad hoc reporting.
+- [ ] 29. Explore Cobee by Pluxee consumption reports.
+- [ ] 30. Add monthly period navigation for transactions and charts.
 
 ## 1. Bootstrap The Next.js Project
 
@@ -1152,6 +1155,8 @@ Implemented so far:
 - The annual chart is titled `Progreso anual`, summarizes annual income and
   spending in its subtitle, and keeps the lines continuous without permanent
   point markers.
+- A current-month category expense radar visualization is present in the
+  working tree, using categorized expense rows and excluding internal transfers.
 - This first slice reuses cached Supabase transaction rows and does not add new
   report tables or external integrations.
 
@@ -1301,3 +1306,197 @@ Risks or decisions:
 Do not do yet:
 
 - Add security theater without addressing real risks.
+
+## 28. Add Transaction Labels For Trips, Events, And Ad Hoc Reporting
+
+Status:
+
+- Planned.
+
+Goal:
+
+- Let the owner optionally group transactions across categories and
+  institutions for one-off contexts such as a trip.
+
+Preferred terminology:
+
+- Internal name: `labels`.
+- Spanish UI name: `Etiquetas`.
+
+Rationale:
+
+- Categories describe what a transaction is.
+- Labels describe what broader context it belongs to.
+- `Labels` fits the model better than reusing `categories` and is clearer than
+  `tags` in repository documentation.
+
+Expected result:
+
+- Most transactions remain unlabeled.
+- Selected transactions can be assigned a label such as `Viaje Lisboa 2026`.
+- Reports can show total income or spending for that label across flights,
+  hotels, restaurants, transport, and other categories.
+
+Concepts learned:
+
+- Optional user-owned metadata.
+- Many-to-many assignment tables.
+- Cross-category reporting.
+
+Possible future files:
+
+- A Supabase migration for `transaction_labels`.
+- A Supabase migration for `transaction_label_assignments`.
+- Label assignment server actions.
+- Transaction row label UI.
+- Report filters by label.
+
+Risks or decisions:
+
+- A transaction may eventually need multiple labels. Start with a join table
+  unless there is a strong reason to restrict transactions to one label.
+- Labels can reveal sensitive travel, medical, family, or project context, so
+  they require the same owner-scoped RLS mindset as categories.
+- Labels should not be overwritten by provider sync.
+- Avoid confusing labels with categories in the UI.
+
+Suggested acceptance criteria:
+
+- A user can create and archive their own labels.
+- A user can assign and remove labels only on their own transactions.
+- Unlabeled transactions remain the default state.
+- A report can filter or group transactions by label across categories.
+- RLS and server-side checks prevent assigning another user's label.
+
+Do not do yet:
+
+- Build a complex project management model.
+- Replace categories with labels.
+
+## 29. Explore Cobee By Pluxee Consumption Reports
+
+Status:
+
+- Planned / exploratory.
+
+Goal:
+
+- Determine whether Cobee by Pluxee can provide useful restaurant and flexible
+  compensation spending data for personal reporting.
+
+Current research:
+
+- The public API requires `clientId` and `clientSecret`, then returns a Bearer
+  JWT through `POST /oauth/token`.
+- The API has company and employee endpoints that appear to be needed before
+  reading consumption reports.
+- The likely report endpoint is
+  `GET /companies/{companyId}/employees/{employeeId}/consumptions`.
+- Consumption reports can include category, behaviour, sum type, amount in
+  cents, currency, and payroll cycle context.
+- The endpoint appears oriented around payroll-cycle reports. It still needs
+  validation before assuming transaction-level restaurant detail exists.
+
+Expected result:
+
+- A documented integration decision: either defer, add read-only aggregate
+  reporting, or add a richer transaction-level integration if the API supports
+  it and access is allowed.
+
+Concepts learned:
+
+- External non-bank financial data.
+- Credential-based API authentication.
+- Payroll-cycle consumption reports.
+- Separating PSD2 bank data from benefit-provider data.
+
+Possible future files:
+
+- `docs/cobee.md`.
+- `lib/cobee/` for server-only API calls, if approved later.
+- Cobee-specific database migrations, if persistence becomes useful.
+- Report view additions that compare or include Cobee consumption.
+
+Risks or decisions:
+
+- API credentials may require employer or customer-success access.
+- The API may expose payroll-cycle aggregates rather than individual purchases.
+- Cobee credentials and JWTs must remain server-only.
+- Cobee data should not be mixed into Enable Banking connection tables.
+- Do not implement employee administration or payroll mutation endpoints for
+  this app's first scope.
+
+Suggested acceptance criteria for a future spike:
+
+- Confirm API access is available and allowed for this personal reporting use.
+- Authenticate server-side without exposing credentials.
+- Fetch one safe company/employee/consumption response.
+- Document whether data granularity is aggregate-only or transaction-level.
+- Decide whether persistence is needed before creating migrations.
+
+Do not do yet:
+
+- Build a full Cobee integration before credentials and data shape are known.
+- Use Cobee write endpoints.
+
+## 30. Add Monthly Period Navigation For Transactions And Charts
+
+Status:
+
+- Planned.
+
+Goal:
+
+- Let the owner move backward and forward by month to review stored
+  transactions and month-specific visualizations for periods other than the
+  current month.
+
+Expected result:
+
+- The transaction review can show a selected month, not only the current month.
+- Month-specific visualizations, such as category expense charts and monthly
+  cashflow cards, update to the same selected month.
+- The current year evolution chart can remain annual, but it should coexist
+  with the selected-month controls without confusing the user.
+
+Concepts learned:
+
+- URL-backed UI state.
+- Date range calculation from a selected period.
+- Coordinating multiple panels from the same reporting period.
+- Historical data exploration over cached synced rows.
+
+Possible future files:
+
+- `lib/domain/transactionRanges.ts` for selected-month range helpers.
+- `lib/views/privateHomeView/getPrivateHomeView.ts` to accept or derive a
+  selected month.
+- Private home route props and definitions for the selected period.
+- Transaction review header controls for previous and next month.
+- Chart panel controls or shared period controls.
+
+Risks or decisions:
+
+- The selected month should not trigger broad historical sync automatically
+  until sync cost and provider limits are understood.
+- If a month has no stored transactions, the UI should distinguish "no data
+  stored" from "sync failed".
+- URL state should validate invalid months and fall back predictably.
+- Reports should use the user's stored data for the selected month and avoid
+  presenting incomplete historical coverage as complete financial history.
+
+Suggested acceptance criteria:
+
+- The owner can move to the previous and next month from the private app.
+- The selected month is reflected in the URL and survives refresh.
+- Transaction rows, monthly cashflow cards, and category expense visualization
+  use the same selected month.
+- Empty months show a clear Spanish empty state.
+- No provider credentials or server-only details reach the browser.
+
+Do not do yet:
+
+- Fetch all historical transactions automatically.
+- Add custom arbitrary date ranges before month navigation is useful.
+- Replace the annual evolution chart with a month selector unless that becomes
+  a deliberate report redesign.

@@ -8,6 +8,7 @@ Browser / mobile
   -> Supabase Auth
   -> Supabase Postgres with RLS
   -> Enable Banking Account Information API
+  -> Optional future external data sources such as Cobee by Pluxee
 ```
 
 ## Frontend Responsibilities
@@ -17,6 +18,7 @@ The frontend should:
 - Render user-visible screens in Spanish.
 - Start authentication and bank connection flows.
 - Show connection, account, balance, transaction, and report states.
+- Let the owner add app-owned metadata such as categories and future labels.
 - Render the private account area as separate dashboard and transaction review
   sections.
 - Call internal Next.js endpoints or server actions when server work is required.
@@ -44,6 +46,8 @@ Next.js server-side code should:
 - Enforce email allowlist behavior.
 - Talk to Enable Banking from server-only code.
 - Store and update consent, account, balance, transaction, and sync state.
+- Store and update user-owned financial annotations such as categories and
+  future labels without letting provider sync overwrite them.
 - Use Supabase server clients appropriately.
 - Keep sensitive environment variables private.
 - Normalize external API responses before persistence.
@@ -95,8 +99,15 @@ The private UI is split into three tabs:
   institution cues, signed amounts, client-side filters over already-loaded
   owner data, category filtering, and inline manual category assignment.
 - `Evolución`: current-year income and expense trend chart with 12 monthly
-  points, annual income and spending totals, and continuous shadcn/Recharts
-  lines currently calculated from cached transaction rows.
+  points, annual income and spending totals, a current-month category expense
+  visualization, and continuous shadcn/Recharts lines currently calculated from
+  cached transaction rows.
+
+Future monthly exploration should turn the current-month range into a selected
+month range shared by the transaction review and month-specific visualizations.
+The selected month should be represented in the URL, for example as a query
+parameter, so browser back/forward navigation and shared links preserve the
+review context.
 
 ## Supabase Responsibilities
 
@@ -124,6 +135,25 @@ Enable Banking Account Information should provide PSD2 access for supported bank
 - Transactions.
 
 Enable Banking should not be used for payment initiation, transfers, mandates, checkout, billing requests, or scraping.
+
+## Future Cobee By Pluxee Responsibilities
+
+Cobee by Pluxee is a candidate external data source for flexible compensation
+consumption data, especially restaurant expenses paid through Cobee.
+
+This integration should stay separate from PSD2 banking:
+
+- Cobee API calls should happen only in server-side code.
+- Cobee `clientId`, `clientSecret`, and JWT access tokens must remain
+  server-only.
+- Cobee data should be normalized into app-owned rows before being used by
+  reports.
+- The first useful scope should be read-only consumption reporting, not employee
+  administration, payroll mutation, or benefit management.
+- Any overlap with bank transactions should be treated as reconciliation or
+  comparison data, not as a replacement for synced bank movements.
+
+See `docs/cobee.md` for the initial research notes.
 
 ## Authentication Flow
 
@@ -228,8 +258,10 @@ Possible future domain modules:
 lib/domain/accounts.ts
 lib/domain/balances.ts
 lib/domain/transactions.ts
+lib/domain/labels.ts
 lib/domain/reports.ts
 lib/domain/consents.ts
+lib/domain/cobee.ts
 ```
 
 Domain modules should describe financial concepts without depending directly on React components or raw external API responses.

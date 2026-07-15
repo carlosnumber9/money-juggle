@@ -16,9 +16,14 @@ This app should make financial review easier by collecting read-only financial d
 - Avoid routine manual bank statement exports.
 - Store imported transactions in a way that avoids duplicates across repeated syncs.
 - Let the owner categorize transactions according to their own reporting preferences.
+- Let the owner optionally label transactions for cross-category groupings such
+  as trips, events, or one-off projects.
 - Support mobile and desktop usage.
 - Keep bank integrations read-only.
 - Use PSD2/Open Banking for supported banks.
+- Keep non-bank benefit data, such as Cobee by Pluxee consumption reports,
+  separate from PSD2 bank data while still making it visible in personal
+  reports when useful.
 - Build reports incrementally instead of creating a large product all at once.
 - Keep the system understandable enough that the owner can learn from each feature.
 
@@ -44,17 +49,24 @@ This app should make financial review easier by collecting read-only financial d
 - Review current-month transactions grouped by date.
 - Filter current-month transactions by institution and by income or spending.
 - Categorize transactions quickly for personal reporting.
+- Label selected transactions so a temporary context, such as a specific trip,
+  can be reported across many categories.
 - Understand monthly income and spending.
+- Move month by month through stored data to review older transactions and the
+  matching visualizations.
+- Compare bank spending with external benefit consumption data when a safe
+  official integration exists.
 - Track assets that may not be available through PSD2.
 - Reconnect a bank when consent expires.
 
 ## Target Banks And Platforms
 
-| Institution or platform | Initial approach                   | Notes                                              |
-| ----------------------- | ---------------------------------- | -------------------------------------------------- |
-| CaixaBank               | Enable Banking Account Information | Primary PSD2 path; linked as an own account.       |
-| ING                     | Enable Banking Account Information | Primary PSD2 path; linked as an own account.       |
-| Trade Republic          | Special case                       | Investment data may not be available through PSD2. |
+| Institution or platform | Initial approach                   | Notes                                                                       |
+| ----------------------- | ---------------------------------- | --------------------------------------------------------------------------- |
+| CaixaBank               | Enable Banking Account Information | Primary PSD2 path; linked as an own account.                                |
+| ING                     | Enable Banking Account Information | Primary PSD2 path; linked as an own account.                                |
+| Trade Republic          | Special case                       | Investment data may not be available through PSD2.                          |
+| Cobee by Pluxee         | Exploratory official API           | Flexible compensation consumptions; separate from bank Account Information. |
 
 ## Initial Limitations
 
@@ -63,12 +75,22 @@ This app should make financial review easier by collecting read-only financial d
   first private dashboard, current-month transaction review, and inline manual
   transaction categorization.
 - Reporting has started with current-month cashflow cards and a current-year
-  income/spending evolution chart, but it is not yet a complete monthly
+  income/spending evolution chart. The working app also has a current-month
+  category expense visualization, but it is not yet a complete monthly
   reporting system.
+- Transaction review and month-specific charts are still centered on the
+  current month. Future work should add explicit previous/next month controls
+  so stored historical data can be explored without changing code or sync
+  ranges manually.
 - Transaction sync should gain focused idempotency tests before scheduled sync is introduced.
 - Reporting should start simple and become richer later.
 - Categorization has started as user-owned app metadata. Automated rules remain
   future work.
+- Labels are planned as optional user-owned metadata for ad hoc grouping. They
+  should complement categories, not replace them.
+- Cobee by Pluxee is a future exploratory integration. Real implementation
+  should wait until API access, available data granularity, and credential
+  handling are confirmed.
 - Investment data should not block the banking foundation.
 - Trade Republic may begin as manual assets or another isolated approach.
 - No banking credentials should ever be stored.

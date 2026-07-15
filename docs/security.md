@@ -10,12 +10,15 @@ Important assets:
 - Balances.
 - Transactions.
 - Transaction categories and category rules.
+- Transaction labels and label assignments.
 - Consent state.
 - Manual asset data.
+- Cobee consumption data.
 - Supabase sessions.
 - Supabase secret keys.
 - Enable Banking signing keys and provider credentials.
 - Enable Banking access or authorization tokens if used.
+- Cobee client credentials and JWT access tokens if used.
 
 Relevant threats:
 
@@ -101,9 +104,11 @@ Financial sensitivity:
 - Balances.
 - Transactions.
 - Transaction categories and category rules.
+- Transaction labels and label assignments.
 - Institution connections.
 - Consent records.
 - Manual asset values.
+- Cobee consumption reports.
 
 Operational sensitivity:
 
@@ -123,6 +128,7 @@ tokens, refresh tokens, cookie values, private keys, or raw provider payloads.
 The browser must never receive:
 
 - Enable Banking private key or provider credentials.
+- Cobee client credentials or JWT access tokens.
 - Supabase secret keys.
 - Enable Banking access or authorization tokens.
 - Raw server-side error payloads containing secrets.
@@ -201,6 +207,32 @@ Security expectations:
   server-only.
 - Logs should avoid printing full transaction descriptions, raw provider payloads, or large batches of transaction identifiers.
 - Scheduled sync should not run until transaction upsert and deduplication behavior has been tested.
+
+Future transaction labels should follow the same security model as
+categorization:
+
+- Labels and assignments must include owner-scoped access checks.
+- Server actions should verify that the transaction and selected label belong
+  to the same authenticated owner.
+- Provider sync must not overwrite label assignments.
+
+## Cobee By Pluxee Risks
+
+Cobee by Pluxee is a future candidate integration for flexible compensation
+consumption reports. It is not a PSD2 bank provider and should have its own
+server-only boundary.
+
+Security expectations:
+
+- Keep Cobee `clientId`, `clientSecret`, and JWT access tokens server-only.
+- Do not expose Cobee credentials or raw API responses to the browser.
+- Use the narrowest useful read scope first, likely consumption report reads.
+- Avoid employee administration, payroll mutation, or benefit-management writes
+  unless the owner explicitly decides to expand the scope.
+- Treat consumption reports as financial data owned by `user_id` and protected
+  by RLS.
+- Sanitize errors because company, employee, payroll, and benefit identifiers
+  may be sensitive operational data.
 
 ## Future Recommendations
 

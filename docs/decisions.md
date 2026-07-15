@@ -972,3 +972,127 @@ Possible future revisit trigger:
   selector.
 - If reports must remain stable after transaction recategorization or provider
   data corrections.
+
+## ADR-030: Use Labels For Optional Cross-Category Transaction Grouping
+
+Status:
+
+- Accepted as a roadmap concept.
+
+Context:
+
+- Categories already describe the type of movement, such as restaurant, hotel,
+  salary, or rent.
+- The owner wants to group movements for contexts that cut across categories,
+  such as the total cost of a trip with flights, hotels, restaurants, and local
+  transport.
+- Most transactions should not need this extra metadata.
+
+Decision:
+
+- Use `labels` as the internal concept.
+- Use `Etiquetas` as the Spanish user-visible term.
+- Treat labels as optional user-owned transaction metadata.
+- Prefer a future `transaction_labels` table plus a
+  `transaction_label_assignments` join table over a single nullable
+  `transactions.label_id` column, unless the product explicitly decides that a
+  transaction can only ever have one label.
+- Keep labels separate from categories and from provider-owned transaction
+  data.
+
+Consequences:
+
+- Reports can filter or group by a trip, event, or project without disturbing
+  category totals.
+- Labels require RLS and ownership checks because they can reveal sensitive
+  personal context.
+- Provider sync must preserve label assignments just as it preserves category
+  assignments.
+
+Possible future revisit trigger:
+
+- If the UI proves that only one label per transaction is ever needed.
+- If labels evolve into a broader budgeting, project, or reimbursement feature.
+
+## ADR-031: Explore Cobee By Pluxee As A Separate Non-Bank Data Source
+
+Status:
+
+- Accepted as a roadmap concept.
+
+Context:
+
+- The owner uses Cobee by Pluxee for restaurant expenses through flexible
+  compensation.
+- Cobee publishes a public API with credential-based authentication, company
+  and employee endpoints, and employee consumption reports.
+- Cobee is not a PSD2 bank Account Information provider and should not be
+  modeled as an Enable Banking connection.
+
+Decision:
+
+- Treat Cobee by Pluxee as a separate future external data source.
+- Start with research and a read-only spike only after API credentials and
+  allowed use are confirmed.
+- Keep Cobee credentials and JWTs server-only.
+- Focus the first useful scope on consumption report reads.
+- Do not implement employee administration, benefit administration, or payroll
+  mutation endpoints for the first Cobee slice.
+
+Consequences:
+
+- Cobee report data can eventually complement bank transactions without
+  changing the PSD2 provider boundary.
+- The data model may need Cobee-specific tables or a generic external
+  connection model later, but no migration should be created before the data
+  shape is validated.
+- Reports should distinguish aggregate payroll-cycle consumption from
+  transaction-level bank movements unless Cobee exposes purchase-level detail.
+
+Possible future revisit trigger:
+
+- If Cobee access is unavailable for personal use.
+- If Cobee only exposes aggregates that are not useful for the owner's reports.
+- If another benefit provider integration becomes a better source of the same
+  data.
+
+## ADR-032: Add Month Navigation Before Arbitrary Date Ranges
+
+Status:
+
+- Accepted as a roadmap concept.
+
+Context:
+
+- The transaction review currently focuses on the current month.
+- The reporting area already has current-month summaries and visualizations,
+  plus an annual evolution chart.
+- The owner wants to explore older stored movements and matching charts by
+  moving month by month.
+
+Decision:
+
+- Add explicit previous/next month navigation before building arbitrary date
+  range filters.
+- Treat the selected month as shared report state for transaction rows,
+  monthly cashflow cards, and month-specific charts.
+- Prefer URL-backed state so refresh, browser history, and shared links preserve
+  the selected month.
+- Keep historical sync separate from period navigation; changing the selected
+  month should first explore stored data, not automatically launch broad
+  provider synchronization.
+
+Consequences:
+
+- The first historical exploration feature stays understandable and mobile
+  friendly.
+- The app can reuse month range helpers instead of introducing a full reporting
+  query language.
+- Empty months need clear UI states because stored data coverage may be partial.
+
+Possible future revisit trigger:
+
+- If the owner needs custom ranges for travel, taxes, reimbursements, or
+  year-to-date reports.
+- If provider sync later supports controlled historical backfill with clear
+  limits and observability.
