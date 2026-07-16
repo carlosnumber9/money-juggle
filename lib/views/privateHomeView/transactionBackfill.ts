@@ -22,10 +22,7 @@ export function buildTransactionBackfillView({
     return { status: "hidden" };
   }
 
-  const eligibleConnections = connectionsResult.value.filter(
-    (connection) =>
-      connection.status === "linked" && connection.accounts.length > 0
-  );
+  const eligibleConnections = getEligibleConnections(connectionsResult.value);
 
   if (eligibleConnections.length === 0) {
     return { status: "hidden" };
@@ -43,4 +40,26 @@ export function buildTransactionBackfillView({
   return pendingConnectionCount > 0
     ? { status: "available" }
     : { status: "hidden" };
+}
+
+export function getDashboardSyncEnabled({
+  connectionsResult,
+  providerStatus
+}: {
+  connectionsResult: Result<BankConnectionSummary[]>;
+  providerStatus: ProviderStatusView;
+}): boolean {
+  return (
+    providerStatus.status === "success" &&
+    !providerStatus.isDemo &&
+    connectionsResult.ok &&
+    getEligibleConnections(connectionsResult.value).length > 0
+  );
+}
+
+function getEligibleConnections(connections: BankConnectionSummary[]) {
+  return connections.filter(
+    (connection) =>
+      connection.status === "linked" && connection.accounts.length > 0
+  );
 }

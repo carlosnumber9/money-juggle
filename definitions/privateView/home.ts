@@ -25,6 +25,7 @@ export type PrivateHomeView =
       };
       providerStatus: ProviderStatusView;
       bankCards: BankInstitutionCard[];
+      dashboardSyncEnabled: boolean;
       transactionBackfill: TransactionBackfillView;
       monthlyCashflow: MonthlyCashflowSummary;
       monthlyEvolution: {

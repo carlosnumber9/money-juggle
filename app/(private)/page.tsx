@@ -1,12 +1,11 @@
 import { redirect } from "next/navigation";
 
-import { BalanceAutoSync } from "@/app/(private)/BalanceAutoSync";
 import { BankConnectionsPanel } from "@/app/(private)/BankConnectionsPanel";
+import { DashboardSyncControls } from "@/app/(private)/DashboardSyncControls";
 import { EnableBankingStatus } from "@/app/(private)/EnableBankingStatus";
 import { MonthlyCashflowCards } from "@/app/(private)/MonthlyCashflowCards";
 import { MonthlyEvolutionPanel } from "@/app/(private)/MonthlyEvolutionPanel";
 import { MonthlyTransactionsPanel } from "@/app/(private)/MonthlyTransactionsPanel";
-import { TransactionBackfillPanel } from "@/app/(private)/TransactionBackfillPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getPrivateHomeView } from "@/lib/views/privateHomeView";
 
@@ -35,26 +34,19 @@ export default async function Home() {
             <TabsTrigger value="evolution">Evolución</TabsTrigger>
           </TabsList>
         </div>
-        <BalanceAutoSync
-          enabled={
-            view.providerStatus.status === "success" &&
-            !view.providerStatus.isDemo
-          }
-        />
         <TabsContent value="dashboard" keepMounted className="mt-0">
           <MonthlyCashflowCards
             summary={view.monthlyCashflow}
             error={view.monthlyTransactions.error}
           />
           <BankConnectionsPanel cards={view.bankCards} />
-          <TransactionBackfillPanel view={view.transactionBackfill} />
+          <DashboardSyncControls
+            enabled={view.dashboardSyncEnabled}
+            backfill={view.transactionBackfill}
+          />
         </TabsContent>
         <TabsContent value="transactions" keepMounted>
           <MonthlyTransactionsPanel
-            enabled={
-              view.providerStatus.status === "success" &&
-              !view.providerStatus.isDemo
-            }
             transactions={view.monthlyTransactions.rows}
             categoryGroups={view.monthlyTransactions.categoryGroups}
             range={view.monthlyTransactions.range}

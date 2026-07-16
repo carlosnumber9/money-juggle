@@ -10,28 +10,39 @@ import { syncEnableBankingConnectionBalances } from "./syncConnectionBalances";
 export async function syncStaleEnableBankingBalances({
   userId,
   connections,
-  maxAgeMs = BALANCE_AUTO_REFRESH_MS
+  maxAgeMs = BALANCE_AUTO_REFRESH_MS,
+  force = false
 }: {
   userId: string;
   connections: BankConnectionSummary[];
   maxAgeMs?: number;
-}): Promise<boolean> {
+  force?: boolean;
+}) {
   const staleConnectionIds = connections
-    .filter((connection) => shouldRefreshConnection(connection, maxAgeMs))
+    .filter((connection) =>
+      force
+        ? connection.status === "linked" && connection.accounts.length > 0
+        : shouldRefreshConnection(connection, maxAgeMs)
+    )
     .map((connection) => connection.id);
 
   console.info("Balance sync eligibility checked", {
     connection_count: connections.length,
-    stale_connection_count: staleConnectionIds.length
+    eligible_connection_count: staleConnectionIds.length,
+    force
   });
 
   let synced = false;
+  let succeededConnectionCount = 0;
+  let failedConnectionCount = 0;
 
   for (const bankConnectionId of staleConnectionIds) {
     try {
       await syncEnableBankingConnectionBalances({ userId, bankConnectionId });
       synced = true;
+      succeededConnectionCount += 1;
     } catch (error) {
+      failedConnectionCount += 1;
       console.error("Enable Banking balance sync failed", {
         bankConnectionId,
         message: getErrorMessage(error)
@@ -39,5 +50,10 @@ export async function syncStaleEnableBankingBalances({
     }
   }
 
-  return synced;
+  return {
+    synced,
+    attemptedConnectionCount: staleConnectionIds.length,
+    succeededConnectionCount,
+    failedConnectionCount
+  };
 }

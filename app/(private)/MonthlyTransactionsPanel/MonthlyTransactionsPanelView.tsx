@@ -21,19 +21,14 @@ import {
 } from "./transactionFilters";
 import { getTransactionCategoryGroupsWithMatches } from "./transactionCategoryFilterOptions";
 import { TransactionsTable } from "./TransactionsTable";
-import { useTransactionSync } from "./useTransactionSync";
 
 export function MonthlyTransactionsPanel({
-  enabled,
   transactions,
   categoryGroups,
   error
 }: MonthlyTransactionsPanelProps) {
   const [transactionFilters, setTransactionFilters] =
     useState<TransactionFilters>(DEFAULT_TRANSACTION_FILTERS);
-  const { isSyncing, syncError, syncTransactions } =
-    useTransactionSync(enabled);
-  const message = syncError ?? error;
   const filteredTransactions = useMemo(
     () => filterMonthlyTransactions(transactions, transactionFilters),
     [transactionFilters, transactions]
@@ -85,16 +80,13 @@ export function MonthlyTransactionsPanel({
   return (
     <section aria-labelledby="monthly-transactions-title">
       <MonthlyTransactionsHeader
-        message={message}
-        isSyncing={isSyncing}
-        enabled={enabled}
+        message={error}
         categoryGroups={categoryGroupsWithVisibleTransactions}
         filters={transactionFilters}
         onFilterToggle={handleFilterToggle}
         onUncategorizedFilterToggle={handleUncategorizedFilterToggle}
         onCategoryToggle={handleCategoryToggle}
         onClearCategoryFilters={handleClearCategoryFilters}
-        onSyncTransactions={syncTransactions}
       />
 
       {filteredTransactions.length > 0 ? (
@@ -104,7 +96,6 @@ export function MonthlyTransactionsPanel({
         />
       ) : (
         <EmptyTransactionsState
-          isSyncing={isSyncing}
           hasActiveFilters={hasActiveTransactionFilters(transactionFilters)}
         />
       )}

@@ -21,8 +21,9 @@ export type BankConnectionsPanelProps = {
   cards: BankInstitutionCard[];
 };
 
-export type TransactionBackfillPanelProps = {
-  view: TransactionBackfillView;
+export type DashboardSyncControlsProps = {
+  enabled: boolean;
+  backfill: TransactionBackfillView;
 };
 
 export type MonthlyCashflowCardsProps = {
@@ -31,7 +32,6 @@ export type MonthlyCashflowCardsProps = {
 };
 
 export type MonthlyTransactionsPanelProps = {
-  enabled: boolean;
   transactions: import("../dataSource").MonthlyTransactionSummary[];
   categoryGroups: import("../dataSource").TransactionCategoryGroupSummary[];
   range: {

@@ -19,7 +19,10 @@ import {
 import { buildMonthlyCashflowSummary } from "./monthlyCashflow";
 import { buildCurrentMonthCategoryExpensesSummary } from "./monthlyCategoryExpenses";
 import { buildMonthlyEvolutionSummary } from "./monthlyEvolution";
-import { buildTransactionBackfillView } from "./transactionBackfill";
+import {
+  buildTransactionBackfillView,
+  getDashboardSyncEnabled
+} from "./transactionBackfill";
 
 export async function getPrivateHomeView(): Promise<PrivateHomeView> {
   const dataSource = getBankingDataSource();
@@ -64,6 +67,10 @@ export async function getPrivateHomeView(): Promise<PrivateHomeView> {
     bankCards: buildBankCards({
       connectionsResult,
       institutionsResult,
+      providerStatus
+    }),
+    dashboardSyncEnabled: getDashboardSyncEnabled({
+      connectionsResult,
       providerStatus
     }),
     transactionBackfill: buildTransactionBackfillView({

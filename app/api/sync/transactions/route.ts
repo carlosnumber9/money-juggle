@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { isEmailAllowed } from "@/lib/auth/allowlist";
 import { isDemoMode } from "@/lib/demo/mode";
 import { syncEnableBankingTransactions } from "@/lib/db/enableBankingTransactions";
-import { getCurrentMonthProviderDateRange } from "@/lib/domain/transactionRanges";
+import { getIncrementalProviderDateRange } from "@/lib/domain/transactionRanges";
 import { getCurrentSupabaseUser } from "@/lib/supabase/currentUser";
 
 export const runtime = "nodejs";
@@ -24,7 +24,7 @@ export async function POST() {
   }
 
   try {
-    const range = getCurrentMonthProviderDateRange();
+    const range = getIncrementalProviderDateRange();
     const result = await syncEnableBankingTransactions({
       userId: user.id,
       dateFrom: range.from,

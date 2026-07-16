@@ -178,12 +178,16 @@ the last four IBAN characters when available.
 
 Balances are synchronized automatically by server-only code after a connection
 is completed and through an internal `POST /api/sync/balances` request when the
-private home screen detects missing or stale balance snapshots.
+private home screen detects missing or stale balance snapshots. The same route
+accepts an authenticated `force=true` request from the dashboard's manual
+refresh control so every linked connection can request a fresh balance.
 
 Transactions are synchronized by server-only code through
-`POST /api/sync/transactions`. The first implementation fetches the current
-month for each linked Enable Banking account, normalizes rows into the app's
-`transactions` table, and keeps the private home table responsive by showing
+`POST /api/sync/transactions`. Incremental synchronization fetches from the
+first day of the previous month through the current day for each linked Enable
+Banking account. The overlap allows late or provisional transactions to be
+updated without reloading the full history. The route normalizes rows into the
+app's `transactions` table and keeps the private views responsive by showing
 cached Supabase rows while the refresh runs.
 
 Transaction retrieval follows Enable Banking continuation keys until every
@@ -216,6 +220,12 @@ only when at least one linked connection has accounts and no successful
 transaction backfill. The button reports progress and retry state through its
 label, refreshes the private view from Supabase after the request, and
 disappears once every eligible connection has completed its initial backfill.
+
+The same dashboard control area exposes `Actualizar`. On initial page load it
+automatically runs incremental transaction sync together with freshness-limited
+balance sync. A manual click forces balance refresh and runs the same overlapping
+incremental transaction range. The buttons share an operation state so refresh
+and historical backfill cannot be launched concurrently from the UI.
 
 The private `Transacciones` tab presents those current-month rows as a review
 surface: transactions are grouped by booking date, marked with the source bank
@@ -491,7 +501,7 @@ request handling, normalization, and persistence.
 
 The initial Enable Banking path has now progressed through signed requests,
 ASPSP listing, account information authorization, callback handling, account
-storage, balance sync, and current-month transaction sync. Future work should
+storage, balance sync, and overlapping incremental transaction sync. Future work should
 still prefer small steps:
 
 1. Add focused tests for transaction identity and sync idempotency.

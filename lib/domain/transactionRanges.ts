@@ -31,11 +31,15 @@ export function getCurrentYearTransactionRange(
   };
 }
 
-export function getCurrentMonthProviderDateRange(date = new Date()) {
+export function getIncrementalProviderDateRange(date = new Date()) {
   const today = getDatePartsInAppTimeZone(date);
+  const previousMonth =
+    today.month === 1
+      ? { year: today.year - 1, month: 12 }
+      : { year: today.year, month: today.month - 1 };
 
   return {
-    from: formatDatePart(today.year, today.month, 1),
+    from: formatDatePart(previousMonth.year, previousMonth.month, 1),
     to: formatDatePart(today.year, today.month, today.day)
   };
 }

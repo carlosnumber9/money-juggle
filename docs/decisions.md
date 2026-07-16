@@ -573,7 +573,7 @@ Possible future revisit trigger:
 
 Status:
 
-- Accepted.
+- Accepted; the refresh-control decision is superseded by ADR-033.
 
 Context:
 
@@ -1096,3 +1096,47 @@ Possible future revisit trigger:
   year-to-date reports.
 - If provider sync later supports controlled historical backfill with clear
   limits and observability.
+
+## ADR-033: Centralize Manual Refresh On The Dashboard
+
+Status:
+
+- Accepted.
+
+Context:
+
+- Balance and transaction synchronization already run automatically when the
+  private home screen mounts.
+- The transaction tab previously owned a transaction-only refresh control,
+  while balance refresh had no manual UI.
+- Historical import is now a separate dashboard action and must not run at the
+  same time as routine refresh.
+
+Decision:
+
+- Place `Actualizar` below the bank cards beside `Importar historial`.
+- Treat manual refresh as a global action that forces linked-account balance
+  refresh and performs incremental transaction synchronization.
+- Keep automatic refresh on private-home load, but respect the balance freshness
+  window while still running incremental transaction synchronization.
+- Define the incremental transaction range as the first day of the previous
+  month through the current day.
+- Prevent the dashboard UI from launching refresh and historical backfill
+  concurrently.
+- Remove synchronization controls and ownership from the transaction review
+  panel.
+
+Consequences:
+
+- The owner has one predictable place for routine data refresh.
+- The overlapping transaction window can reconcile late and provisional
+  movements without repeatedly fetching the full year.
+- Manual refresh may use more provider calls than automatic refresh because it
+  deliberately bypasses balance freshness checks.
+- Provider calls remain authenticated, allowlisted, and server-only.
+
+Possible future revisit trigger:
+
+- If scheduled synchronization makes manual refresh unnecessary.
+- If provider rate limits require a longer transaction overlap or per-bank
+  refresh controls.
