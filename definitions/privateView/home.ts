@@ -5,9 +5,10 @@ import type {
 import type { BankInstitutionCard } from "./bankCard";
 import type { MonthlyCashflowSummary } from "./monthlyCashflow";
 import type {
-  CurrentMonthCategoryExpensesSummary,
+  MonthlyCategoryExpensesSummary,
   MonthlyEvolutionSummary
 } from "./monthlyEvolution";
+import type { MonthlyPeriodView } from "./monthlyPeriod";
 import type { ProviderStatusView } from "./providerStatus";
 import type { TransactionBackfillView } from "./transactionBackfill";
 
@@ -27,11 +28,12 @@ export type PrivateHomeView =
       bankCards: BankInstitutionCard[];
       dashboardSyncEnabled: boolean;
       transactionBackfill: TransactionBackfillView;
+      selectedMonth: MonthlyPeriodView;
       monthlyCashflow: MonthlyCashflowSummary;
       monthlyEvolution: {
         summary: MonthlyEvolutionSummary;
         error: string | null;
-        categoryExpenses: CurrentMonthCategoryExpensesSummary;
+        categoryExpenses: MonthlyCategoryExpensesSummary;
         categoryExpensesError: string | null;
       };
       monthlyTransactions: {

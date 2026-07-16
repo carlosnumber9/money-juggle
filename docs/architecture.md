@@ -85,29 +85,29 @@ pattern is a small ports-and-adapters boundary:
 This keeps demo mode, provider details, and persistence details out of UI code.
 
 The current private home view is prepared under `lib/views/privateHomeView/`.
-It loads provider status, bank card state, current-month transactions, and
+It loads provider status, bank card state, selected-month transactions, and
 transaction category groups before the route renders UI components. The
-current-month range is calculated in `lib/domain/transactionRanges.ts`, so the
-transaction tab receives a prepared range and rows instead of querying
-persistence directly.
+validated `month=YYYY-MM` URL value is resolved into a range in
+`lib/domain/transactionRanges.ts`, so the tabs receive prepared reporting data
+instead of querying persistence directly. Malformed and future periods fall
+back to the current month.
 
 The private UI is split into three tabs:
 
 - `Dashboard`: bank institution cards, connected accounts, latest balances, and
-  per-bank balance totals, plus current-month income and expense cards.
-- `Transacciones`: current-month transaction review with date grouping,
+  per-bank balance totals, plus selected-month income and expense cards.
+- `Transacciones`: selected-month transaction review with date grouping,
   institution cues, signed amounts, client-side filters over already-loaded
-  owner data, category filtering, and inline manual category assignment.
+  owner data, category filtering, inline manual category assignment, and month
+  navigation.
 - `Evolución`: current-year income and expense trend chart with 12 monthly
-  points, annual income and spending totals, a current-month category expense
-  visualization, and continuous shadcn/Recharts lines currently calculated from
-  cached transaction rows.
+  points, annual income and spending totals, a selected-month category expense
+  visualization with month navigation, and continuous shadcn/Recharts lines
+  calculated from cached transaction rows.
 
-Future monthly exploration should turn the current-month range into a selected
-month range shared by the transaction review and month-specific visualizations.
-The selected month should be represented in the URL, for example as a query
-parameter, so browser back/forward navigation and shared links preserve the
-review context.
+The selected month is shared by transaction rows, cashflow cards, and the
+category expense radar. Moving between periods updates the URL and queries only
+cached Supabase rows; it does not trigger historical Enable Banking requests.
 
 ## Supabase Responsibilities
 

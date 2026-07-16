@@ -1,17 +1,17 @@
 import type {
-  CurrentMonthCategoryExpensesSummary,
+  MonthlyCategoryExpensesSummary,
   MonthlyTransactionSummary
 } from "@/definitions";
 
 import { formatDecimal, parseDecimal } from "./decimal";
 
-export function buildCurrentMonthCategoryExpensesSummary({
+export function buildMonthlyCategoryExpensesSummary({
   transactions,
   periodStart
 }: {
   transactions: MonthlyTransactionSummary[];
   periodStart: string;
-}): CurrentMonthCategoryExpensesSummary {
+}): MonthlyCategoryExpensesSummary {
   const currency = getPrimaryCurrency(transactions) ?? "EUR";
   const totalsByCategory = new Map<
     string,

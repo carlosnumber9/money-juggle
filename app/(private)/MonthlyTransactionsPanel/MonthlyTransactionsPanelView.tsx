@@ -25,6 +25,7 @@ import { TransactionsTable } from "./TransactionsTable";
 export function MonthlyTransactionsPanel({
   transactions,
   categoryGroups,
+  selectedMonth,
   error
 }: MonthlyTransactionsPanelProps) {
   const [transactionFilters, setTransactionFilters] =
@@ -81,6 +82,7 @@ export function MonthlyTransactionsPanel({
     <section aria-labelledby="monthly-transactions-title">
       <MonthlyTransactionsHeader
         message={error}
+        selectedMonth={selectedMonth}
         categoryGroups={categoryGroupsWithVisibleTransactions}
         filters={transactionFilters}
         onFilterToggle={handleFilterToggle}
@@ -97,6 +99,7 @@ export function MonthlyTransactionsPanel({
       ) : (
         <EmptyTransactionsState
           hasActiveFilters={hasActiveTransactionFilters(transactionFilters)}
+          monthLabel={selectedMonth.label}
         />
       )}
     </section>

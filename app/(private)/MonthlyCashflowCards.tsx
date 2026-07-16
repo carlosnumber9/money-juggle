@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 
 export function MonthlyCashflowCards({
   summary,
+  selectedMonth,
   error
 }: MonthlyCashflowCardsProps) {
   return (
@@ -17,13 +18,13 @@ export function MonthlyCashflowCards({
       aria-label="Resumen mensual"
     >
       <MonthlyCashflowCard
-        title="Ingresos del mes"
+        title={`Ingresos de ${selectedMonth.label}`}
         bucket={summary.income}
         error={error}
         tone="income"
       />
       <MonthlyCashflowCard
-        title="Gastos del mes"
+        title={`Gastos de ${selectedMonth.label}`}
         bucket={summary.expenses}
         error={error}
         tone="expense"

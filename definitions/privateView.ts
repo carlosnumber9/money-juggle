@@ -3,6 +3,7 @@ export * from "./privateView/home";
 export * from "./privateView/layout";
 export * from "./privateView/monthlyCashflow";
 export * from "./privateView/monthlyEvolution";
+export * from "./privateView/monthlyPeriod";
 export * from "./privateView/props";
 export * from "./privateView/providerStatus";
 export * from "./privateView/statusMessages";

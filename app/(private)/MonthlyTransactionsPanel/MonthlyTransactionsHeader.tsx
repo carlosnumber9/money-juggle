@@ -1,4 +1,8 @@
-import type { TransactionCategoryGroupSummary } from "@/definitions";
+import { MonthNavigation } from "@/app/(private)/MonthNavigation";
+import type {
+  MonthlyPeriodView,
+  TransactionCategoryGroupSummary
+} from "@/definitions";
 
 import { TransactionFiltersBar } from "./TransactionFiltersBar";
 import type {
@@ -8,6 +12,7 @@ import type {
 
 export function MonthlyTransactionsHeader({
   message,
+  selectedMonth,
   categoryGroups,
   filters,
   onFilterToggle,
@@ -16,6 +21,7 @@ export function MonthlyTransactionsHeader({
   onClearCategoryFilters
 }: {
   message: string | null;
+  selectedMonth: MonthlyPeriodView;
   categoryGroups: TransactionCategoryGroupSummary[];
   filters: TransactionFilters;
   onFilterToggle: (filterId: TransactionFilterId) => void;
@@ -24,14 +30,17 @@ export function MonthlyTransactionsHeader({
   onClearCategoryFilters: () => void;
 }) {
   return (
-    <div className="mb-4 flex items-start justify-between gap-3">
-      <div>
+    <div className="mb-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2
           id="monthly-transactions-title"
           className="text-xl leading-tight font-semibold"
         >
-          Movimientos de este mes
+          Movimientos
         </h2>
+        <MonthNavigation selectedMonth={selectedMonth} tab="transactions" />
+      </div>
+      <div>
         <TransactionFiltersBar
           categoryGroups={categoryGroups}
           filters={filters}

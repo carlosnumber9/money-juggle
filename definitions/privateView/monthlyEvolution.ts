@@ -21,7 +21,7 @@ export type MonthlyCategoryExpensePoint = {
   transactionCount: number;
 };
 
-export type CurrentMonthCategoryExpensesSummary = {
+export type MonthlyCategoryExpensesSummary = {
   monthLabel: string;
   currency: string;
   points: MonthlyCategoryExpensePoint[];

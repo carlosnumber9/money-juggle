@@ -3,8 +3,8 @@ import "server-only";
 import type { PrivateHomeView, ProviderStatusView } from "@/definitions";
 import { getBankingDataSource } from "@/lib/data/getBankingDataSource";
 import {
-  getCurrentMonthTransactionRange,
-  getCurrentYearTransactionRange
+  getCurrentYearTransactionRange,
+  getSelectedTransactionMonth
 } from "@/lib/domain/transactionRanges";
 
 import { buildBankCards } from "./buildBankCards";
@@ -17,14 +17,16 @@ import {
   loadTransactionCategoryGroups
 } from "./loaders";
 import { buildMonthlyCashflowSummary } from "./monthlyCashflow";
-import { buildCurrentMonthCategoryExpensesSummary } from "./monthlyCategoryExpenses";
+import { buildMonthlyCategoryExpensesSummary } from "./monthlyCategoryExpenses";
 import { buildMonthlyEvolutionSummary } from "./monthlyEvolution";
 import {
   buildTransactionBackfillView,
   getDashboardSyncEnabled
 } from "./transactionBackfill";
 
-export async function getPrivateHomeView(): Promise<PrivateHomeView> {
+export async function getPrivateHomeView(
+  requestedMonth?: string
+): Promise<PrivateHomeView> {
   const dataSource = getBankingDataSource();
   const user = await dataSource.getCurrentUser();
 
@@ -36,7 +38,8 @@ export async function getPrivateHomeView(): Promise<PrivateHomeView> {
     return { kind: "forbidden" };
   }
 
-  const transactionRange = getCurrentMonthTransactionRange();
+  const selectedMonth = getSelectedTransactionMonth(requestedMonth);
+  const transactionRange = selectedMonth.range;
   const yearlyTransactionRange = getCurrentYearTransactionRange();
   const reportYear = Number(yearlyTransactionRange.from.slice(0, 4));
   const [
@@ -78,6 +81,12 @@ export async function getPrivateHomeView(): Promise<PrivateHomeView> {
       completedConnectionIdsResult: completedBackfillConnectionIdsResult,
       providerStatus
     }),
+    selectedMonth: {
+      value: selectedMonth.value,
+      label: selectedMonth.label,
+      previousMonth: selectedMonth.previousMonth,
+      nextMonth: selectedMonth.nextMonth
+    },
     monthlyCashflow: buildMonthlyCashflowSummary(
       transactionsResult.ok ? transactionsResult.value : []
     ),
@@ -91,7 +100,7 @@ export async function getPrivateHomeView(): Promise<PrivateHomeView> {
       error: yearlyTransactionsResult.ok
         ? null
         : yearlyTransactionsResult.reason,
-      categoryExpenses: buildCurrentMonthCategoryExpensesSummary({
+      categoryExpenses: buildMonthlyCategoryExpensesSummary({
         transactions: transactionsResult.ok ? transactionsResult.value : [],
         periodStart: transactionRange.from
       }),

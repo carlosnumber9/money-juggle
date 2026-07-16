@@ -29,6 +29,7 @@ const chartConfig = {
 export function MonthlyEvolutionPanel({
   evolution,
   categoryExpenses,
+  selectedMonth,
   error,
   categoryExpensesError
 }: MonthlyEvolutionPanelProps) {
@@ -38,7 +39,7 @@ export function MonthlyEvolutionPanel({
       aria-label="Evolución"
     >
       <ChartContainer
-        title="Progreso anual"
+        title={`Progreso anual · ${evolution.year}`}
         description={error ?? formatAnnualTotals(evolution)}
         headerClassName="items-center text-center lg:items-start lg:text-left"
       >
@@ -107,6 +108,7 @@ export function MonthlyEvolutionPanel({
       <div className="mt-6 flex w-full">
         <CategoryExpensesRadarChart
           summary={categoryExpenses}
+          selectedMonth={selectedMonth}
           error={categoryExpensesError}
           className="lg:w-1/2"
         />

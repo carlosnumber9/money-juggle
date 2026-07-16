@@ -35,7 +35,7 @@ Use this checklist as the source of truth for what remains to be implemented. Ke
 - [ ] 27. Security hardening.
 - [ ] 28. Add transaction labels for trips, events, and ad hoc reporting.
 - [ ] 29. Explore Cobee by Pluxee consumption reports.
-- [ ] 30. Add monthly period navigation for transactions and charts.
+- [x] 30. Add monthly period navigation for transactions and charts.
 
 ## 1. Bootstrap The Next.js Project
 
@@ -1443,7 +1443,20 @@ Do not do yet:
 
 Status:
 
-- Planned.
+- Completed.
+
+Implemented:
+
+- The private route accepts a validated `month=YYYY-MM` query parameter and
+  falls back to the current month for malformed or future values.
+- Previous and next controls are available in the transaction review and the
+  category expense radar. The next control is disabled for the current month.
+- Navigation preserves its source tab in the URL and loads the selected range
+  from cached Supabase transactions without starting a provider backfill.
+- Transaction rows, dashboard cashflow cards, and the category expense radar
+  share the same selected month. The annual evolution chart remains scoped to
+  the current year and labels that year explicitly.
+- Empty transaction and category states name the selected month in Spanish.
 
 Goal:
 
@@ -1466,7 +1479,7 @@ Concepts learned:
 - Coordinating multiple panels from the same reporting period.
 - Historical data exploration over cached synced rows.
 
-Possible future files:
+Implemented files:
 
 - `lib/domain/transactionRanges.ts` for selected-month range helpers.
 - `lib/views/privateHomeView/getPrivateHomeView.ts` to accept or derive a

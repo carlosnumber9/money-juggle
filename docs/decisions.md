@@ -1060,7 +1060,7 @@ Possible future revisit trigger:
 
 Status:
 
-- Accepted as a roadmap concept.
+- Accepted and implemented.
 
 Context:
 
@@ -1081,6 +1081,12 @@ Decision:
 - Keep historical sync separate from period navigation; changing the selected
   month should first explore stored data, not automatically launch broad
   provider synchronization.
+- Validate `month=YYYY-MM` on the server, fall back to the current month for
+  invalid or future values, and disable forward navigation at the current
+  month.
+- Keep the annual evolution chart on the current calendar year while the
+  transaction review, cashflow cards, and category radar follow the selected
+  month.
 
 Consequences:
 

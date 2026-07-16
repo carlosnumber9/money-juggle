@@ -3,9 +3,10 @@ import type * as React from "react";
 import type { BankInstitutionCard } from "./bankCard";
 import type { MonthlyCashflowSummary } from "./monthlyCashflow";
 import type {
-  CurrentMonthCategoryExpensesSummary,
+  MonthlyCategoryExpensesSummary,
   MonthlyEvolutionSummary
 } from "./monthlyEvolution";
+import type { MonthlyPeriodView } from "./monthlyPeriod";
 import type { ProviderStatusView } from "./providerStatus";
 import type { TransactionBackfillView } from "./transactionBackfill";
 
@@ -28,24 +29,30 @@ export type DashboardSyncControlsProps = {
 
 export type MonthlyCashflowCardsProps = {
   summary: MonthlyCashflowSummary;
+  selectedMonth: MonthlyPeriodView;
   error: string | null;
 };
 
 export type MonthlyTransactionsPanelProps = {
   transactions: import("../dataSource").MonthlyTransactionSummary[];
   categoryGroups: import("../dataSource").TransactionCategoryGroupSummary[];
-  range: {
-    from: string;
-    to: string;
-  };
+  selectedMonth: MonthlyPeriodView;
   error: string | null;
 };
 
 export type MonthlyEvolutionPanelProps = {
   evolution: MonthlyEvolutionSummary;
-  categoryExpenses: CurrentMonthCategoryExpensesSummary;
+  categoryExpenses: MonthlyCategoryExpensesSummary;
+  selectedMonth: MonthlyPeriodView;
   error: string | null;
   categoryExpensesError: string | null;
+};
+
+export type PrivateHomePageProps = {
+  searchParams: Promise<{
+    month?: string | string[];
+    tab?: string | string[];
+  }>;
 };
 
 export type EnableBankingStatusProps = {

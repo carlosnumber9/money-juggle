@@ -227,11 +227,12 @@ balance sync. A manual click forces balance refresh and runs the same overlappin
 incremental transaction range. The buttons share an operation state so refresh
 and historical backfill cannot be launched concurrently from the UI.
 
-The private `Transacciones` tab presents those current-month rows as a review
-surface: transactions are grouped by booking date, marked with the source bank
-logo or fallback, and can be filtered by institution or by income/spending
-direction. This UI does not change the provider sync boundary; Enable Banking
-requests still only happen in server-side code.
+The private `Transacciones` tab presents cached rows for the month selected in
+the URL as a review surface: transactions are grouped by booking date, marked
+with the source bank logo or fallback, and can be filtered by institution or by
+income/spending direction. Its month controls query Supabase only and do not
+change the provider sync boundary; Enable Banking requests still only happen in
+server-side synchronization code.
 
 ## What To Store
 

@@ -46,8 +46,8 @@ This app should make financial review easier by collecting read-only financial d
 - View connected accounts.
 - Review latest balances.
 - Review transactions.
-- Review current-month transactions grouped by date.
-- Filter current-month transactions by institution and by income or spending.
+- Review selected-month transactions grouped by date.
+- Filter selected-month transactions by institution and by income or spending.
 - Categorize transactions quickly for personal reporting.
 - Label selected transactions so a temporary context, such as a specific trip,
   can be reported across many categories.
@@ -72,16 +72,15 @@ This app should make financial review easier by collecting read-only financial d
 
 - The current implemented foundation covers authentication, owner allowlist
   checks, consent tracking, account sync, balance sync, transaction sync, a
-  first private dashboard, current-month transaction review, and inline manual
+  first private dashboard, selected-month transaction review, and inline manual
   transaction categorization.
-- Reporting has started with current-month cashflow cards and a current-year
-  income/spending evolution chart. The working app also has a current-month
+- Reporting has started with selected-month cashflow cards and a current-year
+  income/spending evolution chart. The working app also has a selected-month
   category expense visualization, but it is not yet a complete monthly
   reporting system.
-- Transaction review and month-specific charts are still centered on the
-  current month. Future work should add explicit previous/next month controls
-  so stored historical data can be explored without changing code or sync
-  ranges manually.
+- Previous/next month controls explore stored Supabase data from the transaction
+  review and category expense chart. They do not automatically request more
+  history from Enable Banking.
 - Transaction sync should gain focused idempotency tests before scheduled sync is introduced.
 - Reporting should start simple and become richer later.
 - Categorization has started as user-owned app metadata. Automated rules remain

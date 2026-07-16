@@ -8,7 +8,11 @@ import {
   ChartTooltipContent,
   type ChartConfig
 } from "@/components/ui/chart";
-import type { CurrentMonthCategoryExpensesSummary } from "@/definitions";
+import { MonthNavigation } from "@/app/(private)/MonthNavigation";
+import type {
+  MonthlyCategoryExpensesSummary,
+  MonthlyPeriodView
+} from "@/definitions";
 
 import { ChartContainer } from "./ChartContainer";
 
@@ -21,10 +25,12 @@ const chartConfig = {
 
 export function CategoryExpensesRadarChart({
   summary,
+  selectedMonth,
   error,
   className
 }: {
-  summary: CurrentMonthCategoryExpensesSummary;
+  summary: MonthlyCategoryExpensesSummary;
+  selectedMonth: MonthlyPeriodView;
   error: string | null;
   className?: string;
 }) {
@@ -34,6 +40,9 @@ export function CategoryExpensesRadarChart({
     <ChartContainer
       title="Gastos por categoría"
       description={error ?? getDescription(summary, hasCategoryExpenses)}
+      headerActions={
+        <MonthNavigation selectedMonth={selectedMonth} tab="evolution" />
+      }
       className={className}
       headerClassName="items-center text-center"
     >
@@ -100,7 +109,7 @@ export function CategoryExpensesRadarChart({
         </RechartsChartContainer>
       ) : (
         <div className="flex min-h-[240px] items-center justify-center text-center text-sm text-muted-foreground">
-          No hay gastos categorizados este mes.
+          No hay gastos categorizados en {summary.monthLabel}.
         </div>
       )}
     </ChartContainer>
@@ -108,7 +117,7 @@ export function CategoryExpensesRadarChart({
 }
 
 function getDescription(
-  summary: CurrentMonthCategoryExpensesSummary,
+  summary: MonthlyCategoryExpensesSummary,
   hasCategoryExpenses: boolean
 ): string {
   if (!hasCategoryExpenses) {
