@@ -48,6 +48,7 @@ export function mapStoredTransactionToSummary(
         ? {
             id: category.id,
             name: category.name,
+            slug: category.slug,
             group: {
               id: categoryGroup.id,
               name: categoryGroup.name

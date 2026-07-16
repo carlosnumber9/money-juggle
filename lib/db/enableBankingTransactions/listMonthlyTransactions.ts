@@ -40,6 +40,7 @@ export async function listMonthlyTransactions({
       transaction_categories (
         id,
         name,
+        slug,
         transaction_category_groups (
           id,
           name

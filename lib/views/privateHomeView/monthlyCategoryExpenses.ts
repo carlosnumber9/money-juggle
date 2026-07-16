@@ -5,6 +5,8 @@ import type {
 
 import { formatDecimal, parseDecimal } from "./decimal";
 
+const EXCLUDED_CATEGORY_SLUGS = new Set(["mortgage"]);
+
 export function buildMonthlyCategoryExpensesSummary({
   transactions,
   periodStart
@@ -26,6 +28,7 @@ export function buildMonthlyCategoryExpensesSummary({
   let totalExpenses = 0n;
   let uncategorizedExpenseCount = 0;
   let excludedInternalTransferCount = 0;
+  const excludedCategoryNames = new Set<string>();
 
   for (const transaction of transactions) {
     if (transaction.currency !== currency) {
@@ -45,6 +48,11 @@ export function buildMonthlyCategoryExpensesSummary({
 
     if (!transaction.category) {
       uncategorizedExpenseCount += 1;
+      continue;
+    }
+
+    if (EXCLUDED_CATEGORY_SLUGS.has(transaction.category.slug)) {
+      excludedCategoryNames.add(transaction.category.name);
       continue;
     }
 
@@ -92,7 +100,10 @@ export function buildMonthlyCategoryExpensesSummary({
     totalExpenses: Number(formatDecimal(totalExpenses)),
     transactionCount,
     uncategorizedExpenseCount,
-    excludedInternalTransferCount
+    excludedInternalTransferCount,
+    excludedCategoryNames: Array.from(excludedCategoryNames).sort(
+      (left, right) => left.localeCompare(right)
+    )
   };
 }
 

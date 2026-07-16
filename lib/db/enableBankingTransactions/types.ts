@@ -110,6 +110,7 @@ type StoredMonthlyTransactionInstitution = {
 type StoredMonthlyTransactionCategory = {
   id: string;
   name: string;
+  slug: string;
   transaction_category_groups:
     | StoredMonthlyTransactionCategoryGroup
     | StoredMonthlyTransactionCategoryGroup[]

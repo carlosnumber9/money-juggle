@@ -83,6 +83,7 @@ function getDemoTransactionCategory(categorySlug: string | null) {
       return {
         id: category.id,
         name: category.name,
+        slug: category.slug,
         group: {
           id: group.id,
           name: group.name

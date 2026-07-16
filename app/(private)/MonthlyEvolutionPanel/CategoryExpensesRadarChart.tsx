@@ -120,8 +120,12 @@ function getDescription(
   summary: MonthlyCategoryExpensesSummary,
   hasCategoryExpenses: boolean
 ): string {
+  const excludedCategoriesText = getExcludedCategoriesText(
+    summary.excludedCategoryNames
+  );
+
   if (!hasCategoryExpenses) {
-    return `Sin categorías con gasto en ${summary.monthLabel}.`;
+    return `Sin categorías con gasto en ${summary.monthLabel}${excludedCategoriesText}.`;
   }
 
   const uncategorizedText =
@@ -129,7 +133,20 @@ function getDescription(
       ? ` · ${summary.uncategorizedExpenseCount} sin categoría`
       : "";
 
-  return `${formatCurrency(summary.totalExpenses, summary.currency)} en ${summary.monthLabel}${uncategorizedText}`;
+  return `${formatCurrency(summary.totalExpenses, summary.currency)} en ${summary.monthLabel}${uncategorizedText}${excludedCategoriesText}`;
+}
+
+function getExcludedCategoriesText(categoryNames: string[]): string {
+  if (categoryNames.length === 0) {
+    return "";
+  }
+
+  const categoryList = new Intl.ListFormat("es-ES", {
+    style: "long",
+    type: "conjunction"
+  }).format(categoryNames);
+
+  return ` · ${categoryList} ${categoryNames.length === 1 ? "excluida" : "excluidas"}`;
 }
 
 function formatCurrency(value: number, currency: string): string {

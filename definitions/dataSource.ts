@@ -73,6 +73,7 @@ export type MonthlyTransactionSummary = {
 export type MonthlyTransactionCategory = {
   id: string;
   name: string;
+  slug: string;
   group: {
     id: string;
     name: string;

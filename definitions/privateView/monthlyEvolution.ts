@@ -29,4 +29,5 @@ export type MonthlyCategoryExpensesSummary = {
   transactionCount: number;
   uncategorizedExpenseCount: number;
   excludedInternalTransferCount: number;
+  excludedCategoryNames: string[];
 };

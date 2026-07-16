@@ -1157,6 +1157,9 @@ Implemented so far:
   point markers.
 - A current-month category expense radar visualization is present in the
   working tree, using categorized expense rows and excluding internal transfers.
+- The category radar excludes categories listed by stable internal slug. The
+  initial exception is `mortgage`, so its comparatively large fixed expense
+  does not hide anomalies in the remaining categories.
 - This first slice reuses cached Supabase transaction rows and does not add new
   report tables or external integrations.
 
