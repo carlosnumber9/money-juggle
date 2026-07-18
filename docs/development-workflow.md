@@ -127,6 +127,25 @@ Use `docs/decisions.md` for decisions that future sessions should remember.
 
 Add tests when they reduce risk or clarify behavior.
 
+Vitest is the unit and integration test runner. Tests use the Node environment
+by default and should be colocated with the implementation as `*.test.ts`.
+Keep tests deterministic by passing explicit dates and by mocking network,
+Supabase, and provider boundaries. Tests must never contact the real Enable
+Banking API or use production credentials.
+
+Available commands:
+
+```text
+npm run test
+npm run test:watch
+npm run test:coverage
+```
+
+Coverage uses V8 and is a diagnostic tool. Do not optimize for a global
+percentage. Prioritize meaningful positive, negative, boundary, and failure
+scenarios for financial and authorization rules. Do not add broad snapshots or
+tests that only restate third-party library behavior.
+
 Good candidates:
 
 - Permission checks.
@@ -137,6 +156,11 @@ Good candidates:
 - Sync state transitions.
 
 Do not add heavy test infrastructure before it is useful.
+
+GitHub Actions runs static checks and coverage for pull requests and pushes to
+`main`. Vercel remains responsible for preview and production builds. Production
+promotion should require the GitHub `Quality` check through Vercel Deployment
+Checks once the project setting is enabled.
 
 ## Clarity Over Premature Abstraction
 

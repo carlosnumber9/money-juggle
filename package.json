@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "packageManager": "npm@10.8.2",
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "dev": "next dev --experimental-https -p 3001",
     "build": "next build",
@@ -12,6 +15,9 @@
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "check": "npm run typecheck && npm run lint && npm run format:check",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "db:link": "supabase link --project-ref qsmtxtnugihqawjesslo",
     "db:push": "supabase db push",
     "db:migrations": "supabase migration list"
@@ -37,11 +43,13 @@
     "@types/node": "26.1.0",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
+    "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.10",
     "prettier": "^3.9.4",
     "supabase": "^2.109.0",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vitest": "^4.1.10"
   },
   "overrides": {
     "postcss": "8.5.16",

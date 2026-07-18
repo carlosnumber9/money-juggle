@@ -99,8 +99,14 @@ Or run them separately:
 npm run typecheck
 npm run lint
 npm run format:check
+npm run test
+npm run test:coverage
 npm run build
 ```
+
+Use `npm run test:watch` while developing a focused unit. Coverage is written
+to `coverage/` for local inspection and CI artifacts; it is diagnostic and does
+not enforce a global percentage threshold.
 
 Format files:
 

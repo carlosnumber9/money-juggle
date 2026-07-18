@@ -1146,3 +1146,50 @@ Possible future revisit trigger:
 - If scheduled synchronization makes manual refresh unnecessary.
 - If provider rate limits require a longer transaction overlap or per-bank
   refresh controls.
+
+## ADR-034: Use Vitest And Risk-Based Coverage
+
+Status:
+
+- Accepted and implemented.
+
+Context:
+
+- The repository had static checks but no automated test runner or CI workflow.
+- Most current business behavior is implemented as TypeScript functions that
+  can be tested without a browser.
+- Financial identity, normalization, and synchronization behavior need stronger
+  regression protection than presentation-only code.
+
+Decision:
+
+- Use Vitest with the V8 coverage provider for unit and focused integration
+  tests.
+- Run tests in Node and keep them colocated as `*.test.ts`.
+- Use coverage to reveal gaps without enforcing a global percentage threshold.
+- Prioritize utilities first, followed by domain summaries, financial identity,
+  normalization, and server orchestration.
+- Keep React component tests, browser E2E tests, and local Supabase integration
+  outside the initial testing roadmap.
+- Use Node.js 24 consistently for development guidance, GitHub Actions, and
+  Vercel.
+- Run `check` and `test:coverage` in GitHub Actions for pull requests and pushes
+  to `main`; leave builds and deployments to Vercel.
+
+Consequences:
+
+- The initial suite stays fast and does not need external credentials or local
+  services.
+- GitHub CI can become a required Vercel Deployment Check before production is
+  promoted.
+- In-memory doubles cannot prove Supabase constraints or RLS behavior, so that
+  remains a documented residual risk.
+- Coverage growth is evaluated by meaningful scenarios rather than a target
+  percentage.
+
+Possible future revisit trigger:
+
+- If UI regressions justify selective React Testing Library coverage.
+- If database behavior warrants local Supabase and policy tests.
+- If critical user journeys justify Playwright tests against preview
+  deployments.
