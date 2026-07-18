@@ -27,3 +27,15 @@ export function formatCurrency(amount: string, currency: string): string {
     currency
   }).format(Number(amount));
 }
+
+export function formatTransactionDetailDate(value: string | null): string {
+  if (!value) {
+    return "Fecha desconocida";
+  }
+
+  return new Intl.DateTimeFormat("es-ES", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric"
+  }).format(new Date(`${value}T00:00:00`));
+}

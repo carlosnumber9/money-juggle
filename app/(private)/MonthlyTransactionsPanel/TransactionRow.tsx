@@ -1,3 +1,5 @@
+import type { MouseEvent } from "react";
+
 import { TableCell, TableRow as BaseTableRow } from "@/components/ui/table";
 import type {
   MonthlyTransactionSummary,
@@ -12,14 +14,34 @@ import { TransactionCategorySelect } from "./TransactionCategorySelect";
 
 export function TransactionRow({
   transaction,
-  categoryGroups
+  categoryGroups,
+  onSelect
 }: {
   transaction: MonthlyTransactionSummary;
   categoryGroups: TransactionCategoryGroupSummary[];
+  onSelect: (transaction: MonthlyTransactionSummary) => void;
 }) {
   const concept = getTransactionConcept(transaction);
   const amount = Number(transaction.amount);
   const accountLabel = getAccountLabel(transaction);
+
+  function handleRowClick(event: MouseEvent<HTMLTableRowElement>) {
+    const target = event.target;
+
+    if (
+      target instanceof Element &&
+      target.closest(
+        "button, a, input, select, textarea, [role='button'], [role='option']"
+      )
+    ) {
+      return;
+    }
+
+    event.currentTarget
+      .querySelector<HTMLButtonElement>("[data-transaction-detail-trigger]")
+      ?.focus();
+    onSelect(transaction);
+  }
 
   return (
     <BaseTableRow
@@ -27,16 +49,24 @@ export function TransactionRow({
         transaction.amount,
         transaction.currency
       )}.`}
-      className="monthly-transaction-row"
+      className="monthly-transaction-row cursor-pointer"
+      onClick={handleRowClick}
     >
       <TableCell className="w-16 pl-4 pr-0">
         <TransactionBankLogo transaction={transaction} />
       </TableCell>
       <TableCell className="monthly-transaction-details-cell min-w-52 whitespace-normal py-3 pl-4">
         <div className="monthly-transaction-summary min-w-0">
-          <span className="monthly-transaction-description line-clamp-2">
+          <button
+            type="button"
+            data-transaction-detail-trigger
+            aria-haspopup="dialog"
+            aria-label={`Ver detalle de ${concept}`}
+            className="monthly-transaction-description line-clamp-2 cursor-pointer rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
+            onClick={() => onSelect(transaction)}
+          >
             {concept}
-          </span>
+          </button>
           <TransactionCategorySelect
             transaction={transaction}
             categoryGroups={categoryGroups}

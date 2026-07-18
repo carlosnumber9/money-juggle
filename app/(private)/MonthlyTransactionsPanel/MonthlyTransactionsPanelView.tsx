@@ -6,6 +6,7 @@ import type { MonthlyTransactionsPanelProps } from "@/definitions";
 
 import { EmptyTransactionsState } from "./EmptyTransactionsState";
 import { MonthlyTransactionsHeader } from "./MonthlyTransactionsHeader";
+import { TransactionDetailDialog } from "./TransactionDetailDialog";
 import {
   clearCategoryFilters,
   DEFAULT_TRANSACTION_FILTERS,
@@ -28,6 +29,9 @@ export function MonthlyTransactionsPanel({
   selectedMonth,
   error
 }: MonthlyTransactionsPanelProps) {
+  const [selectedTransaction, setSelectedTransaction] = useState<
+    MonthlyTransactionsPanelProps["transactions"][number] | null
+  >(null);
   const [transactionFilters, setTransactionFilters] =
     useState<TransactionFilters>(DEFAULT_TRANSACTION_FILTERS);
   const filteredTransactions = useMemo(
@@ -95,6 +99,7 @@ export function MonthlyTransactionsPanel({
         <TransactionsTable
           transactions={filteredTransactions}
           categoryGroups={categoryGroups}
+          onTransactionSelect={setSelectedTransaction}
         />
       ) : (
         <EmptyTransactionsState
@@ -102,6 +107,11 @@ export function MonthlyTransactionsPanel({
           monthLabel={selectedMonth.label}
         />
       )}
+
+      <TransactionDetailDialog
+        transaction={selectedTransaction}
+        onClose={() => setSelectedTransaction(null)}
+      />
     </section>
   );
 }

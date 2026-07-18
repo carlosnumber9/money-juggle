@@ -13,10 +13,12 @@ import { TransactionRow } from "./TransactionRow";
 
 export function TransactionsTable({
   transactions,
-  categoryGroups
+  categoryGroups,
+  onTransactionSelect
 }: {
   transactions: MonthlyTransactionSummary[];
   categoryGroups: TransactionCategoryGroupSummary[];
+  onTransactionSelect: (transaction: MonthlyTransactionSummary) => void;
 }) {
   const transactionGroups = groupTransactionsByDate(transactions);
 
@@ -29,6 +31,7 @@ export function TransactionsTable({
               key={`${group.date ?? "unknown"}-${index}`}
               group={group}
               categoryGroups={categoryGroups}
+              onTransactionSelect={onTransactionSelect}
             />
           ))}
         </TableBody>
@@ -39,10 +42,12 @@ export function TransactionsTable({
 
 function TransactionDateGroup({
   group,
-  categoryGroups
+  categoryGroups,
+  onTransactionSelect
 }: {
   group: TransactionDateGroup;
   categoryGroups: TransactionCategoryGroupSummary[];
+  onTransactionSelect: (transaction: MonthlyTransactionSummary) => void;
 }) {
   return (
     <>
@@ -61,6 +66,7 @@ function TransactionDateGroup({
           key={transaction.id}
           transaction={transaction}
           categoryGroups={categoryGroups}
+          onSelect={onTransactionSelect}
         />
       ))}
     </>

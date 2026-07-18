@@ -68,3 +68,28 @@
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-size: 3.35rem 3.35rem;
 }
+
+.transaction-detail-dialog::backdrop {
+  background-color: color-mix(in oklch, black 55%, transparent);
+}
+
+.transaction-detail-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 0;
+  width: 180%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  background-color: var(--institution-logo-color);
+  opacity: 0.1;
+  pointer-events: none;
+  mask-image: var(--institution-logo);
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
+  -webkit-mask-image: var(--institution-logo);
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+}
