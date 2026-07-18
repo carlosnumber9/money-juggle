@@ -93,6 +93,24 @@ and use the smallest suitable non-server checks instead.
 
 If verification cannot be run, explain why.
 
+## Commit Messages
+
+Use a lowercase Git Flow-style type prefix followed by a concise message that
+starts with a capitalized verb in the simple past:
+
+```text
+<type>: <Capitalized simple-past message>
+```
+
+Choose the type that best describes the change, such as `feat`, `fix`, `docs`,
+`refactor`, or `test`.
+
+Examples:
+
+- `feat: Added new transaction modal`
+- `fix: Prevented duplicate imports`
+- `docs: Documented commit message convention`
+
 ## Documentation And Decisions
 
 Update documentation when:
