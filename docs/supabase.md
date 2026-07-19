@@ -211,6 +211,7 @@ Current local migrations:
 - `20260707120000_add_account_fingerprints_for_internal_transfers.sql`
 - `20260709120000_seed_initial_transaction_categories.sql`
 - `20260719120000_add_transaction_labels.sql`
+- `20260719214000_add_shared_expense_settlement_category.sql`
 
 Use `npm run db:migrations` to confirm which local migrations are applied to the
 linked remote Supabase project before pushing new schema changes.

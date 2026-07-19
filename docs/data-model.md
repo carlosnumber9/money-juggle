@@ -9,6 +9,7 @@ The executable schema is defined by the local migration chain:
 - `supabase/migrations/20260707120000_add_account_fingerprints_for_internal_transfers.sql`
 - `supabase/migrations/20260709120000_seed_initial_transaction_categories.sql`
 - `supabase/migrations/20260719120000_add_transaction_labels.sql`
+- `supabase/migrations/20260719214000_add_shared_expense_settlement_category.sql`
 
 The model should preserve user ownership even though the app starts as a personal project.
 
@@ -94,6 +95,11 @@ Important constraints in the first migration:
 - The initial category catalog is seeded for profiles that already exist when
   `20260709120000_seed_initial_transaction_categories.sql` runs. Category
   display names are Spanish; slugs remain English.
+- `20260719214000_add_shared_expense_settlement_category.sql` adds
+  `shared_expense_settlement` under the financial group for incoming or outgoing
+  settlements that combine multiple shared expense types. A label can preserve
+  the trip or event context without forcing the movement into one expense
+  category.
 
 ## Entities
 

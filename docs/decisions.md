@@ -868,6 +868,10 @@ Decision:
   category assignment flows, rules, or report rollups in the same step.
 - Use later migrations to add, rename, or archive categories as the owner's
   personal reporting model changes.
+- Categorize mixed repayments from shared-expense tools as
+  `shared_expense_settlement` (`Liquidación de gastos compartidos`) under the
+  financial group. Keep the trip or event context in optional labels instead of
+  assigning the whole settlement to one underlying expense category.
 
 Consequences:
 
@@ -876,6 +880,8 @@ Consequences:
 - Future profiles will need an explicit seed step if the app becomes multi-user.
 - Used categories should usually be archived instead of deleted, because
   transactions can reference them through `transactions.category_id`.
+- Shared-expense settlements remain visible as adjustments instead of being
+  misreported as loans, internal transfers, or arbitrary travel expenses.
 
 Possible future revisit trigger:
 
