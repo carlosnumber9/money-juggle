@@ -73,7 +73,7 @@ This app should make financial review easier by collecting read-only financial d
 - The current implemented foundation covers authentication, owner allowlist
   checks, consent tracking, account sync, balance sync, transaction sync, a
   first private dashboard, selected-month transaction review, and inline manual
-  transaction categorization.
+  transaction categorization and labeling.
 - Reporting has started with selected-month cashflow cards and a current-year
   income/spending evolution chart. The working app also has a selected-month
   category expense visualization, but it is not yet a complete monthly
@@ -85,8 +85,10 @@ This app should make financial review easier by collecting read-only financial d
 - Reporting should start simple and become richer later.
 - Categorization has started as user-owned app metadata. Automated rules remain
   future work.
-- Labels are planned as optional user-owned metadata for ad hoc grouping. They
-  should complement categories, not replace them.
+- Labels are implemented as optional user-owned metadata that can be created,
+  assigned, and removed from transaction detail. Label reporting and global
+  management remain future work. Labels complement categories rather than
+  replacing them.
 - Cobee by Pluxee is a future exploratory integration. Real implementation
   should wait until API access, available data granularity, and credential
   handling are confirmed.

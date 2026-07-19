@@ -55,6 +55,7 @@ export default async function Home({ searchParams }: PrivateHomePageProps) {
             key={view.selectedMonth.value}
             transactions={view.monthlyTransactions.rows}
             categoryGroups={view.monthlyTransactions.categoryGroups}
+            labels={view.monthlyTransactions.labels}
             selectedMonth={view.selectedMonth}
             error={view.monthlyTransactions.error}
           />

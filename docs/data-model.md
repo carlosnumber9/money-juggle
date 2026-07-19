@@ -8,6 +8,7 @@ The executable schema is defined by the local migration chain:
 - `supabase/migrations/20260704170000_add_enable_banking_connection_fields.sql`
 - `supabase/migrations/20260707120000_add_account_fingerprints_for_internal_transfers.sql`
 - `supabase/migrations/20260709120000_seed_initial_transaction_categories.sql`
+- `supabase/migrations/20260719120000_add_transaction_labels.sql`
 
 The model should preserve user ownership even though the app starts as a personal project.
 
@@ -34,14 +35,14 @@ Included tables:
 - `transactions`
 - `transaction_category_groups`
 - `transaction_categories`
+- `transaction_labels`
+- `transaction_label_assignments`
 - `sync_runs`
 - `consent_events`
 
 Deferred tables:
 
 - `transaction_category_rules`: useful later, after manual categorization exists.
-- `transaction_labels` and `transaction_label_assignments`: useful later for
-  optional cross-category grouping such as trips, events, or projects.
 - Cobee integration tables: useful later after API access and desired
   consumption granularity are confirmed.
 - `manual_assets`: useful later for Trade Republic and other non-PSD2 assets.
@@ -56,8 +57,9 @@ Financial provider-owned tables such as `bank_connections`, `accounts`,
 `balances`, `transactions`, `sync_runs`, and `consent_events` expose read
 policies to authenticated owners. Provider writes are performed by controlled
 server-only flows that validate ownership before using elevated Supabase access.
-User-managed category tables allow owner-scoped create, read, update, and
-delete operations.
+User-managed category and label tables use owner-scoped policies. Label
+assignments additionally use composite ownership foreign keys so a transaction
+cannot reference another user's label.
 
 The first manual categorization slice updates only `transactions.category_id`
 through a server action. That action validates the current Supabase user and
@@ -87,9 +89,8 @@ Important constraints in the first migration:
 - Currency values are constrained to three uppercase letters.
 - Category groups and categories are user-owned and unique by `user_id` and
   `slug`.
-- Future labels should also be user-owned and unique by `user_id` and `slug`.
-  A transaction may have zero labels and, when labels are introduced, should be
-  able to have more than one label if a real use case appears.
+- Labels are user-owned and unique by `user_id` and a whitespace-normalized,
+  case-insensitive name. A transaction may have zero or multiple labels.
 - The initial category catalog is seeded for profiles that already exist when
   `20260709120000_seed_initial_transaction_categories.sql` runs. Category
   display names are Spanish; slugs remain English.
@@ -491,7 +492,8 @@ Recommended approach:
 
 #### App-Owned Labels
 
-Transaction labels are planned app-owned metadata for ad hoc reporting slices.
+Transaction labels are implemented app-owned metadata for ad hoc reporting
+slices.
 They are different from categories:
 
 - A category answers what kind of movement it is, such as restaurant, rent, or
@@ -642,14 +644,12 @@ Purpose:
 - Enables reporting across existing categories, for example all movements
   related to one trip.
 
-Probable fields:
+Implemented fields:
 
 - `id`.
 - `user_id`.
 - `name`.
-- `slug`.
-- `color`.
-- `icon`.
+- `normalized_name`.
 - `is_archived`.
 - `created_at`.
 - `updated_at`.
@@ -678,10 +678,9 @@ Source:
 Purpose:
 
 - Links transactions to optional labels.
-- Allows a transaction to remain unlabeled, or to carry one or more labels if
-  future use cases require it.
+- Allows a transaction to remain unlabeled or carry multiple labels.
 
-Probable fields:
+Implemented fields:
 
 - `transaction_id`.
 - `label_id`.
@@ -700,8 +699,8 @@ Ownership model:
 Security and RLS:
 
 - User can manage assignments only for their own transactions and labels.
-- Foreign keys should include `user_id` where useful so a transaction cannot be
-  assigned another user's label.
+- Composite foreign keys include `user_id` so a transaction cannot be assigned
+  another user's label.
 
 Source:
 

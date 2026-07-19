@@ -78,7 +78,22 @@ export type StoredMonthlyTransactionRow = {
     | StoredMonthlyTransactionCategory
     | StoredMonthlyTransactionCategory[]
     | null;
+  transaction_label_assignments:
+    | StoredMonthlyTransactionLabelAssignment
+    | StoredMonthlyTransactionLabelAssignment[]
+    | null;
   accounts: StoredMonthlyTransactionAccount | StoredMonthlyTransactionAccount[];
+};
+
+type StoredMonthlyTransactionLabelAssignment = {
+  created_at: string;
+  transaction_labels:
+    StoredMonthlyTransactionLabel | StoredMonthlyTransactionLabel[] | null;
+};
+
+type StoredMonthlyTransactionLabel = {
+  id: string;
+  name: string;
 };
 
 export type StoredOwnAccountForTransferMatching = {

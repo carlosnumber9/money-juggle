@@ -11,7 +11,8 @@ export const DEMO_TRANSACTIONS: DemoTransaction[] = [
     description: "Compra supermercado",
     merchantName: "Mercadona",
     counterpartyName: null,
-    categorySlug: "groceries"
+    categorySlug: "groceries",
+    labelIds: ["60000000-0000-4000-8000-000000000001"]
   },
   {
     id: "40000000-0000-4000-8000-000000000002",
@@ -23,7 +24,8 @@ export const DEMO_TRANSACTIONS: DemoTransaction[] = [
     description: "Cafe y desayuno",
     merchantName: "Panaderia local",
     counterpartyName: null,
-    categorySlug: null
+    categorySlug: null,
+    labelIds: []
   },
   {
     id: "40000000-0000-4000-8000-000000000003",
@@ -35,6 +37,7 @@ export const DEMO_TRANSACTIONS: DemoTransaction[] = [
     description: "Nomina",
     merchantName: null,
     counterpartyName: "Empresa demo",
-    categorySlug: "salary"
+    categorySlug: "salary",
+    labelIds: []
   }
 ];

@@ -6,6 +6,7 @@ import type {
   TransactionCategoryGroupSummary
 } from "@/definitions";
 import { cn } from "@/lib/utils";
+import { getTransactionLabelSummaryText } from "@/lib/domain/labels";
 
 import { getAccountLabel } from "./accountLabel";
 import { formatCurrency, getTransactionConcept } from "./formatters";
@@ -24,6 +25,7 @@ export function TransactionRow({
   const concept = getTransactionConcept(transaction);
   const amount = Number(transaction.amount);
   const accountLabel = getAccountLabel(transaction);
+  const labelSummary = getTransactionLabelSummaryText(transaction.labels);
 
   function handleRowClick(event: MouseEvent<HTMLTableRowElement>) {
     const target = event.target;
@@ -48,7 +50,7 @@ export function TransactionRow({
       aria-label={`${accountLabel}. ${concept}. ${formatCurrency(
         transaction.amount,
         transaction.currency
-      )}.`}
+      )}.${labelSummary ? ` Etiquetas: ${labelSummary}.` : ""}`}
       className="monthly-transaction-row cursor-pointer"
       onClick={handleRowClick}
     >
@@ -71,6 +73,11 @@ export function TransactionRow({
             transaction={transaction}
             categoryGroups={categoryGroups}
           />
+          {labelSummary ? (
+            <span className="monthly-transaction-label-chip max-w-52 truncate rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-muted-foreground">
+              {labelSummary}
+            </span>
+          ) : null}
         </div>
       </TableCell>
       <TableCell

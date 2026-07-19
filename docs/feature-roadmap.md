@@ -1314,7 +1314,8 @@ Do not do yet:
 
 Status:
 
-- Planned.
+- Assignment slice implemented; reporting and global management remain
+  planned.
 
 Goal:
 
@@ -1346,18 +1347,23 @@ Concepts learned:
 - Many-to-many assignment tables.
 - Cross-category reporting.
 
-Possible future files:
+Implemented slice:
 
-- A Supabase migration for `transaction_labels`.
-- A Supabase migration for `transaction_label_assignments`.
-- Label assignment server actions.
-- Transaction row label UI.
-- Report filters by label.
+- Owner-scoped label and assignment tables with RLS and ownership constraints.
+- Multiple labels per transaction.
+- Existing-label suggestions and create-and-assign behavior in transaction
+  detail.
+- Removable detail chips and compact transaction-row summaries.
+- Optimistic real and demo mode interaction with rollback on failure.
+
+Still planned:
+
+- Label archive, rename, and global management UI.
+- Report and transaction-list filters by label.
 
 Risks or decisions:
 
-- A transaction may eventually need multiple labels. Start with a join table
-  unless there is a strong reason to restrict transactions to one label.
+- A transaction can have multiple labels through a join table.
 - Labels can reveal sensitive travel, medical, family, or project context, so
   they require the same owner-scoped RLS mindset as categories.
 - Labels should not be overwritten by provider sync.
@@ -1365,10 +1371,10 @@ Risks or decisions:
 
 Suggested acceptance criteria:
 
-- A user can create and archive their own labels.
+- A user can create their own labels. Archiving remains a later management UI.
 - A user can assign and remove labels only on their own transactions.
 - Unlabeled transactions remain the default state.
-- A report can filter or group transactions by label across categories.
+- A future report can filter or group transactions by label across categories.
 - RLS and server-side checks prevent assigning another user's label.
 
 Do not do yet:

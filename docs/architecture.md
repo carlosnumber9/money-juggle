@@ -18,7 +18,7 @@ The frontend should:
 - Render user-visible screens in Spanish.
 - Start authentication and bank connection flows.
 - Show connection, account, balance, transaction, and report states.
-- Let the owner add app-owned metadata such as categories and future labels.
+- Let the owner add app-owned metadata such as categories and labels.
 - Render the private account area as separate dashboard and transaction review
   sections.
 - Call internal Next.js endpoints or server actions when server work is required.
@@ -47,7 +47,7 @@ Next.js server-side code should:
 - Talk to Enable Banking from server-only code.
 - Store and update consent, account, balance, transaction, and sync state.
 - Store and update user-owned financial annotations such as categories and
-  future labels without letting provider sync overwrite them.
+  labels without letting provider sync overwrite them.
 - Use Supabase server clients appropriately.
 - Keep sensitive environment variables private.
 - Normalize external API responses before persistence.
@@ -85,8 +85,9 @@ pattern is a small ports-and-adapters boundary:
 This keeps demo mode, provider details, and persistence details out of UI code.
 
 The current private home view is prepared under `lib/views/privateHomeView/`.
-It loads provider status, bank card state, selected-month transactions, and
-transaction category groups before the route renders UI components. The
+It loads provider status, bank card state, selected-month transactions,
+transaction category groups, and active transaction labels before the route
+renders UI components. The
 validated `month=YYYY-MM` URL value is resolved into a range in
 `lib/domain/transactionRanges.ts`, so the tabs receive prepared reporting data
 instead of querying persistence directly. Malformed and future periods fall
@@ -98,8 +99,8 @@ The private UI is split into three tabs:
   per-bank balance totals, plus selected-month income and expense cards.
 - `Transacciones`: selected-month transaction review with date grouping,
   institution cues, signed amounts, client-side filters over already-loaded
-  owner data, category filtering, inline manual category assignment, and month
-  navigation.
+  owner data, category filtering, inline manual category assignment, label
+  chips, detail-dialog label assignment, and month navigation.
 - `Evolución`: current-year income and expense trend chart with 12 monthly
   points, annual income and spending totals, a selected-month category expense
   visualization with month navigation, and continuous shadcn/Recharts lines

@@ -977,7 +977,7 @@ Possible future revisit trigger:
 
 Status:
 
-- Accepted as a roadmap concept.
+- Accepted and implemented for creation and assignment.
 
 Context:
 
@@ -993,12 +993,15 @@ Decision:
 - Use `labels` as the internal concept.
 - Use `Etiquetas` as the Spanish user-visible term.
 - Treat labels as optional user-owned transaction metadata.
-- Prefer a future `transaction_labels` table plus a
+- Use a `transaction_labels` table plus a
   `transaction_label_assignments` join table over a single nullable
-  `transactions.label_id` column, unless the product explicitly decides that a
-  transaction can only ever have one label.
+  `transactions.label_id` column. A transaction can carry multiple labels.
 - Keep labels separate from categories and from provider-owned transaction
   data.
+- Create, assign, and remove labels from transaction detail. Keep table chips
+  informational and defer global management and reporting UI.
+- Treat names as equal after whitespace normalization and case folding, while
+  preserving the original display spelling.
 
 Consequences:
 

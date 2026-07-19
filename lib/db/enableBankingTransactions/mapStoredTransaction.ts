@@ -24,6 +24,11 @@ export function mapStoredTransactionToSummary(
   const categoryGroup = Array.isArray(category?.transaction_category_groups)
     ? (category.transaction_category_groups[0] ?? null)
     : category?.transaction_category_groups;
+  const labelAssignments = Array.isArray(row.transaction_label_assignments)
+    ? row.transaction_label_assignments
+    : row.transaction_label_assignments
+      ? [row.transaction_label_assignments]
+      : [];
 
   return {
     id: row.id,
@@ -54,6 +59,27 @@ export function mapStoredTransactionToSummary(
               name: categoryGroup.name
             }
           }
-        : null
+        : null,
+    labels: labelAssignments
+      .map((assignment) => ({
+        createdAt: assignment.created_at,
+        label: Array.isArray(assignment.transaction_labels)
+          ? (assignment.transaction_labels[0] ?? null)
+          : assignment.transaction_labels
+      }))
+      .filter(
+        (
+          assignment
+        ): assignment is {
+          createdAt: string;
+          label: { id: string; name: string };
+        } => Boolean(assignment.label)
+      )
+      .sort(
+        (left, right) =>
+          left.createdAt.localeCompare(right.createdAt) ||
+          left.label.name.localeCompare(right.label.name)
+      )
+      .map(({ label }) => label)
   };
 }

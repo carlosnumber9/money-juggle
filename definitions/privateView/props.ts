@@ -36,6 +36,7 @@ export type MonthlyCashflowCardsProps = {
 export type MonthlyTransactionsPanelProps = {
   transactions: import("../dataSource").MonthlyTransactionSummary[];
   categoryGroups: import("../dataSource").TransactionCategoryGroupSummary[];
+  labels: import("../dataSource").TransactionLabelSummary[];
   selectedMonth: MonthlyPeriodView;
   error: string | null;
 };

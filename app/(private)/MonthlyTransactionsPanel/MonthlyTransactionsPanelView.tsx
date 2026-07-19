@@ -2,7 +2,10 @@
 
 import { useMemo, useState } from "react";
 
-import type { MonthlyTransactionsPanelProps } from "@/definitions";
+import type {
+  MonthlyTransactionsPanelProps,
+  TransactionLabelSummary
+} from "@/definitions";
 
 import { EmptyTransactionsState } from "./EmptyTransactionsState";
 import { MonthlyTransactionsHeader } from "./MonthlyTransactionsHeader";
@@ -26,26 +29,33 @@ import { TransactionsTable } from "./TransactionsTable";
 export function MonthlyTransactionsPanel({
   transactions,
   categoryGroups,
+  labels,
   selectedMonth,
   error
 }: MonthlyTransactionsPanelProps) {
-  const [selectedTransaction, setSelectedTransaction] = useState<
-    MonthlyTransactionsPanelProps["transactions"][number] | null
+  const [displayTransactions, setDisplayTransactions] = useState(transactions);
+  const [availableLabels, setAvailableLabels] = useState(labels);
+  const [selectedTransactionId, setSelectedTransactionId] = useState<
+    string | null
   >(null);
   const [transactionFilters, setTransactionFilters] =
     useState<TransactionFilters>(DEFAULT_TRANSACTION_FILTERS);
   const filteredTransactions = useMemo(
-    () => filterMonthlyTransactions(transactions, transactionFilters),
-    [transactionFilters, transactions]
+    () => filterMonthlyTransactions(displayTransactions, transactionFilters),
+    [displayTransactions, transactionFilters]
   );
   const categoryFilterTransactions = useMemo(
     () =>
       filterTransactionsForCategoryFilterOptions(
-        transactions,
+        displayTransactions,
         transactionFilters.activeChipFilters
       ),
-    [transactionFilters.activeChipFilters, transactions]
+    [displayTransactions, transactionFilters.activeChipFilters]
   );
+  const selectedTransaction =
+    displayTransactions.find(
+      (transaction) => transaction.id === selectedTransactionId
+    ) ?? null;
   const categoryGroupsWithVisibleTransactions = useMemo(
     () =>
       getTransactionCategoryGroupsWithMatches(
@@ -59,7 +69,7 @@ export function MonthlyTransactionsPanel({
     setTransactionFilters((currentFilters) =>
       removeCategoryFiltersWithoutMatches(
         toggleTransactionChipFilter(currentFilters, filterId),
-        transactions
+        displayTransactions
       )
     );
   }
@@ -82,6 +92,29 @@ export function MonthlyTransactionsPanel({
     );
   }
 
+  function handleTransactionLabelsChange(
+    transactionId: string,
+    nextLabels: TransactionLabelSummary[]
+  ) {
+    setDisplayTransactions((currentTransactions) =>
+      currentTransactions.map((transaction) =>
+        transaction.id === transactionId
+          ? { ...transaction, labels: nextLabels }
+          : transaction
+      )
+    );
+  }
+
+  function handleAvailableLabelAdd(label: TransactionLabelSummary) {
+    setAvailableLabels((currentLabels) =>
+      currentLabels.some((currentLabel) => currentLabel.id === label.id)
+        ? currentLabels
+        : [...currentLabels, label].sort((left, right) =>
+            left.name.localeCompare(right.name, "es")
+          )
+    );
+  }
+
   return (
     <section aria-labelledby="monthly-transactions-title">
       <MonthlyTransactionsHeader
@@ -99,7 +132,9 @@ export function MonthlyTransactionsPanel({
         <TransactionsTable
           transactions={filteredTransactions}
           categoryGroups={categoryGroups}
-          onTransactionSelect={setSelectedTransaction}
+          onTransactionSelect={(transaction) =>
+            setSelectedTransactionId(transaction.id)
+          }
         />
       ) : (
         <EmptyTransactionsState
@@ -110,7 +145,10 @@ export function MonthlyTransactionsPanel({
 
       <TransactionDetailDialog
         transaction={selectedTransaction}
-        onClose={() => setSelectedTransaction(null)}
+        availableLabels={availableLabels}
+        onLabelsChange={handleTransactionLabelsChange}
+        onAvailableLabelAdd={handleAvailableLabelAdd}
+        onClose={() => setSelectedTransactionId(null)}
       />
     </section>
   );

@@ -210,6 +210,7 @@ Current local migrations:
 - `20260704170000_add_enable_banking_connection_fields.sql`
 - `20260707120000_add_account_fingerprints_for_internal_transfers.sql`
 - `20260709120000_seed_initial_transaction_categories.sql`
+- `20260719120000_add_transaction_labels.sql`
 
 Use `npm run db:migrations` to confirm which local migrations are applied to the
 linked remote Supabase project before pushing new schema changes.

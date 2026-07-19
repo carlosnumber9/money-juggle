@@ -68,6 +68,12 @@ export type MonthlyTransactionSummary = {
   merchant_name: string | null;
   counterparty_name: string | null;
   category: MonthlyTransactionCategory | null;
+  labels: TransactionLabelSummary[];
+};
+
+export type TransactionLabelSummary = {
+  id: string;
+  name: string;
 };
 
 export type MonthlyTransactionCategory = {
@@ -114,6 +120,7 @@ export type BankingDataSource = {
   listTransactionCategoryGroups(
     userId: string
   ): Promise<TransactionCategoryGroupSummary[]>;
+  listTransactionLabels(userId: string): Promise<TransactionLabelSummary[]>;
 };
 
 export const INITIAL_BANK_NAMES = ["CaixaBank", "ING"] as const;

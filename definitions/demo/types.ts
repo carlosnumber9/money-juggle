@@ -19,4 +19,5 @@ export type DemoTransaction = {
   merchantName: string | null;
   counterpartyName: string | null;
   categorySlug: string | null;
+  labelIds: string[];
 };

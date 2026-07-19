@@ -208,13 +208,14 @@ Security expectations:
 - Logs should avoid printing full transaction descriptions, raw provider payloads, or large batches of transaction identifiers.
 - Scheduled sync should not run until transaction upsert and deduplication behavior has been tested.
 
-Future transaction labels should follow the same security model as
-categorization:
+Transaction labels follow the same security model as categorization:
 
 - Labels and assignments must include owner-scoped access checks.
 - Server actions should verify that the transaction and selected label belong
   to the same authenticated owner.
 - Provider sync must not overwrite label assignments.
+- Label names are normalized and unique per owner, and assignment foreign keys
+  include `user_id` to prevent cross-owner relationships at the database level.
 
 ## Cobee By Pluxee Risks
 

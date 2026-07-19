@@ -3,7 +3,10 @@
 import { XIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
 
-import type { MonthlyTransactionSummary } from "@/definitions";
+import type {
+  MonthlyTransactionSummary,
+  TransactionLabelSummary
+} from "@/definitions";
 
 import {
   formatCurrency,
@@ -14,14 +17,24 @@ import {
   getInstitutionLogo,
   type InstitutionLogoStyle
 } from "./institutionLogo";
+import { TransactionLabelSelector } from "./TransactionLabelSelector";
 
 const DIALOG_TITLE_ID = "transaction-detail-title";
 
 export function TransactionDetailDialog({
   transaction,
+  availableLabels,
+  onLabelsChange,
+  onAvailableLabelAdd,
   onClose
 }: {
   transaction: MonthlyTransactionSummary | null;
+  availableLabels: TransactionLabelSummary[];
+  onLabelsChange: (
+    transactionId: string,
+    labels: TransactionLabelSummary[]
+  ) => void;
+  onAvailableLabelAdd: (label: TransactionLabelSummary) => void;
   onClose: () => void;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -106,6 +119,21 @@ export function TransactionDetailDialog({
                 label="Categoría"
                 value={transaction.category?.name ?? "Sin categoría"}
               />
+              <div className="grid gap-2">
+                <dt className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                  Etiquetas
+                </dt>
+                <dd>
+                  <TransactionLabelSelector
+                    transaction={transaction}
+                    availableLabels={availableLabels}
+                    onLabelsChange={(labels) =>
+                      onLabelsChange(transaction.id, labels)
+                    }
+                    onAvailableLabelAdd={onAvailableLabelAdd}
+                  />
+                </dd>
+              </div>
             </dl>
           </div>
         </>

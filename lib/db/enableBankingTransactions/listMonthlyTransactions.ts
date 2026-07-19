@@ -46,6 +46,13 @@ export async function listMonthlyTransactions({
           name
         )
       ),
+      transaction_label_assignments (
+        created_at,
+        transaction_labels (
+          id,
+          name
+        )
+      ),
       accounts!inner (
         id,
         name,

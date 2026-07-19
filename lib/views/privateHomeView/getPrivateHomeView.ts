@@ -14,7 +14,8 @@ import {
   loadInstitutions,
   loadMonthlyTransactions,
   loadProviderStatus,
-  loadTransactionCategoryGroups
+  loadTransactionCategoryGroups,
+  loadTransactionLabels
 } from "./loaders";
 import { buildMonthlyCashflowSummary } from "./monthlyCashflow";
 import { buildMonthlyCategoryExpensesSummary } from "./monthlyCategoryExpenses";
@@ -48,14 +49,16 @@ export async function getPrivateHomeView(
     completedBackfillConnectionIdsResult,
     transactionsResult,
     yearlyTransactionsResult,
-    categoryGroupsResult
+    categoryGroupsResult,
+    labelsResult
   ] = await Promise.all([
     loadConnections(dataSource, user.id),
     loadProviderStatus(dataSource),
     loadCompletedTransactionBackfillConnectionIds(dataSource, user.id),
     loadMonthlyTransactions(dataSource, user.id, transactionRange),
     loadMonthlyTransactions(dataSource, user.id, yearlyTransactionRange),
-    loadTransactionCategoryGroups(dataSource, user.id)
+    loadTransactionCategoryGroups(dataSource, user.id),
+    loadTransactionLabels(dataSource, user.id)
   ]);
   const providerStatus = getProviderStatus(providerResult, dataSource.mode);
   const institutionsResult =
@@ -112,9 +115,11 @@ export async function getPrivateHomeView(
       range: transactionRange,
       rows: transactionsResult.ok ? transactionsResult.value : [],
       categoryGroups: categoryGroupsResult.ok ? categoryGroupsResult.value : [],
+      labels: labelsResult.ok ? labelsResult.value : [],
       error: getMonthlyTransactionsError(
         transactionsResult,
-        categoryGroupsResult
+        categoryGroupsResult,
+        labelsResult
       )
     }
   };
@@ -124,7 +129,8 @@ function getMonthlyTransactionsError(
   transactionsResult: Awaited<ReturnType<typeof loadMonthlyTransactions>>,
   categoryGroupsResult: Awaited<
     ReturnType<typeof loadTransactionCategoryGroups>
-  >
+  >,
+  labelsResult: Awaited<ReturnType<typeof loadTransactionLabels>>
 ): string | null {
   if (!transactionsResult.ok) {
     return transactionsResult.reason;
@@ -132,6 +138,10 @@ function getMonthlyTransactionsError(
 
   if (!categoryGroupsResult.ok) {
     return categoryGroupsResult.reason;
+  }
+
+  if (!labelsResult.ok) {
+    return labelsResult.reason;
   }
 
   return null;

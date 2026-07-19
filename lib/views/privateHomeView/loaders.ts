@@ -5,7 +5,8 @@ import type {
   MonthlyTransactionSummary,
   ProviderStatusView,
   Result,
-  TransactionCategoryGroupSummary
+  TransactionCategoryGroupSummary,
+  TransactionLabelSummary
 } from "@/definitions";
 
 import { getPublicErrorReason } from "./publicError";
@@ -86,6 +87,20 @@ export async function loadTransactionCategoryGroups(
     };
   } catch (error) {
     return getFailedResult(error, "No se pudieron cargar las categorías.");
+  }
+}
+
+export async function loadTransactionLabels(
+  dataSource: BankingDataSource,
+  userId: string
+): Promise<Result<TransactionLabelSummary[]>> {
+  try {
+    return {
+      ok: true,
+      value: await dataSource.listTransactionLabels(userId)
+    };
+  } catch (error) {
+    return getFailedResult(error, "No se pudieron cargar las etiquetas.");
   }
 }
 

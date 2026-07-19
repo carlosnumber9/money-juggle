@@ -1,6 +1,7 @@
 import type {
   MonthlyTransactionSummary,
-  TransactionCategoryGroupSummary
+  TransactionCategoryGroupSummary,
+  TransactionLabelSummary
 } from "../dataSource";
 import type { BankInstitutionCard } from "./bankCard";
 import type { MonthlyCashflowSummary } from "./monthlyCashflow";
@@ -43,6 +44,7 @@ export type PrivateHomeView =
         };
         rows: MonthlyTransactionSummary[];
         categoryGroups: TransactionCategoryGroupSummary[];
+        labels: TransactionLabelSummary[];
         error: string | null;
       };
     };

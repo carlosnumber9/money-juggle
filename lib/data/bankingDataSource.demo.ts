@@ -6,6 +6,7 @@ import {
   DEMO_INSTITUTIONS,
   DEMO_PROVIDER_APPLICATION,
   DEMO_TRANSACTION_CATEGORY_GROUPS,
+  DEMO_TRANSACTION_LABELS,
   DEMO_TRANSACTIONS,
   DEMO_USER
 } from "@/definitions";
@@ -60,12 +61,20 @@ export const demoBankingDataSource: BankingDataSource = {
         description: transaction.description,
         merchant_name: transaction.merchantName,
         counterparty_name: transaction.counterpartyName,
-        category
+        category,
+        labels: transaction.labelIds
+          .map((labelId) =>
+            DEMO_TRANSACTION_LABELS.find((label) => label.id === labelId)
+          )
+          .filter((label) => label !== undefined)
       };
     });
   },
   async listTransactionCategoryGroups() {
     return DEMO_TRANSACTION_CATEGORY_GROUPS;
+  },
+  async listTransactionLabels() {
+    return DEMO_TRANSACTION_LABELS;
   }
 };
 
