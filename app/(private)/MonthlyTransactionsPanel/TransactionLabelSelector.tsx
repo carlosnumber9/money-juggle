@@ -183,7 +183,7 @@ export function TransactionLabelSelector({
         <p className="text-xs text-muted-foreground">Sin etiquetas</p>
       )}
 
-      <div className="relative">
+      <div>
         <Input
           ref={inputRef}
           role="combobox"
@@ -244,7 +244,7 @@ export function TransactionLabelSelector({
             id={listboxId}
             role="listbox"
             aria-label="Etiquetas disponibles"
-            className="absolute top-full right-0 left-0 z-20 mt-1 max-h-52 overflow-y-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md"
+            className="mt-1 max-h-52 overflow-y-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md"
           >
             {options.map((option, index) => {
               const key =

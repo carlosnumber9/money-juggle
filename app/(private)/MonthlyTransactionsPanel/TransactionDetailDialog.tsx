@@ -61,7 +61,7 @@ export function TransactionDetailDialog({
     <dialog
       ref={dialogRef}
       aria-labelledby={DIALOG_TITLE_ID}
-      className="transaction-detail-dialog m-auto w-[min(32rem,calc(100%-2rem))] overflow-hidden rounded-lg border border-border bg-card p-0 text-card-foreground shadow-xl"
+      className="transaction-detail-dialog m-auto h-auto max-h-[calc(100dvh-2rem)] w-[min(32rem,calc(100%-2rem))] overflow-x-hidden overflow-y-auto rounded-lg border border-border bg-card p-0 text-card-foreground shadow-xl"
       onClose={onClose}
       onClick={(event) => {
         if (event.target === event.currentTarget) {
