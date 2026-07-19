@@ -37,6 +37,7 @@ Use this checklist as the source of truth for what remains to be implemented. Ke
 - [ ] 29. Explore Cobee by Pluxee consumption reports.
 - [x] 30. Add monthly period navigation for transactions and charts.
 - [x] 31. Replace magic links with owner password login and session refresh.
+- [ ] 32. Investigate neutral cash-flow reconciliation for debts and reimbursements.
 
 ## 1. Bootstrap The Next.js Project
 
@@ -1572,3 +1573,174 @@ Risks or decisions:
   admin operation.
 - Passwords, tokens, full emails, and cookie values must never appear in logs.
 - Existing sessions remain valid and do not need global revocation.
+
+## 32. Investigate Neutral Cash-Flow Reconciliation For Debts And Reimbursements
+
+Status:
+
+- Planned / exploratory.
+
+Problem:
+
+- Some bank movements change the available balance without representing earned
+  income or personal consumption.
+- For example, receiving a EUR 800 family loan and returning its EUR 800
+  principal in a later month should not inflate income in the first month or
+  spending in the second one.
+- Similar-looking cases can have different reporting semantics. Loan principal,
+  shared-payment reimbursements, merchant refunds, fees, and interest should
+  not all be treated as the same concept automatically.
+- Related movements may differ by a small residual amount. For example, a debt
+  repayment may include an extra EUR 0.10. Requiring the full transaction
+  amounts to sum to exactly zero would incorrectly prevent reconciliation.
+- Own-account transfers are already detected separately and excluded from
+  income and spending reports. This feature should complement that behavior,
+  not replace or duplicate it.
+
+Product direction to validate:
+
+- Distinguish bank balance movements from reportable income and spending.
+- Keep every imported transaction visible and unchanged as provider-owned
+  financial data.
+- Store reconciliation or reporting treatment as app-owned, user-owned
+  metadata that provider sync cannot overwrite.
+- Exclude matched loan principal from income and spending reports while keeping
+  any interest or fee as an expense.
+- For partial reimbursements, exclude only the reimbursed portion and retain the
+  owner's remaining share as spending.
+- Let the owner decide when a reconciliation is complete. A zero balance is a
+  useful signal, not a mandatory validation rule.
+- Show a Spanish status chip in the transaction table and provide a focused
+  flow for reviewing linked movements.
+
+Related reporting dependency:
+
+- The current reporting code already excludes automatically detected
+  own-account transfers from monthly cards and charts.
+- The category catalog also contains the stable `internal_transfer` category,
+  but assigning that category does not currently drive the automatic
+  `cashflow_type` classification.
+- A separate reporting task is expected to make movements categorized as
+  internal transfers neutral everywhere: dashboard cards, annual evolution,
+  and category charts.
+- This reconciliation feature should consume that unified reporting result
+  rather than implement another internal-transfer rule.
+- Automatic or manually categorized internal transfers should take precedence
+  over reconciliation, should not be offered as candidates in the compensation
+  dialog, and must never be excluded twice.
+
+Candidate interaction:
+
+- Start from one transaction with an action such as `Compensar` or
+  `Relacionar movimientos`; validate the final Spanish wording with the UI.
+- Open a focused full-screen dialog on small screens with one search field that
+  accepts description text or an amount.
+- Prefer candidates with the opposite sign and the same currency, while still
+  allowing broader date searches because related movements may occur in
+  different months.
+- Omit movements already treated as internal transfers by either automatic
+  detection or the separate manual-category reporting rule.
+- Support multiple selection and keep a calculator-like summary fixed at the
+  bottom of the full-screen dialog.
+- Recalculate the signed balance after every added or removed movement and show
+  the selected movement count alongside it.
+- Keep the completion action available once the source has at least one related
+  movement. Do not disable it merely because the calculated balance is not
+  zero.
+- Present an exact zero as the clearest successful state. For a non-zero balance,
+  show the difference prominently and make the confirmation wording explicit,
+  for example `Terminar con una diferencia de 0,10 EUR`.
+- Store the difference when the owner closes the reconciliation so it remains
+  explainable later rather than being silently discarded.
+- Allow a completed reconciliation to be reviewed, reopened, or edited so an
+  omitted or incorrectly selected movement can be corrected.
+
+Data-model direction to investigate:
+
+- Do not start with only a `compensated` boolean or a single pointer to an
+  opposite transaction. Those shapes cannot explain why a movement was
+  excluded and do not support one-to-many, many-to-many, or partial matching.
+- Prefer a user-owned reconciliation group plus user-owned membership rows.
+- Give the group an owner-controlled lifecycle such as `open` and `closed`
+  rather than deriving completion only from whether its signed total is zero.
+- Derive the current balance from the signed amounts of its membership rows and
+  record the final difference when the owner closes it.
+- In the first slice, closing a group means the owner deliberately treats all
+  selected movements and their residual difference as neutral for income and
+  spending reports.
+- Consider an allocated amount on each membership row in a later slice so one
+  transaction can be only partially neutral and the remaining amount can still
+  contribute to reports.
+- Give the group an explicit reason or type, such as loan principal or
+  reimbursement, instead of treating every zero-sum pair identically.
+- Keep lifecycle and arithmetic separate: a group can be closed by the owner
+  while its calculated balance remains non-zero.
+- Keep currencies separate. Nominal amounts in different currencies must not be
+  matched without an explicit exchange-rate policy.
+
+Smallest useful implementation options to compare:
+
+1. Allow only full, booked, same-currency transactions in a manually created
+   group whose signed total is zero. This covers the initial exact EUR 800
+   example but fails for small residual differences, outstanding debts, and
+   partial repayments.
+2. Allow the owner to close a group of full, booked, same-currency transactions
+   with any visible final difference. Record that difference and exclude the
+   closed group from income and spending reports. This is the preferred first
+   slice because it handles incidental overpayments without requiring partial
+   allocation UI.
+3. Add allocated amounts later for shared payments, partially neutral
+   transactions, or cases where the residual must remain reportable.
+4. Add a manual reporting treatment before relationship groups. This is the
+   smallest way to correct reports immediately, but it provides less auditability
+   and may create unexplained exclusions.
+
+Open questions:
+
+- Is the first scope only loans, or should it also cover shared payments and
+  refunds?
+- Should linking a later repayment recalculate the historical month, or should
+  reports preserve what was known at that time?
+- Can a transaction participate in more than one reconciliation group when it
+  contains several people's shares?
+- Should an open reconciliation affect reports before the owner closes it, or
+  should only closed groups be excluded?
+- Which reports should exclude neutral amounts, and where should they remain
+  visible as financing cash flow?
+- How prominently should a non-zero closing difference appear in the table and
+  reconciliation detail?
+- Is `Compensar`, `Conciliar`, or `Relacionar movimientos` clearest in Spanish?
+
+Security and ownership:
+
+- Reconciliation groups, memberships, reasons, and notes can reveal sensitive
+  family or personal debt information and must be owner-scoped with RLS.
+- Server-side mutations must verify that every linked transaction and group
+  belongs to the authenticated user.
+- Provider sync must never delete or overwrite reconciliation metadata.
+
+Suggested acceptance criteria for a future first slice:
+
+- The owner can start from one of their transactions and find candidate
+  movements by description or amount across stored months.
+- Only transactions owned by the authenticated user can be linked.
+- The UI shows sign, currency, date, account, running selected total, and any
+  unmatched amount before confirmation.
+- A non-zero difference does not block reconciliation. The completion action
+  states the difference explicitly and the closed group retains it for later
+  review.
+- Neutral principal or allocated reimbursed amounts are excluded consistently
+  from monthly cards, annual evolution, and category charts.
+- Separately identifiable interest, fees, and non-reimbursed shares remain
+  reportable unless the owner deliberately includes them in the reconciliation.
+  Splitting an embedded residual requires the later allocation feature.
+- Linked transactions remain visible and display a clear Spanish status chip.
+- A completed reconciliation can be reopened or edited, and changing it safely
+  restores or recalculates report contributions.
+
+Do not do yet:
+
+- Create reconciliation migrations or UI before choosing the first supported
+  semantics and whether partial or open groups are required.
+- Automatically match personal debts based only on equal amounts.
+- Turn this into a complete lending, collections, or accounting system.
