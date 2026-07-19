@@ -111,6 +111,19 @@ Examples:
 - `fix: Prevented duplicate imports`
 - `docs: Documented commit message convention`
 
+## Git Transport And Publishing
+
+Use standard local `git` commands with the repository's SSH remote for fetch,
+pull, and push operations. The expected GitHub remote form is
+`git@github.com:<owner>/<repository>.git`.
+
+Do not require or use the GitHub CLI (`gh`) for repository authentication or
+publishing. SSH access is the source of truth for Git transport.
+
+When the user asks only to push changes, commit and push the requested scope
+through the SSH remote. Do not broaden that request into pull-request creation
+unless the user explicitly asks for a pull request.
+
 ## Documentation And Decisions
 
 Update documentation when:
