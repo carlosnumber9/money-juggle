@@ -1,12 +1,5 @@
 import type { BankInstitutionCard } from "@/definitions";
 
-export function formatCurrency(amount: string, currency: string): string {
-  return new Intl.NumberFormat("es-ES", {
-    style: "currency",
-    currency
-  }).format(Number(amount));
-}
-
 export function formatLatestDate(
   totals: NonNullable<BankInstitutionCard["balanceTotals"]>
 ): string {

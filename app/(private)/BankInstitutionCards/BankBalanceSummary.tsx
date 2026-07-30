@@ -2,7 +2,8 @@ import { Clock3Icon } from "lucide-react";
 
 import type { BankInstitutionCard } from "@/definitions";
 
-import { formatCurrency, formatLatestDate } from "./formatters";
+import { AnimatedCurrency } from "./AnimatedCurrency";
+import { formatLatestDate } from "./formatters";
 
 export function BankBalanceSummary({ card }: { card: BankInstitutionCard }) {
   if (card.state !== "connected") {
@@ -24,7 +25,7 @@ export function BankBalanceSummary({ card }: { card: BankInstitutionCard }) {
           key={total.currency}
           className="text-2xl font-semibold tracking-normal"
         >
-          {formatCurrency(total.amount, total.currency)}
+          <AnimatedCurrency amount={total.amount} currency={total.currency} />
         </p>
       ))}
       <p className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
