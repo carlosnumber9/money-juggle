@@ -31,3 +31,18 @@ export type MonthlyCategoryExpensesSummary = {
   excludedInternalTransferCount: number;
   excludedCategoryNames: string[];
 };
+
+export type AnnualLabelExpensePoint = {
+  labelId: string;
+  labelName: string;
+  expenses: number;
+  transactionCount: number;
+};
+
+export type AnnualLabelExpensesSummary = {
+  year: number;
+  currency: string;
+  points: AnnualLabelExpensePoint[];
+  totalExpenses: number;
+  transactionCount: number;
+};

@@ -6,6 +6,7 @@ import type {
 import type { BankInstitutionCard } from "./bankCard";
 import type { MonthlyCashflowSummary } from "./monthlyCashflow";
 import type {
+  AnnualLabelExpensesSummary,
   MonthlyCategoryExpensesSummary,
   MonthlyEvolutionSummary
 } from "./monthlyEvolution";
@@ -36,6 +37,8 @@ export type PrivateHomeView =
         error: string | null;
         categoryExpenses: MonthlyCategoryExpensesSummary;
         categoryExpensesError: string | null;
+        labelExpenses: AnnualLabelExpensesSummary;
+        labelExpensesError: string | null;
       };
       monthlyTransactions: {
         range: {

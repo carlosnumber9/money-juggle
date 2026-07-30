@@ -7,31 +7,24 @@ import {
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig
+  ChartTooltipContent
 } from "@/components/ui/chart";
 import type { MonthlyEvolutionPanelProps } from "@/definitions";
 
+import { AnnualLabelExpensesRadialChart } from "./AnnualLabelExpensesRadialChart";
 import { CategoryExpensesRadarChart } from "./CategoryExpensesRadarChart";
 import { ChartContainer } from "./ChartContainer";
-
-const chartConfig = {
-  income: {
-    label: "Ingresos",
-    color: "color-mix(in oklch, var(--chart-3) 45%, oklch(0.68 0 0))"
-  },
-  expenses: {
-    label: "Gastos",
-    color: "color-mix(in oklch, var(--primary) 45%, oklch(0.68 0 0))"
-  }
-} satisfies ChartConfig;
+import { formatAnnualTotals, formatCompactCurrency } from "./formatters";
+import { monthlyEvolutionChartConfig } from "./monthlyEvolutionChart";
 
 export function MonthlyEvolutionPanel({
   evolution,
   categoryExpenses,
+  labelExpenses,
   selectedMonth,
   error,
-  categoryExpensesError
+  categoryExpensesError,
+  labelExpensesError
 }: MonthlyEvolutionPanelProps) {
   return (
     <section
@@ -44,7 +37,7 @@ export function MonthlyEvolutionPanel({
         headerClassName="items-center text-center lg:items-start lg:text-left"
       >
         <RechartsChartContainer
-          config={chartConfig}
+          config={monthlyEvolutionChartConfig}
           className="h-[360px] min-h-[260px] w-full"
         >
           <LineChart
@@ -105,44 +98,17 @@ export function MonthlyEvolutionPanel({
           </LineChart>
         </RechartsChartContainer>
       </ChartContainer>
-      <div className="mt-6 flex w-full">
+      <div className="mt-6 grid w-full gap-6 lg:grid-cols-2">
         <CategoryExpensesRadarChart
           summary={categoryExpenses}
           selectedMonth={selectedMonth}
           error={categoryExpensesError}
-          className="lg:w-1/2"
+        />
+        <AnnualLabelExpensesRadialChart
+          summary={labelExpenses}
+          error={labelExpensesError}
         />
       </div>
     </section>
   );
-}
-
-function formatAnnualTotals(
-  evolution: MonthlyEvolutionPanelProps["evolution"]
-): string {
-  const totals = evolution.points.reduce(
-    (currentTotals, point) => ({
-      income: currentTotals.income + point.income,
-      expenses: currentTotals.expenses + point.expenses
-    }),
-    { income: 0, expenses: 0 }
-  );
-
-  return `${formatCurrency(totals.income, evolution.currency)} ingresados | ${formatCurrency(totals.expenses, evolution.currency)} gastados`;
-}
-
-function formatCurrency(value: number, currency: string): string {
-  return new Intl.NumberFormat("es-ES", {
-    style: "currency",
-    currency
-  }).format(value);
-}
-
-function formatCompactCurrency(value: number, currency: string): string {
-  return new Intl.NumberFormat("es-ES", {
-    style: "currency",
-    currency,
-    notation: "compact",
-    maximumFractionDigits: 1
-  }).format(value);
 }

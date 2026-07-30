@@ -2,53 +2,48 @@
 
 import { PolarAngleAxis, PolarGrid, Radar, RadarChart } from "recharts";
 
+import { MonthNavigation } from "@/app/(private)/MonthNavigation";
 import {
   ChartContainer as RechartsChartContainer,
   ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig
+  ChartTooltipContent
 } from "@/components/ui/chart";
-import { MonthNavigation } from "@/app/(private)/MonthNavigation";
 import type {
   MonthlyCategoryExpensesSummary,
   MonthlyPeriodView
 } from "@/definitions";
 
+import { categoryExpensesChartConfig } from "./categoryExpensesChart";
 import { ChartContainer } from "./ChartContainer";
-
-const chartConfig = {
-  expenses: {
-    label: "Gastos",
-    color: "oklch(from var(--primary) l calc(c * 0.5) h)"
-  }
-} satisfies ChartConfig;
+import {
+  formatCurrency,
+  formatMonthlyCategoryExpensesDescription
+} from "./formatters";
 
 export function CategoryExpensesRadarChart({
   summary,
   selectedMonth,
-  error,
-  className
+  error
 }: {
   summary: MonthlyCategoryExpensesSummary;
   selectedMonth: MonthlyPeriodView;
   error: string | null;
-  className?: string;
 }) {
   const hasCategoryExpenses = summary.points.length > 0;
 
   return (
     <ChartContainer
       title="Gastos por categoría"
-      description={error ?? getDescription(summary, hasCategoryExpenses)}
+      description={error ?? formatMonthlyCategoryExpensesDescription(summary)}
       headerActions={
         <MonthNavigation selectedMonth={selectedMonth} tab="evolution" />
       }
-      className={className}
+      className="h-full"
       headerClassName="items-center text-center"
     >
       {hasCategoryExpenses ? (
         <RechartsChartContainer
-          config={chartConfig}
+          config={categoryExpensesChartConfig}
           className="mx-auto aspect-square max-h-[320px] w-full overflow-visible [&_.recharts-polar-angle-axis]:[z-index:20] [&_.recharts-surface]:overflow-visible [&_.recharts-wrapper]:overflow-visible"
         >
           <RadarChart
@@ -114,44 +109,4 @@ export function CategoryExpensesRadarChart({
       )}
     </ChartContainer>
   );
-}
-
-function getDescription(
-  summary: MonthlyCategoryExpensesSummary,
-  hasCategoryExpenses: boolean
-): string {
-  const excludedCategoriesText = getExcludedCategoriesText(
-    summary.excludedCategoryNames
-  );
-
-  if (!hasCategoryExpenses) {
-    return `Sin categorías con gasto en ${summary.monthLabel}${excludedCategoriesText}.`;
-  }
-
-  const uncategorizedText =
-    summary.uncategorizedExpenseCount > 0
-      ? ` · ${summary.uncategorizedExpenseCount} sin categoría`
-      : "";
-
-  return `${formatCurrency(summary.totalExpenses, summary.currency)} en ${summary.monthLabel}${uncategorizedText}${excludedCategoriesText}`;
-}
-
-function getExcludedCategoriesText(categoryNames: string[]): string {
-  if (categoryNames.length === 0) {
-    return "";
-  }
-
-  const categoryList = new Intl.ListFormat("es-ES", {
-    style: "long",
-    type: "conjunction"
-  }).format(categoryNames);
-
-  return ` · ${categoryList} ${categoryNames.length === 1 ? "excluida" : "excluidas"}`;
-}
-
-function formatCurrency(value: number, currency: string): string {
-  return new Intl.NumberFormat("es-ES", {
-    style: "currency",
-    currency
-  }).format(value);
 }

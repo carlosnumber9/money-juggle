@@ -17,6 +17,7 @@ import {
   loadTransactionCategoryGroups,
   loadTransactionLabels
 } from "./loaders";
+import { buildAnnualLabelExpensesSummary } from "./annualLabelExpenses";
 import { buildMonthlyCashflowSummary } from "./monthlyCashflow";
 import { buildMonthlyCategoryExpensesSummary } from "./monthlyCategoryExpenses";
 import { buildMonthlyEvolutionSummary } from "./monthlyEvolution";
@@ -109,7 +110,16 @@ export async function getPrivateHomeView(
       }),
       categoryExpensesError: transactionsResult.ok
         ? null
-        : transactionsResult.reason
+        : transactionsResult.reason,
+      labelExpenses: buildAnnualLabelExpensesSummary({
+        transactions: yearlyTransactionsResult.ok
+          ? yearlyTransactionsResult.value
+          : [],
+        year: reportYear
+      }),
+      labelExpensesError: yearlyTransactionsResult.ok
+        ? null
+        : yearlyTransactionsResult.reason
     },
     monthlyTransactions: {
       range: transactionRange,

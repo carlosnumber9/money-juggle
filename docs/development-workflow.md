@@ -178,6 +178,21 @@ Use the configured shadcn/ui preset as the default UI path.
 - Use Tailwind utilities for page composition instead of building many named global CSS classes.
 - Document any custom UI exception when shadcn/ui cannot reasonably cover the interaction.
 
+Keep route and component TSX files focused on composition, interaction, and
+rendering:
+
+- Extract named formatting, grouping, sorting, filtering, and chart-data
+  preparation into colocated `.ts` modules when the logic can be tested or
+  understood independently from JSX.
+- Keep feature-specific helpers beside the feature. Move them to `lib/domain/`
+  only when they express reusable business rules rather than presentation
+  details.
+- Small JSX branches and trivial one-use expressions may stay in the component;
+  do not create a helper file for every expression.
+- Prefer descriptive module names such as `formatters.ts`,
+  `transactionDateGroups.ts`, or `annualLabelExpensesChart.ts` over a generic
+  `utils.ts`.
+
 ## Learning Notes
 
 When a new concept appears, include a short explanation in the relevant PR summary, commit message, or documentation update.

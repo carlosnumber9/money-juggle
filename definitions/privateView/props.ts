@@ -3,6 +3,7 @@ import type * as React from "react";
 import type { BankInstitutionCard } from "./bankCard";
 import type { MonthlyCashflowSummary } from "./monthlyCashflow";
 import type {
+  AnnualLabelExpensesSummary,
   MonthlyCategoryExpensesSummary,
   MonthlyEvolutionSummary
 } from "./monthlyEvolution";
@@ -44,9 +45,11 @@ export type MonthlyTransactionsPanelProps = {
 export type MonthlyEvolutionPanelProps = {
   evolution: MonthlyEvolutionSummary;
   categoryExpenses: MonthlyCategoryExpensesSummary;
+  labelExpenses: AnnualLabelExpensesSummary;
   selectedMonth: MonthlyPeriodView;
   error: string | null;
   categoryExpensesError: string | null;
+  labelExpensesError: string | null;
 };
 
 export type PrivateHomePageProps = {

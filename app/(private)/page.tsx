@@ -64,9 +64,11 @@ export default async function Home({ searchParams }: PrivateHomePageProps) {
           <MonthlyEvolutionPanel
             evolution={view.monthlyEvolution.summary}
             categoryExpenses={view.monthlyEvolution.categoryExpenses}
+            labelExpenses={view.monthlyEvolution.labelExpenses}
             selectedMonth={view.selectedMonth}
             error={view.monthlyEvolution.error}
             categoryExpensesError={view.monthlyEvolution.categoryExpensesError}
+            labelExpensesError={view.monthlyEvolution.labelExpensesError}
           />
         </TabsContent>
       </Tabs>
