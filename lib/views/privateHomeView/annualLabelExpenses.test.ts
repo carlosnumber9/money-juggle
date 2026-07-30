@@ -64,6 +64,11 @@ describe("buildAnnualLabelExpensesSummary", () => {
           labels: [{ id: "travel", name: "Viaje" }]
         }),
         createTransaction({
+          id: "categorized-transfer",
+          category: createCategory("internal_transfer"),
+          labels: [{ id: "travel", name: "Viaje" }]
+        }),
+        createTransaction({
           id: "previous-year",
           booking_date: "2025-12-31",
           labels: [{ id: "travel", name: "Viaje" }]
@@ -131,5 +136,19 @@ function createTransaction(
     category: null,
     labels: [],
     ...overrides
+  };
+}
+
+function createCategory(
+  slug: string
+): NonNullable<MonthlyTransactionSummary["category"]> {
+  return {
+    id: slug,
+    name: "Transferencia interna",
+    slug,
+    group: {
+      id: "transfers",
+      name: "Transferencias y ahorro"
+    }
   };
 }

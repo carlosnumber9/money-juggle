@@ -1,10 +1,13 @@
+import { ArrowLeftRightIcon } from "lucide-react";
 import type { MouseEvent } from "react";
 
 import { TableCell, TableRow as BaseTableRow } from "@/components/ui/table";
+import { Tooltip } from "@/components/ui/tooltip";
 import type {
   MonthlyTransactionSummary,
   TransactionCategoryGroupSummary
 } from "@/definitions";
+import { isAutomaticallyDetectedInternalTransfer } from "@/lib/domain/transactionMetrics";
 import { cn } from "@/lib/utils";
 import { getTransactionLabelSummaryText } from "@/lib/domain/labels";
 
@@ -59,16 +62,27 @@ export function TransactionRow({
       </TableCell>
       <TableCell className="monthly-transaction-details-cell min-w-52 whitespace-normal py-3 pl-4">
         <div className="monthly-transaction-summary min-w-0">
-          <button
-            type="button"
-            data-transaction-detail-trigger
-            aria-haspopup="dialog"
-            aria-label={`Ver detalle de ${concept}`}
-            className="monthly-transaction-description line-clamp-2 cursor-pointer rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
-            onClick={() => onSelect(transaction)}
-          >
-            {concept}
-          </button>
+          <div className="monthly-transaction-concept">
+            <button
+              type="button"
+              data-transaction-detail-trigger
+              aria-haspopup="dialog"
+              aria-label={`Ver detalle de ${concept}`}
+              className="monthly-transaction-description line-clamp-2 cursor-pointer rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
+              onClick={() => onSelect(transaction)}
+            >
+              {concept}
+            </button>
+            {isAutomaticallyDetectedInternalTransfer(transaction) ? (
+              <Tooltip
+                triggerLabel="Movimiento excluido de métricas al ser detectado automáticamente como transferencia interna"
+                label="Movimiento excluido de métricas al ser detectado automáticamente como transferencia interna"
+                triggerClassName="size-6 shrink-0 border-0 bg-transparent p-0 text-muted-foreground shadow-none hover:bg-muted focus-visible:ring-ring/20"
+              >
+                <ArrowLeftRightIcon className="size-3.5" aria-hidden />
+              </Tooltip>
+            ) : null}
+          </div>
           <TransactionCategorySelect
             transaction={transaction}
             categoryGroups={categoryGroups}

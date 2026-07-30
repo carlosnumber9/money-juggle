@@ -25,8 +25,7 @@ describe("monthly evolution formatters", () => {
           expenses: 10.5
         }
       ],
-      transactionCount: 4,
-      excludedInternalTransferCount: 0
+      transactionCount: 4
     });
 
     expect(normalizeWhitespace(description)).toBe(
@@ -81,7 +80,6 @@ describe("monthly evolution formatters", () => {
       totalExpenses: 80,
       transactionCount: 2,
       uncategorizedExpenseCount: 1,
-      excludedInternalTransferCount: 0,
       excludedCategoryNames: ["Hipoteca"]
     });
 

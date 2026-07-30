@@ -2,6 +2,7 @@ import type {
   MonthlyCategoryExpensesSummary,
   MonthlyTransactionSummary
 } from "@/definitions";
+import { isTransactionExcludedFromMetrics } from "@/lib/domain/transactionMetrics";
 
 import { formatDecimal, parseDecimal } from "./decimal";
 
@@ -14,7 +15,10 @@ export function buildMonthlyCategoryExpensesSummary({
   transactions: MonthlyTransactionSummary[];
   periodStart: string;
 }): MonthlyCategoryExpensesSummary {
-  const currency = getPrimaryCurrency(transactions) ?? "EUR";
+  const eligibleTransactions = transactions.filter(
+    (transaction) => !isTransactionExcludedFromMetrics(transaction)
+  );
+  const currency = getPrimaryCurrency(eligibleTransactions) ?? "EUR";
   const totalsByCategory = new Map<
     string,
     {
@@ -27,10 +31,9 @@ export function buildMonthlyCategoryExpensesSummary({
   let transactionCount = 0;
   let totalExpenses = 0n;
   let uncategorizedExpenseCount = 0;
-  let excludedInternalTransferCount = 0;
   const excludedCategoryNames = new Set<string>();
 
-  for (const transaction of transactions) {
+  for (const transaction of eligibleTransactions) {
     if (transaction.currency !== currency) {
       continue;
     }
@@ -38,11 +41,6 @@ export function buildMonthlyCategoryExpensesSummary({
     const amount = parseDecimal(transaction.amount);
 
     if (amount >= 0n) {
-      continue;
-    }
-
-    if (transaction.cashflow_type === "internal_transfer") {
-      excludedInternalTransferCount += 1;
       continue;
     }
 
@@ -100,7 +98,6 @@ export function buildMonthlyCategoryExpensesSummary({
     totalExpenses: Number(formatDecimal(totalExpenses)),
     transactionCount,
     uncategorizedExpenseCount,
-    excludedInternalTransferCount,
     excludedCategoryNames: Array.from(excludedCategoryNames).sort(
       (left, right) => left.localeCompare(right)
     )

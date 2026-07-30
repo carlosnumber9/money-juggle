@@ -2,6 +2,7 @@ import type {
   MonthlyEvolutionSummary,
   MonthlyTransactionSummary
 } from "@/definitions";
+import { isTransactionExcludedFromMetrics } from "@/lib/domain/transactionMetrics";
 
 import { formatDecimal, parseDecimal } from "./decimal";
 
@@ -27,7 +28,10 @@ export function buildMonthlyEvolutionSummary({
   transactions: MonthlyTransactionSummary[];
   year: number;
 }): MonthlyEvolutionSummary {
-  const currency = getPrimaryCurrency(transactions) ?? "EUR";
+  const eligibleTransactions = transactions.filter(
+    (transaction) => !isTransactionExcludedFromMetrics(transaction)
+  );
+  const currency = getPrimaryCurrency(eligibleTransactions) ?? "EUR";
   const totals = MONTH_LABELS.map((monthLabel, index) => ({
     month: index + 1,
     monthLabel,
@@ -35,9 +39,8 @@ export function buildMonthlyEvolutionSummary({
     expenses: 0n
   }));
   let transactionCount = 0;
-  let excludedInternalTransferCount = 0;
 
-  for (const transaction of transactions) {
+  for (const transaction of eligibleTransactions) {
     if (transaction.currency !== currency) {
       continue;
     }
@@ -51,11 +54,6 @@ export function buildMonthlyEvolutionSummary({
     const amount = parseDecimal(transaction.amount);
 
     if (amount === 0n) {
-      continue;
-    }
-
-    if (transaction.cashflow_type === "internal_transfer") {
-      excludedInternalTransferCount += 1;
       continue;
     }
 
@@ -78,8 +76,7 @@ export function buildMonthlyEvolutionSummary({
       income: Number(formatDecimal(point.income)),
       expenses: Number(formatDecimal(point.expenses))
     })),
-    transactionCount,
-    excludedInternalTransferCount
+    transactionCount
   };
 }
 

@@ -10,7 +10,6 @@ export type MonthlyEvolutionSummary = {
   currency: string;
   points: MonthlyEvolutionPoint[];
   transactionCount: number;
-  excludedInternalTransferCount: number;
 };
 
 export type MonthlyCategoryExpensePoint = {
@@ -28,7 +27,6 @@ export type MonthlyCategoryExpensesSummary = {
   totalExpenses: number;
   transactionCount: number;
   uncategorizedExpenseCount: number;
-  excludedInternalTransferCount: number;
   excludedCategoryNames: string[];
 };
 

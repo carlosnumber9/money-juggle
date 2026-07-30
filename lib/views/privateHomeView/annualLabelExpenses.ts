@@ -2,6 +2,7 @@ import type {
   AnnualLabelExpensesSummary,
   MonthlyTransactionSummary
 } from "@/definitions";
+import { isTransactionExcludedFromMetrics } from "@/lib/domain/transactionMetrics";
 
 import { formatDecimal, parseDecimal } from "./decimal";
 
@@ -17,7 +18,7 @@ export function buildAnnualLabelExpensesSummary({
 
     return (
       amount < 0n &&
-      transaction.cashflow_type !== "internal_transfer" &&
+      !isTransactionExcludedFromMetrics(transaction) &&
       transaction.labels.length > 0 &&
       isTransactionInYear(transaction.booking_date, year)
     );

@@ -7,7 +7,6 @@ export type MonthlyCashflowTotal = {
 export type MonthlyCashflowBucket = {
   totals: MonthlyCashflowTotal[];
   transactionCount: number;
-  excludedInternalTransferCount: number;
 };
 
 export type MonthlyCashflowSummary = {

@@ -1144,10 +1144,14 @@ Implemented so far:
   summary cards.
 - Totals are grouped by currency and use signed transaction amounts: positive
   amounts count as income, negative amounts count as expenses.
-- Detected transfers between the owner's own accounts are excluded from income
-  and expense totals. The first implementation uses server-only account
-  fingerprints when available and a conservative paired last-4 fallback for
-  older rows.
+- Transfers between the owner's own accounts are excluded from every reporting
+  total and transaction count when they are either detected automatically or
+  assigned to the stable `internal_transfer` category. Automatic detection uses
+  server-only account fingerprints when available and a conservative paired
+  last-4 fallback for older rows.
+- Excluded transfers remain visible and categorizable in the transaction table.
+  Automatically detected rows show a compact indicator explaining why they do
+  not contribute to metrics.
 - The private home screen includes an `Evolución` tab after `Transacciones`.
   Its first chart shows the current year's 12 monthly points for income and
   expenses, using cached transaction rows and leaving months without data at
@@ -1156,7 +1160,8 @@ Implemented so far:
   spending in its subtitle, and keeps the lines continuous without permanent
   point markers.
 - A current-month category expense radar visualization is present in the
-  working tree, using categorized expense rows and excluding internal transfers.
+  working tree, using categorized expense rows and applying the shared internal
+  transfer exclusion rule.
 - The category radar excludes categories listed by stable internal slug. The
   initial exception is `mortgage`, so its comparatively large fixed expense
   does not hide anomalies in the remaining categories.

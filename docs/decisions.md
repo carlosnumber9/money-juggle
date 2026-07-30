@@ -959,8 +959,12 @@ Decision:
   income and total spending in the selected currency.
 - Keep permanent point markers hidden; only interactive points should appear on
   hover or tap.
-- Exclude detected internal transfers from both lines, matching the monthly
-  dashboard summary.
+- Exclude internal transfers from both lines and the monthly dashboard summary
+  when either the server-side account matching detects them or the owner assigns
+  the stable `internal_transfer` category.
+- Keep excluded transfers visible in the transaction review table. Show a
+  compact indicator there only when exclusion comes from automatic detection,
+  so the owner can distinguish it from manual categorization.
 - Do not add report persistence, report migrations, or new provider sync paths
   in this first slice.
 
