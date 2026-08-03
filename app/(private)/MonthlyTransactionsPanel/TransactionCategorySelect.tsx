@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type {
+  MonthlyTransactionCategory,
   MonthlyTransactionSummary,
   TransactionCategoryGroupSummary
 } from "@/definitions";
@@ -14,6 +15,7 @@ import { cn } from "@/lib/utils";
 
 import { getTransactionConcept } from "./formatters";
 import {
+  getCategoryFromSelectValue,
   getSelectedCategoryLabel,
   UNCATEGORIZED_CATEGORY_VALUE
 } from "./transactionCategoryOptions";
@@ -22,17 +24,23 @@ import { useTransactionCategoryAssignment } from "./useTransactionCategoryAssign
 
 export function TransactionCategorySelect({
   transaction,
-  categoryGroups
+  categoryGroups,
+  onCategoryChange
 }: {
   transaction: MonthlyTransactionSummary;
   categoryGroups: TransactionCategoryGroupSummary[];
+  onCategoryChange: (category: MonthlyTransactionCategory | null) => void;
 }) {
   const {
     isPending,
     saveError,
     selectedCategoryValue,
     updateSelectedCategory
-  } = useTransactionCategoryAssignment(transaction);
+  } = useTransactionCategoryAssignment(transaction, (nextCategoryValue) => {
+    onCategoryChange(
+      getCategoryFromSelectValue(nextCategoryValue, categoryGroups, transaction)
+    );
+  });
   const [isOpen, setIsOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const selectedCategoryLabel = getSelectedCategoryLabel(

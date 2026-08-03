@@ -1,4 +1,5 @@
 import type {
+  MonthlyTransactionCategory,
   MonthlyTransactionSummary,
   TransactionCategoryGroupSummary
 } from "@/definitions";
@@ -13,6 +14,38 @@ export function getInitialCategorySelectValue(
 
 export function getCategoryIdFromSelectValue(value: string): string | null {
   return value === UNCATEGORIZED_CATEGORY_VALUE ? null : value;
+}
+
+export function getCategoryFromSelectValue(
+  selectedCategoryValue: string,
+  categoryGroups: TransactionCategoryGroupSummary[],
+  transaction: MonthlyTransactionSummary
+): MonthlyTransactionCategory | null {
+  if (selectedCategoryValue === UNCATEGORIZED_CATEGORY_VALUE) {
+    return null;
+  }
+
+  if (selectedCategoryValue === transaction.category?.id) {
+    return transaction.category;
+  }
+
+  for (const group of categoryGroups) {
+    const category = group.categories.find(
+      (candidate) => candidate.id === selectedCategoryValue
+    );
+
+    if (category) {
+      return {
+        ...category,
+        group: {
+          id: group.id,
+          name: group.name
+        }
+      };
+    }
+  }
+
+  return null;
 }
 
 export function getSelectedCategoryLabel(

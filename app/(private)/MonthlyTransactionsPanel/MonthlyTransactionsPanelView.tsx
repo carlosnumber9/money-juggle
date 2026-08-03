@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 
 import type {
+  MonthlyTransactionCategory,
   MonthlyTransactionsPanelProps,
   TransactionLabelSummary
 } from "@/definitions";
@@ -24,6 +25,7 @@ import {
   type TransactionFilters
 } from "./transactionFilters";
 import { getTransactionCategoryGroupsWithMatches } from "./transactionCategoryFilterOptions";
+import { updateTransactionCategoryInList } from "./transactionCategoryAssignment";
 import { TransactionsTable } from "./TransactionsTable";
 
 export function MonthlyTransactionsPanel({
@@ -105,6 +107,19 @@ export function MonthlyTransactionsPanel({
     );
   }
 
+  function handleTransactionCategoryChange(
+    transactionId: string,
+    nextCategory: MonthlyTransactionCategory | null
+  ) {
+    setDisplayTransactions((currentTransactions) =>
+      updateTransactionCategoryInList(
+        currentTransactions,
+        transactionId,
+        nextCategory
+      )
+    );
+  }
+
   function handleAvailableLabelAdd(label: TransactionLabelSummary) {
     setAvailableLabels((currentLabels) =>
       currentLabels.some((currentLabel) => currentLabel.id === label.id)
@@ -132,6 +147,7 @@ export function MonthlyTransactionsPanel({
         <TransactionsTable
           transactions={filteredTransactions}
           categoryGroups={categoryGroups}
+          onTransactionCategoryChange={handleTransactionCategoryChange}
           onTransactionSelect={(transaction) =>
             setSelectedTransactionId(transaction.id)
           }

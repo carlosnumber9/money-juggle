@@ -1,5 +1,6 @@
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import type {
+  MonthlyTransactionCategory,
   MonthlyTransactionSummary,
   TransactionCategoryGroupSummary
 } from "@/definitions";
@@ -14,10 +15,15 @@ import { TransactionRow } from "./TransactionRow";
 export function TransactionsTable({
   transactions,
   categoryGroups,
+  onTransactionCategoryChange,
   onTransactionSelect
 }: {
   transactions: MonthlyTransactionSummary[];
   categoryGroups: TransactionCategoryGroupSummary[];
+  onTransactionCategoryChange: (
+    transactionId: string,
+    category: MonthlyTransactionCategory | null
+  ) => void;
   onTransactionSelect: (transaction: MonthlyTransactionSummary) => void;
 }) {
   const transactionGroups = groupTransactionsByDate(transactions);
@@ -31,6 +37,7 @@ export function TransactionsTable({
               key={`${group.date ?? "unknown"}-${index}`}
               group={group}
               categoryGroups={categoryGroups}
+              onTransactionCategoryChange={onTransactionCategoryChange}
               onTransactionSelect={onTransactionSelect}
             />
           ))}
@@ -43,10 +50,15 @@ export function TransactionsTable({
 function TransactionDateGroup({
   group,
   categoryGroups,
+  onTransactionCategoryChange,
   onTransactionSelect
 }: {
   group: TransactionDateGroup;
   categoryGroups: TransactionCategoryGroupSummary[];
+  onTransactionCategoryChange: (
+    transactionId: string,
+    category: MonthlyTransactionCategory | null
+  ) => void;
   onTransactionSelect: (transaction: MonthlyTransactionSummary) => void;
 }) {
   return (
@@ -66,6 +78,9 @@ function TransactionDateGroup({
           key={transaction.id}
           transaction={transaction}
           categoryGroups={categoryGroups}
+          onCategoryChange={(category) =>
+            onTransactionCategoryChange(transaction.id, category)
+          }
           onSelect={onTransactionSelect}
         />
       ))}

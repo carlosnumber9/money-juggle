@@ -10,7 +10,8 @@ import {
 } from "./transactionCategoryOptions";
 
 export function useTransactionCategoryAssignment(
-  transaction: MonthlyTransactionSummary
+  transaction: MonthlyTransactionSummary,
+  onSelectedCategoryChange: (selectedCategoryValue: string) => void
 ) {
   const [isPending, startTransition] = useTransition();
   const requestIdRef = useRef(0);
@@ -26,6 +27,7 @@ export function useTransactionCategoryAssignment(
 
     requestIdRef.current = requestId;
     setSelectedCategoryValue(nextCategoryValue);
+    onSelectedCategoryChange(nextCategoryValue);
     setSaveError(null);
 
     startTransition(() => {
@@ -39,6 +41,7 @@ export function useTransactionCategoryAssignment(
           }
 
           setSelectedCategoryValue(previousCategoryValue);
+          onSelectedCategoryChange(previousCategoryValue);
           setSaveError(result.reason);
         })
         .catch(() => {
@@ -47,6 +50,7 @@ export function useTransactionCategoryAssignment(
           }
 
           setSelectedCategoryValue(previousCategoryValue);
+          onSelectedCategoryChange(previousCategoryValue);
           setSaveError("No se pudo guardar la categoría. Inténtalo de nuevo.");
         });
     });

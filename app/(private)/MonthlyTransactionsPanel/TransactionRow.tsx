@@ -2,6 +2,7 @@ import type { MouseEvent } from "react";
 
 import { TableCell, TableRow as BaseTableRow } from "@/components/ui/table";
 import type {
+  MonthlyTransactionCategory,
   MonthlyTransactionSummary,
   TransactionCategoryGroupSummary
 } from "@/definitions";
@@ -16,10 +17,12 @@ import { TransactionCategorySelect } from "./TransactionCategorySelect";
 export function TransactionRow({
   transaction,
   categoryGroups,
+  onCategoryChange,
   onSelect
 }: {
   transaction: MonthlyTransactionSummary;
   categoryGroups: TransactionCategoryGroupSummary[];
+  onCategoryChange: (category: MonthlyTransactionCategory | null) => void;
   onSelect: (transaction: MonthlyTransactionSummary) => void;
 }) {
   const concept = getTransactionConcept(transaction);
@@ -72,6 +75,7 @@ export function TransactionRow({
           <TransactionCategorySelect
             transaction={transaction}
             categoryGroups={categoryGroups}
+            onCategoryChange={onCategoryChange}
           />
           {labelSummary ? (
             <span className="monthly-transaction-label-chip max-w-52 truncate rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-muted-foreground">
