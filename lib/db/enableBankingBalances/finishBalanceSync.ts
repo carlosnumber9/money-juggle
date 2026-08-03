@@ -3,6 +3,8 @@ import "server-only";
 import { persistBalances } from "./persistBalances";
 import { finishSyncRun } from "./syncRuns";
 import { updateBalanceSyncTimestamp } from "./updateSyncTimestamp";
+import { areAllFailuresRateLimited } from "../shared/accountSyncFailure";
+import { BalanceSyncUnavailableError } from "./syncError";
 import type { BalanceSyncFailure } from "./types";
 
 export async function finishBalanceSync(input: {
@@ -16,7 +18,12 @@ export async function finishBalanceSync(input: {
   await persistBalances(input);
   await finishSyncRun({
     syncRunId: input.syncRunId,
-    status: input.failures.length > 0 ? "partial" : "succeeded",
+    status:
+      input.failures.length > 0 && input.rows.length === 0
+        ? "failed"
+        : input.failures.length > 0
+          ? "partial"
+          : "succeeded",
     metadata: {
       balance_count: input.rows.length,
       failures: input.failures
@@ -28,6 +35,8 @@ export async function finishBalanceSync(input: {
   }
 
   if (input.failures.length > 0 && input.rows.length === 0) {
-    throw new Error("Could not fetch balances for any linked account.");
+    throw new BalanceSyncUnavailableError(
+      areAllFailuresRateLimited(input.failures)
+    );
   }
 }

@@ -34,6 +34,7 @@ export async function syncConnectionTransactions(input: {
   const failures = [];
   let attemptedAccountCount = 0;
   let succeededAccountCount = 0;
+  let rateLimitedAccountCount = 0;
 
   for (const account of input.connection.accounts) {
     attemptedAccountCount += 1;
@@ -64,7 +65,11 @@ export async function syncConnectionTransactions(input: {
         account_id: account.id,
         message: getErrorMessage(error)
       });
-      failures.push(getAccountFailure(account, error));
+      const failure = getAccountFailure(account, error);
+      failures.push(failure);
+      if (failure.rate_limited) {
+        rateLimitedAccountCount += 1;
+      }
     }
   }
 
@@ -80,7 +85,8 @@ export async function syncConnectionTransactions(input: {
     synced: rows.length > 0,
     attemptedAccountCount,
     succeededAccountCount,
-    failedAccountCount: failures.length
+    failedAccountCount: failures.length,
+    rateLimitedAccountCount
   };
 }
 

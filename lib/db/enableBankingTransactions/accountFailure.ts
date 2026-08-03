@@ -1,13 +1,13 @@
-import { getErrorMessage } from "../shared/getErrorMessage";
+import { getAccountSyncFailure } from "../shared/accountSyncFailure";
 import type { StoredConnectionForTransactionSync } from "./types";
 
 export function getAccountFailure(
   account: StoredConnectionForTransactionSync["accounts"][number],
   error: unknown
 ) {
-  return {
-    account_id: account.id,
-    provider_account_id: account.provider_account_id,
-    message: getErrorMessage(error)
-  };
+  return getAccountSyncFailure({
+    accountId: account.id,
+    providerAccountId: account.provider_account_id,
+    error
+  });
 }

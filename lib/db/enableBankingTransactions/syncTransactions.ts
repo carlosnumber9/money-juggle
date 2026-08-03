@@ -26,7 +26,8 @@ export async function syncEnableBankingTransactions({
     synced: false,
     attemptedAccountCount: 0,
     succeededAccountCount: 0,
-    failedAccountCount: 0
+    failedAccountCount: 0,
+    rateLimitedAccountCount: 0
   };
 
   for (const connection of connections) {
@@ -81,4 +82,5 @@ function mergeSyncResult(
   target.attemptedAccountCount += source.attemptedAccountCount;
   target.succeededAccountCount += source.succeededAccountCount;
   target.failedAccountCount += source.failedAccountCount;
+  target.rateLimitedAccountCount += source.rateLimitedAccountCount;
 }

@@ -42,7 +42,8 @@ export async function POST() {
       synced: result.synced,
       attempted_account_count: result.attemptedAccountCount,
       succeeded_account_count: result.succeededAccountCount,
-      failed_account_count: result.failedAccountCount
+      failed_account_count: result.failedAccountCount,
+      rate_limited_account_count: result.rateLimitedAccountCount
     });
 
     if (
@@ -50,6 +51,13 @@ export async function POST() {
       result.succeededAccountCount === 0 &&
       result.failedAccountCount > 0
     ) {
+      if (result.rateLimitedAccountCount === result.failedAccountCount) {
+        return NextResponse.json(
+          { error: "aspsp-rate-limited" },
+          { status: 429 }
+        );
+      }
+
       return NextResponse.json(
         { error: "transaction-backfill-failed" },
         { status: 500 }

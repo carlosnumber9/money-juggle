@@ -50,3 +50,11 @@ export function getEnableBankingErrorMetadata(error: unknown) {
     provider_detail: stringifyErrorDetail(error.providerError?.detail)
   };
 }
+
+export function isEnableBankingRateLimitError(error: unknown): boolean {
+  return (
+    error instanceof EnableBankingRequestError &&
+    (error.status === 429 ||
+      error.providerError?.error === "ASPSP_RATE_LIMIT_EXCEEDED")
+  );
+}

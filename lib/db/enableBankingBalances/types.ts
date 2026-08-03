@@ -12,8 +12,4 @@ export type StoredConnectionForBalanceSync = {
   accounts: StoredAccountForBalanceSync[];
 };
 
-export type BalanceSyncFailure = {
-  account_id: string;
-  provider_account_id: string;
-  message: string;
-};
+export type { AccountSyncFailure as BalanceSyncFailure } from "../shared/accountSyncFailure";

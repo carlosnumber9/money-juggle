@@ -57,6 +57,7 @@ export type TransactionSyncResult = {
   attemptedAccountCount: number;
   succeededAccountCount: number;
   failedAccountCount: number;
+  rateLimitedAccountCount: number;
 };
 
 export type TransactionSyncMode = "incremental" | "backfill";

@@ -10,6 +10,7 @@ export {
 } from "./client/endpoints";
 export {
   getEnableBankingErrorMetadata,
-  getEnableBankingErrorStatus
+  getEnableBankingErrorStatus,
+  isEnableBankingRateLimitError
 } from "./client/providerErrors";
 export { EnableBankingRequestError } from "./client/requestError";

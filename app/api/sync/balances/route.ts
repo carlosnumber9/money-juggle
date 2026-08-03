@@ -42,7 +42,8 @@ export async function POST(request: NextRequest) {
       synced: result.synced,
       attempted_connection_count: result.attemptedConnectionCount,
       succeeded_connection_count: result.succeededConnectionCount,
-      failed_connection_count: result.failedConnectionCount
+      failed_connection_count: result.failedConnectionCount,
+      rate_limited_connection_count: result.rateLimitedConnectionCount
     });
 
     if (
@@ -50,6 +51,13 @@ export async function POST(request: NextRequest) {
       result.succeededConnectionCount === 0 &&
       result.failedConnectionCount > 0
     ) {
+      if (result.rateLimitedConnectionCount === result.failedConnectionCount) {
+        return NextResponse.json(
+          { error: "aspsp-rate-limited" },
+          { status: 429 }
+        );
+      }
+
       return NextResponse.json(
         { error: "balance-sync-failed" },
         { status: 500 }

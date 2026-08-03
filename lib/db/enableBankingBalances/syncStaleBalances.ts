@@ -6,6 +6,7 @@ import { getErrorMessage } from "../shared/getErrorMessage";
 import { BALANCE_AUTO_REFRESH_MS } from "./constants";
 import { shouldRefreshConnection } from "./refreshCheck";
 import { syncEnableBankingConnectionBalances } from "./syncConnectionBalances";
+import { BalanceSyncUnavailableError } from "./syncError";
 
 export async function syncStaleEnableBankingBalances({
   userId,
@@ -35,6 +36,7 @@ export async function syncStaleEnableBankingBalances({
   let synced = false;
   let succeededConnectionCount = 0;
   let failedConnectionCount = 0;
+  let rateLimitedConnectionCount = 0;
 
   for (const bankConnectionId of staleConnectionIds) {
     try {
@@ -43,6 +45,9 @@ export async function syncStaleEnableBankingBalances({
       succeededConnectionCount += 1;
     } catch (error) {
       failedConnectionCount += 1;
+      if (error instanceof BalanceSyncUnavailableError && error.rateLimited) {
+        rateLimitedConnectionCount += 1;
+      }
       console.error("Enable Banking balance sync failed", {
         bankConnectionId,
         message: getErrorMessage(error)
@@ -54,6 +59,7 @@ export async function syncStaleEnableBankingBalances({
     synced,
     attemptedConnectionCount: staleConnectionIds.length,
     succeededConnectionCount,
-    failedConnectionCount
+    failedConnectionCount,
+    rateLimitedConnectionCount
   };
 }

@@ -2,7 +2,7 @@ import "server-only";
 
 import { getEnableBankingAccountBalances } from "@/lib/enableBanking/client";
 
-import { getErrorMessage } from "../shared/getErrorMessage";
+import { getAccountSyncFailure } from "../shared/accountSyncFailure";
 import { finishBalanceSync } from "./finishBalanceSync";
 import { getConnectionForBalanceSync } from "./getConnection";
 import { mapBalanceToRow } from "./mapBalanceRow";
@@ -53,11 +53,13 @@ export async function syncEnableBankingConnectionBalances(input: {
         )
       );
     } catch (error) {
-      failures.push({
-        account_id: account.id,
-        provider_account_id: account.provider_account_id,
-        message: getErrorMessage(error)
-      });
+      failures.push(
+        getAccountSyncFailure({
+          accountId: account.id,
+          providerAccountId: account.provider_account_id,
+          error
+        })
+      );
     }
   }
 
