@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { EnableBankingPsuHeaders } from "@/definitions";
 import { getEnableBankingAccountBalances } from "@/lib/enableBanking/client";
 
 import { getAccountSyncFailure } from "../shared/accountSyncFailure";
@@ -20,6 +21,7 @@ import type {
 export async function syncEnableBankingConnectionBalances(input: {
   userId: string;
   bankConnectionId: string;
+  psuHeaders?: EnableBankingPsuHeaders;
 }) {
   const connection = await getConnectionForBalanceSync(input);
 
@@ -57,7 +59,8 @@ export async function syncEnableBankingConnectionBalances(input: {
   for (const account of connection.accounts) {
     try {
       const balances = await getEnableBankingAccountBalances(
-        account.provider_account_id
+        account.provider_account_id,
+        input.psuHeaders
       );
 
       rows.push(

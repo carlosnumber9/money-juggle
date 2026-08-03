@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import { isEmailAllowed } from "@/lib/auth/allowlist";
@@ -7,12 +8,13 @@ import {
   syncEnableBankingTransactions
 } from "@/lib/db/enableBankingTransactions";
 import { withConnectionSyncLeases } from "@/lib/db/enableBankingSync/connectionLease";
+import { getInteractivePsuHeadersByConnection } from "@/lib/db/enableBankingSync/interactivePsuHeaders";
 import { getCurrentYearProviderDateRange } from "@/lib/domain/transactionRanges";
 import { getCurrentSupabaseUser } from "@/lib/supabase/currentUser";
 
 export const runtime = "nodejs";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   if (isDemoMode()) {
     return NextResponse.json({ synced: false, skipped: true });
   }
@@ -33,14 +35,23 @@ export async function POST() {
     const leaseResult = await withConnectionSyncLeases({
       userId: user.id,
       bankConnectionIds: connections.map((connection) => connection.id),
-      run: (acquiredConnectionIds) =>
-        syncEnableBankingTransactions({
+      run: async (acquiredConnectionIds) => {
+        const psuHeadersByConnectionId =
+          await getInteractivePsuHeadersByConnection({
+            userId: user.id,
+            bankConnectionIds: acquiredConnectionIds,
+            requestHeaders: request.headers
+          });
+
+        return syncEnableBankingTransactions({
           userId: user.id,
           dateFrom: range.from,
           dateTo: range.to,
           mode: "backfill",
-          bankConnectionIds: acquiredConnectionIds
-        })
+          bankConnectionIds: acquiredConnectionIds,
+          psuHeadersByConnectionId
+        });
+      }
     });
     const result = leaseResult.value;
     const skipped = result.attemptedAccountCount === 0;

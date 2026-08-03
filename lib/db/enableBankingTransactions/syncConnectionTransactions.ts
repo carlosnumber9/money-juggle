@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { EnableBankingPsuHeaders } from "@/definitions";
 import { getEnableBankingAccountTransactions } from "@/lib/enableBanking/client";
 
 import { getErrorMessage } from "../shared/getErrorMessage";
@@ -21,6 +22,7 @@ export async function syncConnectionTransactions(input: {
   dateFrom: string;
   dateTo: string;
   mode: TransactionSyncMode;
+  psuHeaders?: EnableBankingPsuHeaders;
 }) {
   const syncRunId = await createSyncRun({
     userId: input.userId,
@@ -45,7 +47,8 @@ export async function syncConnectionTransactions(input: {
         accountId: account.provider_account_id,
         dateFrom: input.dateFrom,
         dateTo: input.dateTo,
-        strategy: input.mode === "backfill" ? "longest" : "default"
+        strategy: input.mode === "backfill" ? "longest" : "default",
+        psuHeaders: input.psuHeaders
       });
 
       rows.push(

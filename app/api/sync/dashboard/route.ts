@@ -7,6 +7,7 @@ import { syncStaleEnableBankingBalances } from "@/lib/db/enableBankingBalances";
 import { listUserEnableBankingConnections } from "@/lib/db/enableBankingConnections";
 import { syncEnableBankingTransactions } from "@/lib/db/enableBankingTransactions";
 import { withConnectionSyncLeases } from "@/lib/db/enableBankingSync/connectionLease";
+import { getInteractivePsuHeadersByConnection } from "@/lib/db/enableBankingSync/interactivePsuHeaders";
 import { getIncrementalProviderDateRange } from "@/lib/domain/transactionRanges";
 import { getCurrentSupabaseUser } from "@/lib/supabase/currentUser";
 
@@ -39,12 +40,19 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       bankConnectionIds: connections.map((connection) => connection.id),
       run: async (acquiredConnectionIds) => {
+        const psuHeadersByConnectionId =
+          await getInteractivePsuHeadersByConnection({
+            userId: user.id,
+            bankConnectionIds: acquiredConnectionIds,
+            requestHeaders: request.headers
+          });
         const balances = await syncStaleEnableBankingBalances({
           userId: user.id,
           connections: connections.filter((connection) =>
             acquiredConnectionIds.has(connection.id)
           ),
-          force
+          force,
+          psuHeadersByConnectionId
         });
         const transactions = await syncEnableBankingTransactions({
           userId: user.id,
@@ -52,7 +60,8 @@ export async function POST(request: NextRequest) {
           dateTo: range.to,
           mode: "incremental",
           bankConnectionIds: acquiredConnectionIds,
-          force
+          force,
+          psuHeadersByConnectionId
         });
 
         return { balances, transactions };

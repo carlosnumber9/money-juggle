@@ -6,6 +6,7 @@ import { isDemoMode } from "@/lib/demo/mode";
 import { syncStaleEnableBankingBalances } from "@/lib/db/enableBankingBalances";
 import { listUserEnableBankingConnections } from "@/lib/db/enableBankingConnections";
 import { withConnectionSyncLeases } from "@/lib/db/enableBankingSync/connectionLease";
+import { getInteractivePsuHeadersByConnection } from "@/lib/db/enableBankingSync/interactivePsuHeaders";
 import { getCurrentSupabaseUser } from "@/lib/supabase/currentUser";
 
 export const runtime = "nodejs";
@@ -33,14 +34,23 @@ export async function POST(request: NextRequest) {
     const leaseResult = await withConnectionSyncLeases({
       userId: user.id,
       bankConnectionIds: connections.map((connection) => connection.id),
-      run: (acquiredConnectionIds) =>
-        syncStaleEnableBankingBalances({
+      run: async (acquiredConnectionIds) => {
+        const psuHeadersByConnectionId =
+          await getInteractivePsuHeadersByConnection({
+            userId: user.id,
+            bankConnectionIds: acquiredConnectionIds,
+            requestHeaders: request.headers
+          });
+
+        return syncStaleEnableBankingBalances({
           userId: user.id,
           connections: connections.filter((connection) =>
             acquiredConnectionIds.has(connection.id)
           ),
-          force
-        })
+          force,
+          psuHeadersByConnectionId
+        });
+      }
     });
     const result = leaseResult.value;
 

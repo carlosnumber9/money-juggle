@@ -47,7 +47,8 @@ export async function handleCallbackRequest(request: NextRequest) {
 
     const result = await authorizeAndCompleteSession({
       connection,
-      code: params.code
+      code: params.code,
+      requestHeaders: request.headers
     });
 
     return redirectWithStatus(requestUrl, result.ok ? "linked" : result.status);

@@ -8,6 +8,7 @@ import {
   syncEnableBankingTransactions
 } from "@/lib/db/enableBankingTransactions";
 import { withConnectionSyncLeases } from "@/lib/db/enableBankingSync/connectionLease";
+import { getInteractivePsuHeadersByConnection } from "@/lib/db/enableBankingSync/interactivePsuHeaders";
 import { getIncrementalProviderDateRange } from "@/lib/domain/transactionRanges";
 import { getCurrentSupabaseUser } from "@/lib/supabase/currentUser";
 
@@ -35,15 +36,24 @@ export async function POST(request: NextRequest) {
     const leaseResult = await withConnectionSyncLeases({
       userId: user.id,
       bankConnectionIds: connections.map((connection) => connection.id),
-      run: (acquiredConnectionIds) =>
-        syncEnableBankingTransactions({
+      run: async (acquiredConnectionIds) => {
+        const psuHeadersByConnectionId =
+          await getInteractivePsuHeadersByConnection({
+            userId: user.id,
+            bankConnectionIds: acquiredConnectionIds,
+            requestHeaders: request.headers
+          });
+
+        return syncEnableBankingTransactions({
           userId: user.id,
           dateFrom: range.from,
           dateTo: range.to,
           mode: "incremental",
           bankConnectionIds: acquiredConnectionIds,
-          force
-        })
+          force,
+          psuHeadersByConnectionId
+        });
+      }
     });
     const result = leaseResult.value;
 

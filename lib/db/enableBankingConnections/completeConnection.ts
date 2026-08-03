@@ -1,6 +1,9 @@
 import "server-only";
 
-import type { EnableBankingAuthorizeSessionResponse } from "@/definitions";
+import type {
+  EnableBankingAuthorizeSessionResponse,
+  EnableBankingPsuHeaders
+} from "@/definitions";
 import { syncEnableBankingConnectionBalances } from "@/lib/db/enableBankingBalances";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/serviceRole";
 
@@ -12,11 +15,13 @@ import { insertConsentEvent } from "./consentEvents";
 export async function completeEnableBankingConnection({
   userId,
   bankConnectionId,
-  session
+  session,
+  psuHeaders
 }: {
   userId: string;
   bankConnectionId: string;
   session: EnableBankingAuthorizeSessionResponse;
+  psuHeaders?: EnableBankingPsuHeaders;
 }) {
   const consentExpiresAt = session.access.valid_until;
 
@@ -34,11 +39,24 @@ export async function completeEnableBankingConnection({
       consent_expires_at: consentExpiresAt
     }
   });
-  await syncInitialBalances({ userId, bankConnectionId });
+  await syncInitialBalances({ userId, bankConnectionId, psuHeaders });
 }
 
 async function markConnectionLinked(input: CompleteConnectionInput) {
   const supabase = createSupabaseServiceRoleClient();
+  const { data: storedConnection, error: loadError } = await supabase
+    .from("bank_connections")
+    .select("provider_metadata")
+    .eq("id", input.bankConnectionId)
+    .eq("user_id", input.userId)
+    .single();
+
+  if (loadError) {
+    throw new Error(`Could not load bank connection: ${loadError.message}`);
+  }
+
+  const providerMetadata = getRecord(storedConnection.provider_metadata);
+  const storedAspsp = getRecord(providerMetadata.aspsp);
   const { error } = await supabase
     .from("bank_connections")
     .update({
@@ -46,7 +64,8 @@ async function markConnectionLinked(input: CompleteConnectionInput) {
       provider_session_id: input.session.session_id,
       consent_expires_at: input.session.access.valid_until,
       provider_metadata: {
-        aspsp: input.session.aspsp,
+        ...providerMetadata,
+        aspsp: { ...storedAspsp, ...input.session.aspsp },
         psu_type: input.session.psu_type,
         authorized_access: input.session.access,
         linked_account_count: input.session.accounts.length
@@ -64,7 +83,14 @@ type CompleteConnectionInput = {
   userId: string;
   bankConnectionId: string;
   session: EnableBankingAuthorizeSessionResponse;
+  psuHeaders?: EnableBankingPsuHeaders;
 };
+
+function getRecord(value: unknown): Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
 
 async function upsertAccounts(input: CompleteConnectionInput) {
   if (input.session.accounts.length === 0) {

@@ -1,6 +1,9 @@
 import "server-only";
 
-import type { BankConnectionSummary } from "@/definitions";
+import type {
+  BankConnectionSummary,
+  EnableBankingPsuHeaders
+} from "@/definitions";
 
 import { getErrorMessage } from "../shared/getErrorMessage";
 import { BALANCE_AUTO_REFRESH_MS } from "./constants";
@@ -12,12 +15,14 @@ export async function syncStaleEnableBankingBalances({
   userId,
   connections,
   maxAgeMs = BALANCE_AUTO_REFRESH_MS,
-  force = false
+  force = false,
+  psuHeadersByConnectionId
 }: {
   userId: string;
   connections: BankConnectionSummary[];
   maxAgeMs?: number;
   force?: boolean;
+  psuHeadersByConnectionId?: ReadonlyMap<string, EnableBankingPsuHeaders>;
 }) {
   const staleConnectionIds = connections
     .filter((connection) =>
@@ -44,7 +49,8 @@ export async function syncStaleEnableBankingBalances({
     try {
       const connectionResult = await syncEnableBankingConnectionBalances({
         userId,
-        bankConnectionId
+        bankConnectionId,
+        psuHeaders: psuHeadersByConnectionId?.get(bankConnectionId)
       });
 
       if (connectionResult.status === "rate-limited") {

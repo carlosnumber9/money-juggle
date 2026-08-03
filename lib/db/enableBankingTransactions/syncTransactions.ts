@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { EnableBankingPsuHeaders } from "@/definitions";
 import { getErrorMessage } from "../shared/getErrorMessage";
 import { getActiveRateLimitCooldown } from "../enableBankingSync/rateLimitCooldown";
 import {
@@ -18,7 +19,8 @@ export async function syncEnableBankingTransactions({
   mode,
   bankConnectionIds,
   force = false,
-  maxAgeMs = TRANSACTION_AUTO_REFRESH_MS
+  maxAgeMs = TRANSACTION_AUTO_REFRESH_MS,
+  psuHeadersByConnectionId
 }: {
   userId: string;
   dateFrom: string;
@@ -27,6 +29,7 @@ export async function syncEnableBankingTransactions({
   bankConnectionIds?: ReadonlySet<string>;
   force?: boolean;
   maxAgeMs?: number;
+  psuHeadersByConnectionId?: ReadonlyMap<string, EnableBankingPsuHeaders>;
 }): Promise<TransactionSyncResult> {
   const connections = await listConnectionsForTransactionSync(userId);
   const completedBackfillConnectionIds =
@@ -81,7 +84,8 @@ export async function syncEnableBankingTransactions({
         connection,
         dateFrom,
         dateTo,
-        mode
+        mode,
+        psuHeaders: psuHeadersByConnectionId?.get(connection.id)
       });
 
       mergeSyncResult(result, connectionResult);

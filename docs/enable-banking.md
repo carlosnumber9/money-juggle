@@ -189,6 +189,14 @@ never requested concurrently by one dashboard operation. The resource-specific
 routes remain available as isolated server boundaries, but the dashboard does
 not launch them in parallel.
 
+Interactive account-data requests forward the available PSU context from the
+authenticated Next.js request. The app reads each ASPSP's
+`required_psu_headers` setting, sends all required values or sends no PSU
+headers, and never persists the owner's IP address, user agent, or other browser
+headers. Existing connections resolve and retain only the provider's required
+header names in `provider_metadata`; new connections retain that setting from
+the ASPSP selected during authorization.
+
 Transactions are synchronized by server-only code through
 `POST /api/sync/transactions`. Incremental synchronization fetches from the
 first day of the previous month through the current day for each linked Enable

@@ -23,7 +23,8 @@ export function getProviderMetadata(input: CreateLinkingConnectionInput) {
     aspsp: {
       name: input.aspsp.name,
       country: input.aspsp.country,
-      maximum_consent_validity: input.aspsp.maximum_consent_validity
+      maximum_consent_validity: input.aspsp.maximum_consent_validity,
+      required_psu_headers: input.aspsp.required_psu_headers ?? []
     },
     requested_access: input.requestedAccess,
     requested_redirect_url: input.redirectUrl

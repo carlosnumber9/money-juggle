@@ -10,7 +10,8 @@ import type {
   EnableBankingStartAuthorizationResponse,
   EnableBankingTransactionsFetchStrategy,
   EnableBankingTransactionResource,
-  EnableBankingTransactionsResponse
+  EnableBankingTransactionsResponse,
+  EnableBankingPsuHeaders
 } from "@/definitions";
 
 import { requestEnableBanking } from "./request";
@@ -54,10 +55,12 @@ export async function authorizeEnableBankingSession(
 }
 
 export async function getEnableBankingAccountBalances(
-  accountId: string
+  accountId: string,
+  psuHeaders?: EnableBankingPsuHeaders
 ): Promise<EnableBankingBalanceResource[]> {
   const response = await requestEnableBanking<EnableBankingBalancesResponse>(
-    `/accounts/${encodeURIComponent(accountId)}/balances`
+    `/accounts/${encodeURIComponent(accountId)}/balances`,
+    { psuHeaders }
   );
 
   return response.balances;
@@ -68,6 +71,7 @@ export async function getEnableBankingAccountTransactions(input: {
   dateFrom: string;
   dateTo: string;
   strategy: EnableBankingTransactionsFetchStrategy;
+  psuHeaders?: EnableBankingPsuHeaders;
 }): Promise<EnableBankingTransactionResource[]> {
   const baseSearchParams = new URLSearchParams({
     date_from: input.dateFrom,
@@ -87,7 +91,8 @@ export async function getEnableBankingAccountTransactions(input: {
 
     const response =
       await requestEnableBanking<EnableBankingTransactionsResponse>(
-        `/accounts/${encodeURIComponent(input.accountId)}/transactions?${searchParams}`
+        `/accounts/${encodeURIComponent(input.accountId)}/transactions?${searchParams}`,
+        { psuHeaders: input.psuHeaders }
       );
 
     transactions.push(

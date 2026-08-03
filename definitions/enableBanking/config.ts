@@ -4,6 +4,19 @@ export type EnableBankingConfig = {
   privateKey: string;
 };
 
+export type EnableBankingPsuHeaderName =
+  | "Psu-Ip-Address"
+  | "Psu-User-Agent"
+  | "Psu-Referer"
+  | "Psu-Accept"
+  | "Psu-Accept-Charset"
+  | "Psu-Accept-Encoding"
+  | "Psu-Accept-Language";
+
+export type EnableBankingPsuHeaders = Partial<
+  Record<EnableBankingPsuHeaderName, string>
+>;
+
 export const DEFAULT_ENABLE_BANKING_API_BASE_URL =
   "https://api.enablebanking.com";
 

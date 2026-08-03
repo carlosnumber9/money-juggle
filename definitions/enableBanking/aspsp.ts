@@ -5,6 +5,7 @@ export type EnableBankingAspsp = {
   psu_types: string[];
   maximum_consent_validity: number;
   beta: boolean;
+  required_psu_headers?: string[];
   bic?: string;
   auth_methods: Array<{
     name: string;

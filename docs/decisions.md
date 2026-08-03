@@ -1280,6 +1280,11 @@ Decision:
   transaction refresh while allowing the manual control to bypass freshness.
 - Store `last_transaction_synced_at` separately because the legacy
   `last_synced_at` value is shared with balance synchronization.
+- Forward available PSU context for user-present dashboard, manual, backfill,
+  and post-authorization requests only after every ASPSP-required header can be
+  satisfied.
+- Persist only required PSU header names in provider metadata; never persist or
+  log the request's IP address, user agent, or browser header values.
 - Keep the cooldown server-managed and scoped by both connection ID and owner.
 
 Consequences:

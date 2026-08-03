@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { EnableBankingPsuHeaders } from "@/definitions";
 import { getEnableBankingConfig } from "@/lib/enableBanking/env";
 import { createEnableBankingJwt } from "@/lib/enableBanking/jwt";
 
@@ -12,6 +13,7 @@ export async function requestEnableBanking<T>(
   options: {
     method?: "GET" | "POST";
     body?: unknown;
+    psuHeaders?: EnableBankingPsuHeaders;
   } = {}
 ): Promise<T> {
   const config = getEnableBankingConfig();
@@ -22,6 +24,7 @@ export async function requestEnableBanking<T>(
   const response = await fetch(`${config.apiBaseUrl}${path}`, {
     method: options.method ?? "GET",
     headers: {
+      ...options.psuHeaders,
       Accept: "application/json",
       Authorization: `Bearer ${jwt}`,
       ...(options.body ? { "Content-Type": "application/json" } : {})
