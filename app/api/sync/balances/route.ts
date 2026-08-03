@@ -5,6 +5,7 @@ import { isEmailAllowed } from "@/lib/auth/allowlist";
 import { isDemoMode } from "@/lib/demo/mode";
 import { syncStaleEnableBankingBalances } from "@/lib/db/enableBankingBalances";
 import { listUserEnableBankingConnections } from "@/lib/db/enableBankingConnections";
+import { withConnectionSyncLeases } from "@/lib/db/enableBankingSync/connectionLease";
 import { getCurrentSupabaseUser } from "@/lib/supabase/currentUser";
 
 export const runtime = "nodejs";
@@ -29,11 +30,19 @@ export async function POST(request: NextRequest) {
     const connections = await listUserEnableBankingConnections(user.id, {
       useServiceRole: true
     });
-    const result = await syncStaleEnableBankingBalances({
+    const leaseResult = await withConnectionSyncLeases({
       userId: user.id,
-      connections,
-      force
+      bankConnectionIds: connections.map((connection) => connection.id),
+      run: (acquiredConnectionIds) =>
+        syncStaleEnableBankingBalances({
+          userId: user.id,
+          connections: connections.filter((connection) =>
+            acquiredConnectionIds.has(connection.id)
+          ),
+          force
+        })
     });
+    const result = leaseResult.value;
 
     console.info("Balance sync completed", {
       user_id_suffix: user.id.slice(-8),
@@ -45,7 +54,8 @@ export async function POST(request: NextRequest) {
       failed_connection_count: result.failedConnectionCount,
       rate_limited_connection_count: result.rateLimitedConnectionCount,
       cooldown_connection_count: result.cooldownConnectionCount,
-      cooldown_until: result.cooldownUntil
+      cooldown_until: result.cooldownUntil,
+      busy_connection_count: leaseResult.busyConnectionCount
     });
 
     if (
@@ -70,7 +80,8 @@ export async function POST(request: NextRequest) {
       synced: result.synced,
       partialFailure: result.failedConnectionCount > 0,
       rateLimited: result.cooldownConnectionCount > 0,
-      cooldownUntil: result.cooldownUntil
+      cooldownUntil: result.cooldownUntil,
+      syncInProgress: leaseResult.busyConnectionCount > 0
     });
   } catch (error) {
     console.error("Balance sync failed", {

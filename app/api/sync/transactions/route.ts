@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 
 import { isEmailAllowed } from "@/lib/auth/allowlist";
 import { isDemoMode } from "@/lib/demo/mode";
-import { syncEnableBankingTransactions } from "@/lib/db/enableBankingTransactions";
+import {
+  listConnectionsForTransactionSync,
+  syncEnableBankingTransactions
+} from "@/lib/db/enableBankingTransactions";
+import { withConnectionSyncLeases } from "@/lib/db/enableBankingSync/connectionLease";
 import { getIncrementalProviderDateRange } from "@/lib/domain/transactionRanges";
 import { getCurrentSupabaseUser } from "@/lib/supabase/currentUser";
 
@@ -25,12 +29,20 @@ export async function POST() {
 
   try {
     const range = getIncrementalProviderDateRange();
-    const result = await syncEnableBankingTransactions({
+    const connections = await listConnectionsForTransactionSync(user.id);
+    const leaseResult = await withConnectionSyncLeases({
       userId: user.id,
-      dateFrom: range.from,
-      dateTo: range.to,
-      mode: "incremental"
+      bankConnectionIds: connections.map((connection) => connection.id),
+      run: (acquiredConnectionIds) =>
+        syncEnableBankingTransactions({
+          userId: user.id,
+          dateFrom: range.from,
+          dateTo: range.to,
+          mode: "incremental",
+          bankConnectionIds: acquiredConnectionIds
+        })
     });
+    const result = leaseResult.value;
 
     console.info("Transaction sync completed", {
       user_id_suffix: user.id.slice(-8),
@@ -43,7 +55,8 @@ export async function POST() {
       failed_account_count: result.failedAccountCount,
       rate_limited_account_count: result.rateLimitedAccountCount,
       cooldown_connection_count: result.cooldownConnectionCount,
-      cooldown_until: result.cooldownUntil
+      cooldown_until: result.cooldownUntil,
+      busy_connection_count: leaseResult.busyConnectionCount
     });
 
     if (
@@ -68,7 +81,8 @@ export async function POST() {
       synced: result.synced,
       partialFailure: result.failedAccountCount > 0,
       rateLimited: result.cooldownConnectionCount > 0,
-      cooldownUntil: result.cooldownUntil
+      cooldownUntil: result.cooldownUntil,
+      syncInProgress: leaseResult.busyConnectionCount > 0
     });
   } catch (error) {
     console.error("Transaction sync failed", {

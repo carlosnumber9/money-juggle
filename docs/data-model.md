@@ -232,6 +232,8 @@ Probable fields:
 - `last_synced_at`.
 - `provider_rate_limited_until`: server-managed cooldown shared by balance and
   transaction synchronization after the ASPSP rejects account-data requests.
+- `sync_lease_token` and `sync_lease_until`: short-lived server-managed lease
+  preventing overlapping provider work for the same bank connection.
 - `created_at`.
 - `updated_at`.
 

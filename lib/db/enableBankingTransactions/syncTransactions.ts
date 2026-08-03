@@ -11,12 +11,14 @@ export async function syncEnableBankingTransactions({
   userId,
   dateFrom,
   dateTo,
-  mode
+  mode,
+  bankConnectionIds
 }: {
   userId: string;
   dateFrom: string;
   dateTo: string;
   mode: TransactionSyncMode;
+  bankConnectionIds?: ReadonlySet<string>;
 }): Promise<TransactionSyncResult> {
   const connections = await listConnectionsForTransactionSync(userId);
   const completedBackfillConnectionIds =
@@ -36,6 +38,7 @@ export async function syncEnableBankingTransactions({
   for (const connection of connections) {
     if (
       !shouldSyncConnection(connection) ||
+      (bankConnectionIds && !bankConnectionIds.has(connection.id)) ||
       completedBackfillConnectionIds.has(connection.id)
     ) {
       continue;

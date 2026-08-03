@@ -1272,6 +1272,10 @@ Decision:
 - Use a single dashboard synchronization route that runs eligible balance work
   before transaction work instead of launching both resource routes in
   parallel.
+- Acquire a short atomic lease per bank connection before dashboard, isolated
+  resource, or historical synchronization and release only the caller's token.
+- Let leases expire automatically so an interrupted server process cannot block
+  later synchronization indefinitely.
 - Keep the cooldown server-managed and scoped by both connection ID and owner.
 
 Consequences:
