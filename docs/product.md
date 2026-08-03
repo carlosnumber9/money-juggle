@@ -41,7 +41,7 @@ This app should make financial review easier by collecting read-only financial d
 
 ## Primary Use Cases
 
-- Sign in securely with an email magic link.
+- Sign in securely with the owner email and password.
 - Connect a supported bank through a PSD2 consent flow.
 - View connected accounts.
 - Review latest balances.

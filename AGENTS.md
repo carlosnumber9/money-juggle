@@ -35,7 +35,7 @@ separate integration, or a future solution.
 - React
 - Vercel
 - Supabase Auth
-- Magic link login by email
+- Email and password login
 - Supabase Postgres
 - Supabase Row Level Security
 - Enable Banking Account Information API
@@ -68,7 +68,7 @@ Browser / mobile
 - The frontend must never receive `ENABLE_BANKING_PRIVATE_KEY`, provider tokens, service role keys, or other sensitive credentials.
 - Supabase RLS must be enabled for tables containing financial data.
 - Even though this is a personal app, model ownership as if multiple users may exist later.
-- Magic link login must be restricted to the owner email or an explicit allowlist.
+- Password login must be restricted to the owner email or an explicit allowlist.
 - Avoid overusing the Supabase service role. Use it only in server-only contexts where RLS bypass is intentionally required.
 
 ## What Not To Build Without Confirmation

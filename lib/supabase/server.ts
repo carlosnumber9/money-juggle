@@ -32,7 +32,8 @@ export async function createSupabaseServerClient() {
             ...diagnostics,
             error: sanitizeAuthError(error)
           });
-          // Server Components cannot always write cookies; auth routes will handle this when implemented.
+          // Server Components cannot always write cookies; Server Actions and
+          // the Proxy handle writes in response-capable contexts.
         }
       }
     }
@@ -46,9 +47,6 @@ function getSupabaseCookieWriteDiagnostics(cookiesToSet: { name: string }[]) {
     cookieCount: cookieNames.length,
     hasSupabaseAuthCookie: cookieNames.some(
       (name) => name.startsWith("sb-") && name.includes("auth-token")
-    ),
-    hasSupabaseCodeVerifierCookie: cookieNames.some((name) =>
-      name.includes("code-verifier")
     )
   };
 }

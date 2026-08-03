@@ -1,14 +1,14 @@
 import Image from "next/image";
 
 import type { LoginPageProps } from "@/definitions";
-import { requestMagicLink } from "@/lib/auth/requestMagicLink";
+import { signInWithPassword } from "@/lib/auth/signInWithPassword";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getLoginView } from "@/lib/views/loginView";
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const { email, status } = await searchParams;
-  const view = getLoginView({ email, status });
+  const { status } = await searchParams;
+  const view = getLoginView({ status });
 
   return (
     <main className="flex min-h-dvh items-center justify-center px-6 py-10">
@@ -30,7 +30,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </div>
 
         <form
-          action={requestMagicLink}
+          action={signInWithPassword}
           className="grid w-full gap-4"
           noValidate={view.isDemo}
         >
@@ -46,6 +46,22 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             required={!view.isDemo}
           />
 
+          {!view.isDemo ? (
+            <>
+              <label className="sr-only" htmlFor="password">
+                Contraseña
+              </label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                placeholder="Contraseña"
+                required
+              />
+            </>
+          ) : null}
+
           {view.message ? (
             <p
               className={
@@ -60,7 +76,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           ) : null}
 
           <Button type="submit" className="w-full">
-            {view.isDemo ? "Entrar en demo" : "Enviar enlace"}
+            {view.isDemo ? "Entrar en demo" : "Iniciar sesión"}
           </Button>
         </form>
       </section>

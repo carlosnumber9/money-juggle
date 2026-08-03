@@ -54,7 +54,7 @@ Possible future revisit trigger:
 
 Status:
 
-- Accepted.
+- Superseded by ADR-035.
 
 Context:
 
@@ -82,7 +82,9 @@ Status:
 
 Context:
 
-- Magic link auth alone could allow unintended users to create sessions.
+- The login page is publicly reachable even though the app does not expose
+  sign-up.
+- Authentication alone should not decide who may read owner financial data.
 
 Decision:
 
@@ -768,9 +770,9 @@ Status:
 
 Context:
 
-- Magic-link authentication can fail for several operational reasons, including
-  missing allowlist configuration, Supabase rate limits, callback exchange
-  errors, and cookie write behavior.
+- Authentication can fail for several operational reasons, including missing
+  allowlist configuration, invalid credentials, Supabase rate limits, and
+  cookie write behavior.
 - Troubleshooting these failures needs server-side visibility.
 - Auth-related logs can easily expose sensitive identifiers if they are not
   constrained.
@@ -783,12 +785,12 @@ Decision:
 - Sanitize Supabase errors to names, messages, statuses, and codes rather than
   logging raw objects.
 - Log cookie diagnostics only as counts and booleans, never cookie values.
-- Never log magic-link codes, session tokens, refresh tokens, private keys,
+- Never log passwords, session tokens, refresh tokens, private keys,
   Supabase secret keys, or full email addresses.
 
 Consequences:
 
-- Login and callback issues are easier to diagnose in production logs.
+- Login and session issues are easier to diagnose in production logs.
 - Auth diagnostics remain separate from a future formal audit log.
 - Future auth changes should preserve the same sanitization rules.
 
@@ -1202,3 +1204,45 @@ Possible future revisit trigger:
 - If database behavior warrants local Supabase and policy tests.
 - If critical user journeys justify Playwright tests against preview
   deployments.
+
+## ADR-035: Replace Magic Links With Owner Password Login
+
+Status:
+
+- Accepted and implemented.
+
+Context:
+
+- The installed iOS web app has cookies and storage separate from the default
+  browser.
+- Magic links opened from email therefore complete outside the installed web
+  app and cannot reliably establish its session.
+- Email OTP would require customizing the Supabase email template, which in the
+  current hosted setup would add an unnecessary custom SMTP dependency.
+- The app has one owner with administrative access to Supabase.
+
+Decision:
+
+- Authenticate the existing owner with Supabase email and password login.
+- Keep public sign-up, self-service password recovery, and in-app password
+  changes out of scope.
+- Provision or rotate the owner password through a controlled, server-only
+  Supabase admin operation.
+- Keep the email allowlist before and after authentication.
+- Remove the email auth callback and all magic-link request behavior.
+- Refresh cookie-backed sessions in the Next.js Proxy and return the refreshed
+  cookies and no-cache headers to the browser.
+
+Consequences:
+
+- Login completes inside the installed web app on iOS and desktop.
+- The owner must use a strong, unique password stored in a password manager.
+- Losing the password requires an administrative reset rather than a public
+  recovery flow.
+- Existing sessions do not need to be revoked when the login method changes.
+- Resend, custom SMTP, and auth email templates are not required.
+
+Possible future revisit trigger:
+
+- If passkeys become the preferred stable authentication method.
+- If the app gains additional users or needs self-service recovery.

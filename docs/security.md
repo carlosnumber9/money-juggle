@@ -28,28 +28,32 @@ Relevant threats:
 - Accidental exposure of server secrets to the browser.
 - Overbroad secret key usage.
 - Broken RLS policies.
-- Compromised email account.
+- Stolen or reused owner password.
 - Browser or mobile device compromise.
 - Sync jobs writing data to the wrong owner.
 
-## Magic Link Authentication
+## Password Authentication
 
-Magic link login is convenient and appropriate for an early personal app, but it makes the email inbox a critical security factor.
+Email and password login keeps authentication inside the installed web app, but
+it makes password strength and storage critical security factors.
 
 The app should:
 
 - Restrict sign-in to the owner email or an explicit allowlist.
 - Reject unapproved emails after authentication.
+- Avoid exposing sign-up, password recovery, or password-change routes.
+- Leave password verification and password hashing to Supabase Auth.
 - Keep private routes protected by session checks.
 - Log server-side authentication milestones with a per-request auth log ID,
-  masked email addresses, sanitized Supabase errors, and cookie diagnostics that
-  do not include cookie values.
+  masked email addresses and sanitized Supabase errors.
+- Refresh cookie-backed Supabase sessions through the Next.js Proxy without
+  logging cookie values.
 - Consider MFA or passkeys later.
 
 Authentication logs are operational diagnostics, not an audit log. They should
-help debug missing allowlist configuration, Supabase rate limits, callback code
-exchange failures, and auth cookie write behavior without exposing secrets,
-magic-link codes, session tokens, or full email addresses.
+help debug missing allowlist configuration, rejected credentials, Supabase rate
+limits, and auth cookie write behavior without exposing passwords, session
+tokens, cookie values, or full email addresses.
 
 ## Email Allowlist
 
@@ -118,9 +122,9 @@ Operational sensitivity:
 
 Logs should avoid secrets and should minimize financial detail.
 
-Auth logs may include masked email addresses, request origins, redirect targets,
-boolean cookie diagnostics, sanitized error names or status codes, and generated
-correlation IDs. They must not include full emails, magic-link codes, access
+Auth logs may include masked email addresses, boolean cookie diagnostics,
+sanitized error names or status codes, and generated correlation IDs. They must
+not include full emails, passwords, access
 tokens, refresh tokens, cookie values, private keys, or raw provider payloads.
 
 ## What Must Never Reach The Client
@@ -149,12 +153,17 @@ The app may be used on mobile and desktop browsers. Risks include:
 
 Future mitigations may include short sessions, explicit sign-out, careful notification behavior, and avoiding unnecessary local storage.
 
-## Compromised Email Risk
+## Password Credential Risk
 
-Because magic link login depends on email, a compromised email account may allow app access.
+Because the owner password can create a financial-data session, password reuse,
+phishing, or insecure storage may allow app access.
 
-Future mitigations:
+Mitigations:
 
+- Use a strong, unique password stored in a password manager.
+- Keep public sign-up and self-service recovery disabled.
+- Rotate a forgotten or compromised password through a controlled server-only
+  Supabase admin operation.
 - MFA.
 - Passkeys.
 - Login notifications.

@@ -21,7 +21,7 @@ For each feature:
 
 Prefer small slices such as:
 
-- Configure magic link login.
+- Configure email and password login.
 - Add an email allowlist.
 - Create one table and one set of RLS policies.
 - Make one signed Enable Banking API request server-side.
@@ -211,7 +211,7 @@ Keep future prompts focused and incremental.
 Good prompt shape:
 
 ```text
-Implement magic link login with an owner email allowlist.
+Implement email and password login with an owner email allowlist.
 Before coding, explain the flow and list the files you expect to change.
 ```
 

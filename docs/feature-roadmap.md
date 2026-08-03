@@ -11,7 +11,7 @@ Use this checklist as the source of truth for what remains to be implemented. Ke
 - [x] 3. Set up Supabase project.
 - [x] 4. Configure quick UI foundation with shadcn/ui.
 - [x] 5. Configure Supabase Auth.
-- [x] 6. Implement magic link login.
+- [x] 6. Implement initial magic link login (superseded by phase 31).
 - [x] 7. Add email allowlist.
 - [x] 8. Create basic private layout.
 - [x] 9. Design initial database schema.
@@ -36,6 +36,7 @@ Use this checklist as the source of truth for what remains to be implemented. Ke
 - [ ] 28. Add transaction labels for trips, events, and ad hoc reporting.
 - [ ] 29. Explore Cobee by Pluxee consumption reports.
 - [x] 30. Add monthly period navigation for transactions and charts.
+- [x] 31. Replace magic links with owner password login and session refresh.
 
 ## 1. Bootstrap The Next.js Project
 
@@ -209,7 +210,7 @@ Do not do yet:
 
 Status:
 
-- Completed.
+- Completed; the initial magic-link configuration was superseded by phase 31.
 
 Goal:
 
@@ -249,7 +250,7 @@ Do not do yet:
 
 Status:
 
-- Completed.
+- Completed historically; superseded by phase 31.
 
 Goal:
 
@@ -1522,3 +1523,36 @@ Do not do yet:
 - Add custom arbitrary date ranges before month navigation is useful.
 - Replace the annual evolution chart with a month selector unless that becomes
   a deliberate report redesign.
+
+## 31. Replace Magic Links With Owner Password Login And Session Refresh
+
+Status:
+
+- Completed.
+
+Implemented:
+
+- The Spanish login form accepts the owner email and password and authenticates
+  through Supabase `signInWithPassword`.
+- The allowlist is checked before authentication, after authentication, and on
+  private routes.
+- Public sign-up, self-service recovery, and in-app password changes remain
+  unavailable.
+- The previous magic-link request action and email auth callback were removed.
+- A Next.js Proxy refreshes expiring Supabase tokens and returns updated cookies
+  with the required no-cache response headers.
+- Local demo mode bypasses Supabase in both the login action and Proxy.
+- Password login and cookie refresh behavior have focused automated coverage.
+
+Goal:
+
+- Make authentication reliable inside the installed iOS web app without adding
+  custom SMTP or email OTP infrastructure.
+
+Risks or decisions:
+
+- The owner password must be strong, unique, and stored in a password manager.
+- Password provisioning and recovery use a controlled server-only Supabase
+  admin operation.
+- Passwords, tokens, full emails, and cookie values must never appear in logs.
+- Existing sessions remain valid and do not need global revocation.

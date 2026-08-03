@@ -117,7 +117,7 @@ selected month.
 
 Supabase should provide:
 
-- Email magic link authentication.
+- Email and password authentication.
 - Session management for the app.
 - Postgres persistence.
 - Row Level Security for financial data.
@@ -163,14 +163,16 @@ See `docs/cobee.md` for the initial research notes.
 
 Conceptual flow:
 
-1. User enters email.
-2. Supabase sends a magic link.
-3. User opens the link.
-4. Next.js receives the authenticated Supabase session.
-5. The app checks whether the email is allowed.
+1. User enters the owner email and password.
+2. The server checks whether the submitted email is allowed.
+3. Supabase verifies the credentials and creates a cookie-backed session.
+4. The app checks the authenticated Supabase email against the allowlist again.
+5. A Next.js Proxy refreshes expiring auth tokens and returns updated cookies.
 6. Private routes become available only to allowed authenticated users.
 
-The allowlist check is important even for a personal app because a magic link login page can otherwise become a public entry point.
+The allowlist check is important even for a personal app because the login page
+is still publicly reachable. The app does not expose sign-up, password recovery,
+or password-change routes.
 
 ## Bank Connection Flow
 

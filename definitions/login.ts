@@ -11,11 +11,15 @@ export type LoginView = {
 export const LOGIN_STATUS_MESSAGES: Record<string, LoginStatusMessage> = {
   "missing-email": {
     tone: "error",
-    text: "Introduce tu email para recibir el enlace mágico."
+    text: "Introduce tu email."
+  },
+  "missing-password": {
+    tone: "error",
+    text: "Introduce tu contraseña."
   },
   "allowlist-missing": {
     tone: "error",
-    text: "Configura ALLOWED_EMAILS en .env.local antes de pedir enlaces mágicos."
+    text: "Configura ALLOWED_EMAILS antes de iniciar sesión."
   },
   "not-allowed": {
     tone: "error",
@@ -25,23 +29,22 @@ export const LOGIN_STATUS_MESSAGES: Record<string, LoginStatusMessage> = {
     tone: "success",
     text: "Has cerrado sesión correctamente."
   },
-  "callback-error": {
+  "invalid-credentials": {
     tone: "error",
-    text: "El enlace no se ha podido validar. Pide un enlace nuevo e inténtalo de nuevo."
+    text: "El email o la contraseña no son correctos."
   },
-  "email-rate-limit": {
+  "login-rate-limit": {
     tone: "error",
-    text: "Supabase ha limitado temporalmente el envío de emails con su SMTP por defecto. Espera unos minutos o configura un proveedor SMTP propio."
+    text: "Se han realizado demasiados intentos. Espera unos minutos y vuelve a intentarlo."
   },
   error: {
     tone: "error",
-    text: "No se ha podido enviar el enlace. Revisa que el usuario exista en Supabase y vuelve a intentarlo."
+    text: "No se ha podido iniciar sesión. Vuelve a intentarlo."
   }
 };
 
 export type LoginPageProps = {
   searchParams: Promise<{
-    email?: string;
     status?: string;
   }>;
 };

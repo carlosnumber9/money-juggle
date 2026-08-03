@@ -4,77 +4,76 @@ Supabase will provide authentication, Postgres persistence, and Row Level Securi
 
 The app should treat Supabase as a security boundary, not just a database.
 
-## Authentication With Magic Link
+## Authentication With Email And Password
 
-Initial authentication should use email magic links.
+Authentication uses the existing owner email and a strong password managed by
+Supabase Auth. The app does not expose sign-up, password recovery, or password
+change flows.
 
 Conceptual flow:
 
-1. User enters email.
-2. Supabase sends a magic link.
-3. User opens the link.
-4. Next.js receives and stores the session.
-5. Server-side checks verify that the email is allowed.
-6. Private app areas become available.
+1. The owner enters email and password.
+2. The server rejects missing or unapproved email input before authentication.
+3. Supabase verifies the credentials with `signInWithPassword`.
+4. The server checks the authenticated email against the allowlist again.
+5. Next.js stores the Supabase session in cookies.
+6. The Next.js Proxy refreshes expiring tokens and returns updated cookies.
+7. Private app areas become available.
 
 User-visible authentication text should be Spanish when the UI is implemented.
 
 ## Supabase Auth Dashboard Configuration
 
-Supabase email authentication methods, including magic links, are enabled by
-default for hosted projects. This project should still make the required Auth
-settings explicit before the login UI is implemented.
+Supabase email authentication is enabled by default for hosted projects. This
+project uses only the password sign-in part of that provider.
 
 In the Supabase Dashboard:
 
 1. Open the project used by `money-juggle`.
 2. Go to Auth configuration.
 3. Keep email authentication enabled.
-4. Configure the Site URL:
-   - Local development: `https://localhost:3001`
-   - Production: the final Vercel production URL when it exists.
-5. Add allowed redirect URLs:
-   - Local callback: `https://localhost:3001/auth/callback`
-   - Production callback: `https://<production-domain>/auth/callback`
-   - Optional Vercel preview callback only when preview deployments need login.
-6. Keep the email template as a magic-link flow unless the app deliberately
-   changes to OTP codes later.
+4. Disable public user creation.
+5. Create the owner user if it does not exist and assign its password through a
+   controlled server-only admin operation.
+6. Remove `/auth/callback` from allowed redirect URLs because password login
+   does not use email callbacks.
 
-The future login implementation should pass `/auth/callback` as the redirect
-target when requesting a magic link. Supabase will only redirect to URLs that
-match the configured allow list.
+The app checks `ALLOWED_EMAILS` before sending credentials to Supabase, after
+Supabase creates a session, and before rendering private routes. Authentication
+proves knowledge of the owner password; the allowlist decides whether that
+authenticated email may access `money-juggle`.
 
-The current login implementation passes the runtime origin plus
-`/auth/callback` as the redirect target and uses `shouldCreateUser: false`.
-The runtime origin is resolved from forwarded request headers so production and
-preview deployments generate magic links for the domain that served the login
-request, not a hard-coded local URL. This prevents public self-registration
-through the login form. The owner user must exist in Supabase before the login
-request can succeed.
-
-The app checks `ALLOWED_EMAILS` before requesting a magic link, after the
-callback creates a session, and before rendering private routes. Authentication
-proves the user owns an email inbox; the allowlist decides whether that email
-may access `money-juggle`.
-
-The current auth flow also writes server-side diagnostic logs for magic-link
-requests, callback handling, Supabase auth cookie writes, and rejected access.
-Those logs use generated auth log IDs, masked email addresses, sanitized
-Supabase error details, and boolean cookie diagnostics. They must remain
-server-side and must not include magic-link codes, session tokens, cookie
+The auth flow writes sanitized server-side diagnostics for password sign-in,
+Supabase auth cookie writes, and rejected access. Those logs use generated auth
+log IDs, masked email addresses, sanitized Supabase error details, and boolean
+cookie diagnostics. They must not include passwords, session tokens, cookie
 values, full email addresses, or secret keys.
 
 ## Next.js SSR
 
-Future implementation should use Supabase patterns compatible with Next.js App Router and server rendering.
+The implementation uses Supabase patterns compatible with Next.js App Router
+and server rendering.
 
 Important goals:
 
 - Read sessions on the server.
+- Refresh expiring tokens in the Next.js Proxy and return the updated cookies.
 - Protect private routes.
 - Avoid exposing secret keys or other elevated Supabase credentials.
-- Keep auth callback behavior explicit.
+- Do not add an email auth callback while password login remains the only flow.
 - Make redirects predictable.
+
+## Owner Password Provisioning And Recovery
+
+The app must not expose an admin password endpoint. Before deploying password
+login, assign a strong password to the existing owner user through a one-off
+server-only call to `auth.admin.updateUserById`. Enter the password
+interactively and never place it in a committed script, shell argument, log, or
+persistent environment variable.
+
+Use the same controlled admin procedure if the password is forgotten or needs
+rotation. The normal login path uses only the publishable key and never receives
+the Supabase secret key.
 
 ## RLS Mindset
 

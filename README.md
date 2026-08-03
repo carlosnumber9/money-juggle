@@ -3,7 +3,7 @@
 A very custom finance tracker for my own accounts.
 
 The current implementation includes a private Next.js App Router application
-with Supabase magic-link authentication, owner email allowlist checks, a
+with Supabase email-and-password authentication, owner email allowlist checks, a
 server-only Enable Banking Account Information integration, connected account
 storage, balance synchronization, current-month transaction synchronization,
 monthly cashflow cards, current-year evolution charts, category expense
@@ -43,8 +43,8 @@ Configure the allowed login emails as a comma-separated list:
 ALLOWED_EMAILS=owner@example.com
 ```
 
-The owner user must already exist in Supabase Auth because the app disables
-public self-registration for magic links.
+The owner user must already exist in Supabase Auth with a strong password
+because the app does not expose public registration or password recovery.
 
 ## Database Schema
 

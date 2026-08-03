@@ -7,31 +7,13 @@ import {
 } from "@/definitions";
 import { isDemoMode } from "@/lib/demo/mode";
 
-export function getLoginView({
-  email,
-  status
-}: {
-  email?: string;
-  status?: string;
-}): LoginView {
+export function getLoginView({ status }: { status?: string }): LoginView {
   return {
     isDemo: isDemoMode(),
-    message: getStatusMessage(status, email)
+    message: getStatusMessage(status)
   };
 }
 
-function getStatusMessage(
-  status?: string,
-  email?: string
-): LoginStatusMessage | null {
-  if (status === "sent") {
-    return {
-      tone: "success",
-      text: email
-        ? `Te hemos enviado un enlace mágico a ${email}.`
-        : "Te hemos enviado un enlace mágico."
-    };
-  }
-
+function getStatusMessage(status?: string): LoginStatusMessage | null {
   return status ? (LOGIN_STATUS_MESSAGES[status] ?? null) : null;
 }
