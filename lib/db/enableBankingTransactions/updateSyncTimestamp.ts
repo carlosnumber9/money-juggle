@@ -14,7 +14,10 @@ export async function updateConnectionSyncTimestamp({
   const supabase = createSupabaseServiceRoleClient();
   const { error } = await supabase
     .from("bank_connections")
-    .update({ last_synced_at: fetchedAt })
+    .update({
+      last_synced_at: fetchedAt,
+      last_transaction_synced_at: fetchedAt
+    })
     .eq("id", bankConnectionId)
     .eq("user_id", userId);
 

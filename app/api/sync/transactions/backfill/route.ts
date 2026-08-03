@@ -58,6 +58,7 @@ export async function POST() {
       rate_limited_account_count: result.rateLimitedAccountCount,
       cooldown_connection_count: result.cooldownConnectionCount,
       cooldown_until: result.cooldownUntil,
+      fresh_connection_count: result.freshConnectionCount,
       busy_connection_count: leaseResult.busyConnectionCount
     });
 

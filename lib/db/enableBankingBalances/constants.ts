@@ -1,1 +1,1 @@
-export const BALANCE_AUTO_REFRESH_MS = 15 * 60 * 1000;
+export const BALANCE_AUTO_REFRESH_MS = 6 * 60 * 60 * 1000;

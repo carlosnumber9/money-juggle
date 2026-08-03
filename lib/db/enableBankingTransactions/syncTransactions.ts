@@ -2,6 +2,10 @@ import "server-only";
 
 import { getErrorMessage } from "../shared/getErrorMessage";
 import { getActiveRateLimitCooldown } from "../enableBankingSync/rateLimitCooldown";
+import {
+  shouldRefreshConnectionTransactions,
+  TRANSACTION_AUTO_REFRESH_MS
+} from "./freshness";
 import { listCompletedTransactionBackfillConnectionIds } from "./listCompletedBackfills";
 import { listConnectionsForTransactionSync } from "./listConnections";
 import { syncConnectionTransactions } from "./syncConnectionTransactions";
@@ -12,13 +16,17 @@ export async function syncEnableBankingTransactions({
   dateFrom,
   dateTo,
   mode,
-  bankConnectionIds
+  bankConnectionIds,
+  force = false,
+  maxAgeMs = TRANSACTION_AUTO_REFRESH_MS
 }: {
   userId: string;
   dateFrom: string;
   dateTo: string;
   mode: TransactionSyncMode;
   bankConnectionIds?: ReadonlySet<string>;
+  force?: boolean;
+  maxAgeMs?: number;
 }): Promise<TransactionSyncResult> {
   const connections = await listConnectionsForTransactionSync(userId);
   const completedBackfillConnectionIds =
@@ -32,7 +40,8 @@ export async function syncEnableBankingTransactions({
     failedAccountCount: 0,
     rateLimitedAccountCount: 0,
     cooldownConnectionCount: 0,
-    cooldownUntil: null
+    cooldownUntil: null,
+    freshConnectionCount: 0
   };
 
   for (const connection of connections) {
@@ -54,6 +63,15 @@ export async function syncEnableBankingTransactions({
         result.cooldownUntil,
         cooldownUntil
       );
+      continue;
+    }
+
+    if (
+      mode === "incremental" &&
+      !force &&
+      !shouldRefreshConnectionTransactions({ connection, maxAgeMs })
+    ) {
+      result.freshConnectionCount += 1;
       continue;
     }
 
@@ -107,6 +125,7 @@ function mergeSyncResult(
     target.cooldownUntil,
     source.cooldownUntil
   );
+  target.freshConnectionCount += source.freshConnectionCount;
 }
 
 function getLatestTimestamp(

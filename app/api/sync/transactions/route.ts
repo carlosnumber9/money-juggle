@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import { isEmailAllowed } from "@/lib/auth/allowlist";
@@ -12,7 +13,7 @@ import { getCurrentSupabaseUser } from "@/lib/supabase/currentUser";
 
 export const runtime = "nodejs";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   if (isDemoMode()) {
     return NextResponse.json({ synced: false });
   }
@@ -29,6 +30,7 @@ export async function POST() {
 
   try {
     const range = getIncrementalProviderDateRange();
+    const force = request.nextUrl.searchParams.get("force") === "true";
     const connections = await listConnectionsForTransactionSync(user.id);
     const leaseResult = await withConnectionSyncLeases({
       userId: user.id,
@@ -39,7 +41,8 @@ export async function POST() {
           dateFrom: range.from,
           dateTo: range.to,
           mode: "incremental",
-          bankConnectionIds: acquiredConnectionIds
+          bankConnectionIds: acquiredConnectionIds,
+          force
         })
     });
     const result = leaseResult.value;
@@ -49,6 +52,7 @@ export async function POST() {
       date_from: range.from,
       date_to: range.to,
       mode: "incremental",
+      force,
       synced: result.synced,
       attempted_account_count: result.attemptedAccountCount,
       succeeded_account_count: result.succeededAccountCount,
@@ -56,6 +60,7 @@ export async function POST() {
       rate_limited_account_count: result.rateLimitedAccountCount,
       cooldown_connection_count: result.cooldownConnectionCount,
       cooldown_until: result.cooldownUntil,
+      fresh_connection_count: result.freshConnectionCount,
       busy_connection_count: leaseResult.busyConnectionCount
     });
 

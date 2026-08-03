@@ -230,7 +230,9 @@ disappears once every eligible connection has completed its initial backfill.
 
 The same dashboard control area exposes `Actualizar`. On initial page load it
 automatically runs incremental transaction sync together with freshness-limited
-balance sync. A manual click forces balance refresh and runs the same overlapping
+balance sync. Automatic balance and incremental transaction work use a six-hour
+freshness window. A manual click forces both resources while still respecting
+provider cooldowns and connection leases, and runs the same overlapping
 incremental transaction range. The buttons share an operation state so refresh
 and historical backfill cannot be launched concurrently from the UI.
 

@@ -94,7 +94,8 @@ export async function syncConnectionTransactions(input: {
     failedAccountCount: failures.length,
     rateLimitedAccountCount,
     cooldownConnectionCount: 0,
-    cooldownUntil: null
+    cooldownUntil: null,
+    freshConnectionCount: 0
   };
 }
 

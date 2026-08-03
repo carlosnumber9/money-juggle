@@ -18,6 +18,7 @@ export async function listConnectionsForTransactionSync(
       status,
       provider_session_id,
       provider_rate_limited_until,
+      last_transaction_synced_at,
       accounts (
         id,
         provider_account_id,
@@ -43,6 +44,7 @@ export async function listConnectionsForTransactionSync(
     status: connection.status,
     provider_session_id: connection.provider_session_id,
     provider_rate_limited_until: connection.provider_rate_limited_until,
+    last_transaction_synced_at: connection.last_transaction_synced_at,
     accounts: connection.accounts ?? []
   }));
 }

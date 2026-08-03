@@ -51,7 +51,8 @@ export async function POST(request: NextRequest) {
           dateFrom: range.from,
           dateTo: range.to,
           mode: "incremental",
-          bankConnectionIds: acquiredConnectionIds
+          bankConnectionIds: acquiredConnectionIds,
+          force
         });
 
         return { balances, transactions };
@@ -67,6 +68,7 @@ export async function POST(request: NextRequest) {
       balance_failed_connection_count: balances.failedConnectionCount,
       transaction_succeeded_account_count: transactions.succeededAccountCount,
       transaction_failed_account_count: transactions.failedAccountCount,
+      transaction_fresh_connection_count: transactions.freshConnectionCount,
       rate_limited: result.body.rateLimited,
       cooldown_until: result.body.cooldownUntil,
       acquired_connection_count: leaseResult.acquiredConnectionCount,

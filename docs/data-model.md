@@ -230,6 +230,8 @@ Probable fields:
 - `consent_expires_at`.
 - `redirect_url`.
 - `last_synced_at`.
+- `last_transaction_synced_at`: last successful or partially successful
+  incremental transaction refresh, used for automatic freshness checks.
 - `provider_rate_limited_until`: server-managed cooldown shared by balance and
   transaction synchronization after the ASPSP rejects account-data requests.
 - `sync_lease_token` and `sync_lease_until`: short-lived server-managed lease

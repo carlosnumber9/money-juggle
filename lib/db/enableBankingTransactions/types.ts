@@ -17,6 +17,7 @@ export type StoredConnectionForTransactionSync = {
   status: string;
   provider_session_id: string | null;
   provider_rate_limited_until: string | null;
+  last_transaction_synced_at: string | null;
   accounts: StoredAccountForTransactionSync[];
 };
 
@@ -61,6 +62,7 @@ export type TransactionSyncResult = {
   rateLimitedAccountCount: number;
   cooldownConnectionCount: number;
   cooldownUntil: string | null;
+  freshConnectionCount: number;
 };
 
 export type TransactionSyncMode = "incremental" | "backfill";

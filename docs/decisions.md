@@ -1276,6 +1276,10 @@ Decision:
   resource, or historical synchronization and release only the caller's token.
 - Let leases expire automatically so an interrupted server process cannot block
   later synchronization indefinitely.
+- Apply a six-hour freshness window to automatic balance and incremental
+  transaction refresh while allowing the manual control to bypass freshness.
+- Store `last_transaction_synced_at` separately because the legacy
+  `last_synced_at` value is shared with balance synchronization.
 - Keep the cooldown server-managed and scoped by both connection ID and owner.
 
 Consequences:
