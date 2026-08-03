@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import type { DashboardSyncControlsProps } from "@/definitions";
 
+import { useSyncActivity } from "./SyncActivityProvider";
+
 type ActiveOperation = "refresh" | "backfill" | null;
 
 export function DashboardSyncControls({
@@ -14,6 +16,7 @@ export function DashboardSyncControls({
   backfill
 }: DashboardSyncControlsProps) {
   const router = useRouter();
+  const { beginSync } = useSyncActivity();
   const didAutoRefreshRef = useRef(false);
   const [activeOperation, setActiveOperation] = useState<ActiveOperation>(null);
   const [shouldRetryRefresh, setShouldRetryRefresh] = useState(false);
@@ -26,6 +29,7 @@ export function DashboardSyncControls({
 
     didAutoRefreshRef.current = true;
     const abortController = new AbortController();
+    const finishSync = beginSync();
 
     setActiveOperation("refresh");
     requestDashboardRefresh({
@@ -49,6 +53,7 @@ export function DashboardSyncControls({
         router.refresh();
       })
       .finally(() => {
+        finishSync();
         if (!abortController.signal.aborted) {
           setActiveOperation(null);
         }
@@ -56,8 +61,9 @@ export function DashboardSyncControls({
 
     return () => {
       abortController.abort();
+      finishSync();
     };
-  }, [enabled, router]);
+  }, [beginSync, enabled, router]);
 
   async function handleRefresh() {
     if (!enabled || activeOperation) {
@@ -66,6 +72,7 @@ export function DashboardSyncControls({
 
     setActiveOperation("refresh");
     setShouldRetryRefresh(false);
+    const finishSync = beginSync();
 
     try {
       const result = await requestDashboardRefresh({ forceBalances: true });
@@ -77,6 +84,7 @@ export function DashboardSyncControls({
       setShouldRetryRefresh(true);
       router.refresh();
     } finally {
+      finishSync();
       setActiveOperation(null);
     }
   }
@@ -88,6 +96,7 @@ export function DashboardSyncControls({
 
     setActiveOperation("backfill");
     setShouldRetryBackfill(false);
+    const finishSync = beginSync();
 
     try {
       const result = await requestTransactionBackfill();
@@ -99,6 +108,7 @@ export function DashboardSyncControls({
       setShouldRetryBackfill(true);
       router.refresh();
     } finally {
+      finishSync();
       setActiveOperation(null);
     }
   }

@@ -1285,6 +1285,9 @@ Decision:
   satisfied.
 - Persist only required PSU header names in provider metadata; never persist or
   log the request's IP address, user agent, or browser header values.
+- Share client-side synchronization activity through the private layout so the
+  app logo can pulse throughout refresh and backfill work without replacing the
+  existing button-level loading feedback.
 - Keep the cooldown server-managed and scoped by both connection ID and owner.
 
 Consequences:

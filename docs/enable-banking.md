@@ -244,6 +244,11 @@ provider cooldowns and connection leases, and runs the same overlapping
 incremental transaction range. The buttons share an operation state so refresh
 and historical backfill cannot be launched concurrently from the UI.
 
+While any dashboard refresh or historical import is active, the private layout
+also pulses the app logo with its brand color. This global feedback complements
+the existing button spinner and stops on success, failure, cancellation, or a
+provider cooldown response.
+
 The private `Transacciones` tab presents cached rows for the month selected in
 the URL as a review surface: transactions are grouped by booking date, marked
 with the source bank logo or fallback, and can be filtered by institution or by

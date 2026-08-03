@@ -39,3 +39,27 @@
     cursor: pointer;
   }
 }
+
+@keyframes app-logo-sync-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 transparent);
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 0.625rem var(--brand-logo));
+    transform: scale(1.04);
+  }
+}
+
+.app-logo-syncing {
+  animation: app-logo-sync-pulse 1.4s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-logo-syncing {
+    animation: none;
+    filter: drop-shadow(0 0 0.375rem var(--brand-logo));
+  }
+}
