@@ -16,4 +16,26 @@
   p {
     overflow-wrap: anywhere;
   }
+
+  :where(
+    a[href],
+    button:not(:disabled),
+    input:is(
+        [type="button"],
+        [type="submit"],
+        [type="reset"],
+        [type="checkbox"],
+        [type="radio"]
+      ):not(:disabled),
+    select:not(:disabled),
+    summary,
+    label[for],
+    [role="button"]:not([aria-disabled="true"]):not([data-disabled]),
+    [role="link"]:not([aria-disabled="true"]):not([data-disabled]),
+    [role="menuitem"]:not([aria-disabled="true"]):not([data-disabled]),
+    [role="option"]:not([aria-disabled="true"]):not([data-disabled]),
+    [role="tab"]:not([aria-disabled="true"]):not([data-disabled])
+  ) {
+    cursor: pointer;
+  }
 }
