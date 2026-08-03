@@ -2,9 +2,9 @@ import Image from "next/image";
 
 import type { LoginPageProps } from "@/definitions";
 import { signInWithPassword } from "@/lib/auth/signInWithPassword";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { getLoginView } from "@/lib/views/loginView";
+
+import { LoginFormContent } from "./LoginFormContent";
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { status } = await searchParams;
@@ -31,53 +31,10 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
         <form
           action={signInWithPassword}
-          className="grid w-full gap-4"
+          className="w-full"
           noValidate={view.isDemo}
         >
-          <label className="sr-only" htmlFor="email">
-            Email
-          </label>
-          <Input
-            id="email"
-            name="email"
-            type={view.isDemo ? "text" : "email"}
-            autoComplete="email"
-            placeholder="Email"
-            required={!view.isDemo}
-          />
-
-          {!view.isDemo ? (
-            <>
-              <label className="sr-only" htmlFor="password">
-                Contraseña
-              </label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                placeholder="Contraseña"
-                required
-              />
-            </>
-          ) : null}
-
-          {view.message ? (
-            <p
-              className={
-                view.message.tone === "success"
-                  ? "text-center text-sm text-foreground"
-                  : "text-center text-sm text-destructive"
-              }
-              role="status"
-            >
-              {view.message.text}
-            </p>
-          ) : null}
-
-          <Button type="submit" className="w-full">
-            {view.isDemo ? "Entrar en demo" : "Iniciar sesión"}
-          </Button>
+          <LoginFormContent view={view} />
         </form>
       </section>
     </main>
