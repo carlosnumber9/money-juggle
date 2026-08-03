@@ -37,10 +37,29 @@ export async function syncStaleEnableBankingBalances({
   let succeededConnectionCount = 0;
   let failedConnectionCount = 0;
   let rateLimitedConnectionCount = 0;
+  let cooldownConnectionCount = 0;
+  let cooldownUntil: string | null = null;
 
   for (const bankConnectionId of staleConnectionIds) {
     try {
-      await syncEnableBankingConnectionBalances({ userId, bankConnectionId });
+      const connectionResult = await syncEnableBankingConnectionBalances({
+        userId,
+        bankConnectionId
+      });
+
+      if (connectionResult.status === "rate-limited") {
+        cooldownConnectionCount += 1;
+        cooldownUntil = getLatestTimestamp(
+          cooldownUntil,
+          connectionResult.cooldownUntil
+        );
+        continue;
+      }
+
+      if (connectionResult.status === "skipped") {
+        continue;
+      }
+
       synced = true;
       succeededConnectionCount += 1;
     } catch (error) {
@@ -60,6 +79,16 @@ export async function syncStaleEnableBankingBalances({
     attemptedConnectionCount: staleConnectionIds.length,
     succeededConnectionCount,
     failedConnectionCount,
-    rateLimitedConnectionCount
+    rateLimitedConnectionCount,
+    cooldownConnectionCount,
+    cooldownUntil
   };
+}
+
+function getLatestTimestamp(left: string | null, right: string): string {
+  if (!left) {
+    return right;
+  }
+
+  return new Date(left).getTime() >= new Date(right).getTime() ? left : right;
 }

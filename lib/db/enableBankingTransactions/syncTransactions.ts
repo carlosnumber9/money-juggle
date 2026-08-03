@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getErrorMessage } from "../shared/getErrorMessage";
+import { getActiveRateLimitCooldown } from "../enableBankingSync/rateLimitCooldown";
 import { listCompletedTransactionBackfillConnectionIds } from "./listCompletedBackfills";
 import { listConnectionsForTransactionSync } from "./listConnections";
 import { syncConnectionTransactions } from "./syncConnectionTransactions";
@@ -27,7 +28,9 @@ export async function syncEnableBankingTransactions({
     attemptedAccountCount: 0,
     succeededAccountCount: 0,
     failedAccountCount: 0,
-    rateLimitedAccountCount: 0
+    rateLimitedAccountCount: 0,
+    cooldownConnectionCount: 0,
+    cooldownUntil: null
   };
 
   for (const connection of connections) {
@@ -35,6 +38,19 @@ export async function syncEnableBankingTransactions({
       !shouldSyncConnection(connection) ||
       completedBackfillConnectionIds.has(connection.id)
     ) {
+      continue;
+    }
+
+    const cooldownUntil = getActiveRateLimitCooldown(
+      connection.provider_rate_limited_until
+    );
+
+    if (cooldownUntil) {
+      result.cooldownConnectionCount += 1;
+      result.cooldownUntil = getLatestTimestamp(
+        result.cooldownUntil,
+        cooldownUntil
+      );
       continue;
     }
 
@@ -83,4 +99,24 @@ function mergeSyncResult(
   target.succeededAccountCount += source.succeededAccountCount;
   target.failedAccountCount += source.failedAccountCount;
   target.rateLimitedAccountCount += source.rateLimitedAccountCount;
+  target.cooldownConnectionCount += source.cooldownConnectionCount;
+  target.cooldownUntil = getLatestTimestamp(
+    target.cooldownUntil,
+    source.cooldownUntil
+  );
+}
+
+function getLatestTimestamp(
+  left: string | null,
+  right: string | null
+): string | null {
+  if (!left) {
+    return right;
+  }
+
+  if (!right) {
+    return left;
+  }
+
+  return new Date(left).getTime() >= new Date(right).getTime() ? left : right;
 }

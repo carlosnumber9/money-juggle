@@ -4,6 +4,7 @@ import { getEnableBankingAccountTransactions } from "@/lib/enableBanking/client"
 
 import { getErrorMessage } from "../shared/getErrorMessage";
 import { getAccountFailure } from "./accountFailure";
+import { setConnectionRateLimitCooldown } from "../enableBankingSync/rateLimitCooldown";
 import { persistRowsAndFinishRun } from "./finishConnectionSync";
 import { listConnectionsForTransactionSync } from "./listConnections";
 import { mapTransactionToRow } from "./mapTransactionToRow";
@@ -69,6 +70,11 @@ export async function syncConnectionTransactions(input: {
       failures.push(failure);
       if (failure.rate_limited) {
         rateLimitedAccountCount += 1;
+        await setConnectionRateLimitCooldown({
+          userId: input.userId,
+          bankConnectionId: input.connection.id
+        });
+        break;
       }
     }
   }
@@ -86,7 +92,9 @@ export async function syncConnectionTransactions(input: {
     attemptedAccountCount,
     succeededAccountCount,
     failedAccountCount: failures.length,
-    rateLimitedAccountCount
+    rateLimitedAccountCount,
+    cooldownConnectionCount: 0,
+    cooldownUntil: null
   };
 }
 

@@ -1246,3 +1246,40 @@ Possible future revisit trigger:
 
 - If passkeys become the preferred stable authentication method.
 - If the app gains additional users or needs self-service recovery.
+
+## ADR-036: Protect Provider Synchronization Per Connection
+
+Status:
+
+- Accepted and implemented incrementally.
+
+Context:
+
+- Enable Banking can return `ASPSP_RATE_LIMIT_EXCEEDED` when the target bank
+  refuses additional account-data requests.
+- Balance and transaction synchronization previously retried independently,
+  so a page reload could contact the same bank again immediately.
+
+Decision:
+
+- Persist `provider_rate_limited_until` on each bank connection.
+- Apply a six-hour cooldown after an ASPSP rate limit, as recommended by Enable
+  Banking for background retrieval.
+- Check the cooldown before both balance and transaction requests, including
+  manual and historical synchronization.
+- Stop processing further accounts in a connection after the first rate-limit
+  response.
+- Keep the cooldown server-managed and scoped by both connection ID and owner.
+
+Consequences:
+
+- Reloads and separate synchronization routes cannot repeatedly contact a bank
+  during the known cooldown.
+- A past deadline remains useful operational history but no longer blocks work.
+- A later synchronization-orchestration step can expose the same deadline to a
+  single dashboard response.
+
+Possible future revisit trigger:
+
+- If an ASPSP provides a reliable `Retry-After` value that should override the
+  default six-hour window.

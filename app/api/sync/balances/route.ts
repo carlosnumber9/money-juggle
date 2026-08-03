@@ -43,7 +43,9 @@ export async function POST(request: NextRequest) {
       attempted_connection_count: result.attemptedConnectionCount,
       succeeded_connection_count: result.succeededConnectionCount,
       failed_connection_count: result.failedConnectionCount,
-      rate_limited_connection_count: result.rateLimitedConnectionCount
+      rate_limited_connection_count: result.rateLimitedConnectionCount,
+      cooldown_connection_count: result.cooldownConnectionCount,
+      cooldown_until: result.cooldownUntil
     });
 
     if (
@@ -66,7 +68,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       synced: result.synced,
-      partialFailure: result.failedConnectionCount > 0
+      partialFailure: result.failedConnectionCount > 0,
+      rateLimited: result.cooldownConnectionCount > 0,
+      cooldownUntil: result.cooldownUntil
     });
   } catch (error) {
     console.error("Balance sync failed", {

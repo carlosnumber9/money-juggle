@@ -3,6 +3,10 @@ import "server-only";
 import { getEnableBankingAccountBalances } from "@/lib/enableBanking/client";
 
 import { getAccountSyncFailure } from "../shared/accountSyncFailure";
+import {
+  getActiveRateLimitCooldown,
+  setConnectionRateLimitCooldown
+} from "../enableBankingSync/rateLimitCooldown";
 import { finishBalanceSync } from "./finishBalanceSync";
 import { getConnectionForBalanceSync } from "./getConnection";
 import { mapBalanceToRow } from "./mapBalanceRow";
@@ -24,7 +28,22 @@ export async function syncEnableBankingConnectionBalances(input: {
       reason: getBalanceSyncSkipReason(connection),
       bank_connection_id: input.bankConnectionId
     });
-    return;
+    return { status: "skipped" as const };
+  }
+
+  const cooldownUntil = getActiveRateLimitCooldown(
+    connection.provider_rate_limited_until
+  );
+
+  if (cooldownUntil) {
+    console.info("Balance sync skipped during provider rate-limit cooldown", {
+      bank_connection_id: input.bankConnectionId,
+      cooldown_until: cooldownUntil
+    });
+    return {
+      status: "rate-limited" as const,
+      cooldownUntil
+    };
   }
 
   const syncRunId = await createSyncRun({
@@ -53,17 +72,22 @@ export async function syncEnableBankingConnectionBalances(input: {
         )
       );
     } catch (error) {
-      failures.push(
-        getAccountSyncFailure({
-          accountId: account.id,
-          providerAccountId: account.provider_account_id,
-          error
-        })
-      );
+      const failure = getAccountSyncFailure({
+        accountId: account.id,
+        providerAccountId: account.provider_account_id,
+        error
+      });
+      failures.push(failure);
+
+      if (failure.rate_limited) {
+        await setConnectionRateLimitCooldown(input);
+        break;
+      }
     }
   }
 
   await finishBalanceSync({ ...input, syncRunId, fetchedAt, rows, failures });
+  return { status: "completed" as const };
 }
 
 function shouldSyncConnection(

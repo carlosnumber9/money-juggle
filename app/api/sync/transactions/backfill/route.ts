@@ -43,7 +43,9 @@ export async function POST() {
       attempted_account_count: result.attemptedAccountCount,
       succeeded_account_count: result.succeededAccountCount,
       failed_account_count: result.failedAccountCount,
-      rate_limited_account_count: result.rateLimitedAccountCount
+      rate_limited_account_count: result.rateLimitedAccountCount,
+      cooldown_connection_count: result.cooldownConnectionCount,
+      cooldown_until: result.cooldownUntil
     });
 
     if (
@@ -67,7 +69,9 @@ export async function POST() {
     return NextResponse.json({
       synced: result.synced,
       skipped,
-      partialFailure: result.failedAccountCount > 0
+      partialFailure: result.failedAccountCount > 0,
+      rateLimited: result.cooldownConnectionCount > 0,
+      cooldownUntil: result.cooldownUntil
     });
   } catch (error) {
     console.error("Transaction backfill failed", {

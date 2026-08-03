@@ -9,6 +9,7 @@ export type StoredConnectionForBalanceSync = {
   user_id: string;
   status: string;
   provider_session_id: string | null;
+  provider_rate_limited_until: string | null;
   accounts: StoredAccountForBalanceSync[];
 };
 

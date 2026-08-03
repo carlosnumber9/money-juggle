@@ -230,6 +230,8 @@ Probable fields:
 - `consent_expires_at`.
 - `redirect_url`.
 - `last_synced_at`.
+- `provider_rate_limited_until`: server-managed cooldown shared by balance and
+  transaction synchronization after the ASPSP rejects account-data requests.
 - `created_at`.
 - `updated_at`.
 
