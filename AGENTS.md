@@ -4,6 +4,23 @@ This repository is the foundation for a personal finance application named `mone
 
 The current phase is documentation-first. Do not generate the full application, broad scaffolding, large feature sets, database migrations, API routes, React components, or integration clients unless the user explicitly asks for that next step.
 
+## Repository Instructions Take Precedence
+
+- Before acting, read this guide and the repository documentation relevant to
+  the requested workflow.
+- Repository-specific instructions and the user's explicit request take
+  precedence over generic agent conventions, skills, templates, GitHub
+  workflows, or personal defaults whenever they are compatible with
+  higher-priority platform instructions.
+- Never replace a documented repository workflow with a generic one. Do not
+  invent branches, pull requests, tools, or publication steps that the user did
+  not request.
+- If a generic skill or tool recommends a different workflow, follow the
+  repository workflow instead. If the conflict cannot be resolved safely, stop
+  and ask the user before changing repository state.
+- Before any commit or push, re-read the publication rules in
+  `docs/development-workflow.md` and follow them exactly.
+
 ## Product Goal
 
 `money-juggle` will help the owner review their financial situation from mobile and desktop without manually exporting bank statements.

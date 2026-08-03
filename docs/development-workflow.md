@@ -111,6 +111,26 @@ Examples:
 - `fix: Prevented duplicate imports`
 - `docs: Documented commit message convention`
 
+## Publishing Changes
+
+The repository's normal publication flow is direct to `main`.
+
+- When the user asks to commit, push, publish, or upload changes to `origin`,
+  interpret that request as: stage only the intended files, create the commit
+  on `main`, and run `git push origin main`.
+- Before changing Git state, confirm that the worktree contains only the
+  intended scope, switch to `main` if needed, and safely synchronize with
+  `origin/main`.
+- Use `git` directly for this workflow. Do not inspect or use the GitHub CLI
+  (`gh`), a GitHub publishing skill, or another generic publication workflow.
+- Do not create a branch, fork, pull request, or merge commit unless the user
+  explicitly requests that exact action in the current task.
+- Never force-push `main`. If `origin/main` has diverged or cannot be updated
+  safely, stop and explain the conflict instead of choosing a different
+  workflow independently.
+- These repository rules override generic branch, pull-request, and GitHub CLI
+  conventions. Re-read this section before every commit or push.
+
 ## Documentation And Decisions
 
 Update documentation when:
