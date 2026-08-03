@@ -37,7 +37,7 @@ export function buildMonthlyCategoryExpensesSummary({
 
     const amount = parseDecimal(transaction.amount);
 
-    if (amount >= 0n) {
+    if (amount === 0n) {
       continue;
     }
 
@@ -47,7 +47,10 @@ export function buildMonthlyCategoryExpensesSummary({
     }
 
     if (!transaction.category) {
-      uncategorizedExpenseCount += 1;
+      if (amount < 0n) {
+        uncategorizedExpenseCount += 1;
+      }
+
       continue;
     }
 

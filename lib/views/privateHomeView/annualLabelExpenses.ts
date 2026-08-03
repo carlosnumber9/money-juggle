@@ -16,7 +16,7 @@ export function buildAnnualLabelExpensesSummary({
     const amount = parseDecimal(transaction.amount);
 
     return (
-      amount < 0n &&
+      amount !== 0n &&
       transaction.cashflow_type !== "internal_transfer" &&
       transaction.labels.length > 0 &&
       isTransactionInYear(transaction.booking_date, year)

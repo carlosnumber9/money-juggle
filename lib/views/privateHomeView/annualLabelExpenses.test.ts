@@ -48,19 +48,48 @@ describe("buildAnnualLabelExpensesSummary", () => {
     });
   });
 
-  it("excludes unlabeled expenses, income, internal transfers, and other years", () => {
+  it("subtracts labeled income from expenses to produce net spending", () => {
+    const summary = buildAnnualLabelExpensesSummary({
+      year: 2026,
+      transactions: [
+        createTransaction({
+          id: "expense",
+          amount: "-80",
+          labels: [{ id: "restaurants", name: "Restaurantes" }]
+        }),
+        createTransaction({
+          id: "refund",
+          amount: "20",
+          labels: [{ id: "restaurants", name: "Restaurantes" }]
+        })
+      ]
+    });
+
+    expect(summary.points).toEqual([
+      {
+        labelId: "restaurants",
+        labelName: "Restaurantes",
+        expenses: 60,
+        transactionCount: 2
+      }
+    ]);
+    expect(summary.totalExpenses).toBe(60);
+    expect(summary.transactionCount).toBe(2);
+  });
+
+  it("excludes unlabeled movements, internal transfers, zeroes, and other years", () => {
     const summary = buildAnnualLabelExpensesSummary({
       year: 2026,
       transactions: [
         createTransaction({ id: "unlabeled", labels: [] }),
         createTransaction({
-          id: "income",
-          amount: "100",
+          id: "transfer",
+          cashflow_type: "internal_transfer",
           labels: [{ id: "travel", name: "Viaje" }]
         }),
         createTransaction({
-          id: "transfer",
-          cashflow_type: "internal_transfer",
+          id: "zero",
+          amount: "0",
           labels: [{ id: "travel", name: "Viaje" }]
         }),
         createTransaction({
