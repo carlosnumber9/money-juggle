@@ -1269,6 +1269,9 @@ Decision:
   manual and historical synchronization.
 - Stop processing further accounts in a connection after the first rate-limit
   response.
+- Use a single dashboard synchronization route that runs eligible balance work
+  before transaction work instead of launching both resource routes in
+  parallel.
 - Keep the cooldown server-managed and scoped by both connection ID and owner.
 
 Consequences:

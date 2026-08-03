@@ -182,6 +182,13 @@ private home screen detects missing or stale balance snapshots. The same route
 accepts an authenticated `force=true` request from the dashboard's manual
 refresh control so every linked connection can request a fresh balance.
 
+Routine dashboard refresh uses `POST /api/sync/dashboard` as its single
+authenticated entry point. It evaluates and fetches eligible balances before
+starting transaction synchronization, so the two account-data resources are
+never requested concurrently by one dashboard operation. The resource-specific
+routes remain available as isolated server boundaries, but the dashboard does
+not launch them in parallel.
+
 Transactions are synchronized by server-only code through
 `POST /api/sync/transactions`. Incremental synchronization fetches from the
 first day of the previous month through the current day for each linked Enable

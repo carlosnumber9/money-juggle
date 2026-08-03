@@ -162,31 +162,23 @@ async function requestDashboardRefresh({
   forceBalances: boolean;
   signal?: AbortSignal;
 }): Promise<{ synced: boolean; partialFailure: boolean }> {
-  const balancePath = forceBalances
-    ? "/api/sync/balances?force=true"
-    : "/api/sync/balances";
-  const [balanceResponse, transactionResponse] = await Promise.all([
-    fetch(balancePath, { method: "POST", signal }),
-    fetch("/api/sync/transactions", { method: "POST", signal })
-  ]);
+  const path = forceBalances
+    ? "/api/sync/dashboard?force=true"
+    : "/api/sync/dashboard";
+  const response = await fetch(path, { method: "POST", signal });
+  const result = (await response.json()) as {
+    synced?: boolean;
+    partialFailure?: boolean;
+    rateLimited?: boolean;
+  };
 
-  if (!balanceResponse.ok || !transactionResponse.ok) {
+  if (!response.ok && response.status !== 429) {
     throw new Error("Could not refresh dashboard data.");
   }
 
-  const [balanceResult, transactionResult] = (await Promise.all([
-    balanceResponse.json(),
-    transactionResponse.json()
-  ])) as [
-    { synced?: boolean; partialFailure?: boolean },
-    { synced?: boolean; partialFailure?: boolean }
-  ];
-
   return {
-    synced: Boolean(balanceResult.synced || transactionResult.synced),
-    partialFailure: Boolean(
-      balanceResult.partialFailure || transactionResult.partialFailure
-    )
+    synced: Boolean(result.synced),
+    partialFailure: Boolean(result.partialFailure && !result.rateLimited)
   };
 }
 
