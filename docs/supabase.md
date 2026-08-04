@@ -211,6 +211,7 @@ Current local migrations:
 - `20260709120000_seed_initial_transaction_categories.sql`
 - `20260719120000_add_transaction_labels.sql`
 - `20260719214000_add_shared_expense_settlement_category.sql`
+- `20260804120000_add_personal_care_and_rename_vehicle_insurance.sql`
 
 Use `npm run db:migrations` to confirm which local migrations are applied to the
 linked remote Supabase project before pushing new schema changes.

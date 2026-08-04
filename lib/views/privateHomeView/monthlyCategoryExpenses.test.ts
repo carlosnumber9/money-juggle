@@ -76,11 +76,38 @@ describe("buildMonthlyCategoryExpensesSummary", () => {
   });
 
   it("keeps exclusions while counting only uncategorized expenses", () => {
-    const mortgage = createCategory({
-      id: "mortgage",
-      name: "Hipoteca",
-      slug: "mortgage"
-    });
+    const excludedCategories = [
+      createCategory({
+        id: "shared-expense-settlement",
+        name: "Liquidación de gastos compartidos",
+        slug: "shared_expense_settlement"
+      }),
+      createCategory({
+        id: "community-fees",
+        name: "Comunidad",
+        slug: "community_fees"
+      }),
+      createCategory({
+        id: "savings-transfer",
+        name: "Ahorro",
+        slug: "savings_transfer"
+      }),
+      createCategory({
+        id: "internet-mobile",
+        name: "Internet y móvil",
+        slug: "internet_mobile"
+      }),
+      createCategory({
+        id: "home-insurance",
+        name: "Seguro de hogar",
+        slug: "home_insurance"
+      }),
+      createCategory({
+        id: "mortgage",
+        name: "Hipoteca",
+        slug: "mortgage"
+      })
+    ];
     const summary = buildMonthlyCategoryExpensesSummary({
       periodStart: "2026-07-01",
       transactions: [
@@ -96,8 +123,18 @@ describe("buildMonthlyCategoryExpensesSummary", () => {
           amount: "50",
           cashflow_type: "internal_transfer"
         }),
-        createTransaction({ amount: "-700", category: mortgage }),
-        createTransaction({ amount: "100", category: mortgage })
+        ...excludedCategories.map((category, index) =>
+          createTransaction({
+            id: `excluded-${index}`,
+            amount: "-10",
+            category
+          })
+        ),
+        createTransaction({
+          id: "excluded-mortgage-refund",
+          amount: "100",
+          category: excludedCategories.at(-1)
+        })
       ]
     });
 
@@ -106,7 +143,11 @@ describe("buildMonthlyCategoryExpensesSummary", () => {
     expect(summary.transactionCount).toBe(0);
     expect(summary.uncategorizedExpenseCount).toBe(1);
     expect(summary.excludedInternalTransferCount).toBe(2);
-    expect(summary.excludedCategoryNames).toEqual(["Hipoteca"]);
+    expect(summary.excludedCategoryNames).toEqual(
+      excludedCategories
+        .map((category) => category.name)
+        .sort((left, right) => left.localeCompare(right))
+    );
   });
 });
 

@@ -5,7 +5,14 @@ import type {
 
 import { formatDecimal, parseDecimal } from "./decimal";
 
-const EXCLUDED_CATEGORY_SLUGS = new Set(["mortgage"]);
+const EXCLUDED_CATEGORY_SLUGS = new Set([
+  "community_fees",
+  "home_insurance",
+  "internet_mobile",
+  "mortgage",
+  "savings_transfer",
+  "shared_expense_settlement"
+]);
 
 export function buildMonthlyCategoryExpensesSummary({
   transactions,

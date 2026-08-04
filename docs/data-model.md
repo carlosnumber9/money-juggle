@@ -10,6 +10,7 @@ The executable schema is defined by the local migration chain:
 - `supabase/migrations/20260709120000_seed_initial_transaction_categories.sql`
 - `supabase/migrations/20260719120000_add_transaction_labels.sql`
 - `supabase/migrations/20260719214000_add_shared_expense_settlement_category.sql`
+- `supabase/migrations/20260804120000_add_personal_care_and_rename_vehicle_insurance.sql`
 
 The model should preserve user ownership even though the app starts as a personal project.
 
@@ -100,6 +101,10 @@ Important constraints in the first migration:
   settlements that combine multiple shared expense types. A label can preserve
   the trip or event context without forcing the movement into one expense
   category.
+- `20260804120000_add_personal_care_and_rename_vehicle_insurance.sql` adds
+  `hair_beauty` under health and wellness and changes the existing
+  `vehicle_insurance` display name to `Seguro de automóvil` without changing
+  its stable slug or existing transaction assignments.
 
 ## Entities
 

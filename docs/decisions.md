@@ -874,6 +874,10 @@ Decision:
   `shared_expense_settlement` (`Liquidación de gastos compartidos`) under the
   financial group. Keep the trip or event context in optional labels instead of
   assigning the whole settlement to one underlying expense category.
+- Add `hair_beauty` (`Peluquería y belleza`) under health and wellness.
+- Keep the existing `vehicle_insurance` slug and use `Seguro de automóvil` as
+  its display name so existing assignments remain valid without a duplicate
+  category.
 
 Consequences:
 
