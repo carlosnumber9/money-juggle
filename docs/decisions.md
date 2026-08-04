@@ -799,7 +799,7 @@ Possible future revisit trigger:
 - If the app adds a structured audit log, centralized observability, or stricter
   privacy controls for operational logs.
 
-## ADR-026: Exclude Own-Account Transfers From Monthly Cashflow
+## ADR-026: Treat Own-Account Transfers As Financially Neutral
 
 Status:
 
@@ -822,12 +822,21 @@ Decision:
 - Store nullable server-generated HMAC fingerprints for own account identifiers
   and transaction counterparty identifiers when the provider sends them and the
   server-only fingerprint secret is configured.
-- Classify own-account transfers before building the monthly cashflow summary.
-- Exclude classified own-account transfers from monthly income and expense
-  totals while keeping the original transactions available for review.
+- Classify own-account transfers from provider account fingerprints or the
+  conservative paired fallback before building transaction-derived reports.
+- Treat the owner-assigned `internal_transfer` category as an authoritative
+  manual override when provider metadata cannot identify the movement.
+- Use one shared domain rule for detected and manually categorized internal
+  transfers in every current and future transaction-derived financial metric.
+- Exclude internal transfers from income, spending, category, and label report
+  amounts and transaction counts, as well as report currency selection.
+- Keep the original transactions and amounts available for review, but exclude
+  internal transfers from transaction-list income and expense filters.
 - Use a conservative paired last-4 fallback for existing or incomplete rows,
   requiring opposite signed amounts, matching currency, nearby booking dates,
   different accounts, and reciprocal account suffixes.
+- Load the fallback's three-day matching context around a requested reporting
+  range, then return only movements inside the original range.
 
 Consequences:
 
@@ -835,6 +844,10 @@ Consequences:
   financial world instead of money moving between the owner's accounts.
 - Existing rows can still be classified when both sides of a transfer are
   present and contain reciprocal account suffixes.
+- Transfers that cross a month or year boundary keep the same classification
+  in the adjacent reports.
+- Manual categorization supplies a safe owner-controlled override without
+  changing provider-owned transaction fields.
 - Future syncs can classify more reliably when account fingerprints are
   populated.
 - False positives should be rare because weak suffix-only matching is used only
@@ -843,7 +856,7 @@ Consequences:
 Possible future revisit trigger:
 
 - If the provider omits counterparty account identifiers frequently.
-- If transfers need manual review, override, or a visible transaction label.
+- If transfers need a dedicated review state beyond the existing category.
 - If investment accounts introduce cash movements that need separate treatment.
 
 ## ADR-027: Seed Initial User-Owned Transaction Categories
@@ -965,8 +978,9 @@ Decision:
   income and total spending in the selected currency.
 - Keep permanent point markers hidden; only interactive points should appear on
   hover or tap.
-- Exclude detected internal transfers from both lines, matching the monthly
-  dashboard summary.
+- Exclude detected or manually categorized internal transfers from both lines,
+  matching the monthly dashboard summary and the shared financial-neutrality
+  rule.
 - Do not add report persistence, report migrations, or new provider sync paths
   in this first slice.
 
@@ -1327,8 +1341,9 @@ Decision:
 
 - Continue netting every included category from its signed monthly movements so
   refunds and reimbursements reduce the reported expense.
-- Exclude internal transfers and the existing stable category-slug exclusions
-  before calculating reportable category totals.
+- Exclude detected or manually categorized internal transfers through the
+  shared financial-neutrality rule, followed by the existing stable
+  category-slug exclusions, before calculating reportable category totals.
 - Include a category in the radar only when its final net spending is strictly
   greater than zero.
 - Calculate the radar summary total and transaction count from those included

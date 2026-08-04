@@ -1145,10 +1145,18 @@ Implemented so far:
   summary cards.
 - Totals are grouped by currency and use signed transaction amounts: positive
   amounts count as income, negative amounts count as expenses.
-- Detected transfers between the owner's own accounts are excluded from income
-  and expense totals. The first implementation uses server-only account
-  fingerprints when available and a conservative paired last-4 fallback for
-  older rows.
+- Transfers between the owner's own accounts are excluded from every
+  transaction-derived financial metric when detected from server-only account
+  fingerprints, matched through the conservative paired last-4 fallback, or
+  categorized by the owner as `internal_transfer`.
+- The shared internal-transfer rule applies to monthly income and expense
+  totals, annual evolution, category and label reports, their transaction
+  counts, and report currency selection. The original movements remain visible
+  for review but do not appear under transaction-list income or expense
+  filters.
+- The paired last-4 fallback loads three days of matching context around report
+  boundaries so a transfer crossing a month or year remains neutral in both
+  periods.
 - The private home screen includes an `Evolución` tab after `Transacciones`.
   Its first chart shows the current year's 12 monthly points for income and
   expenses, using cached transaction rows and leaving months without data at
@@ -1157,7 +1165,8 @@ Implemented so far:
   spending in its subtitle, and keeps the lines continuous without permanent
   point markers.
 - A current-month category expense radar visualization is present in the
-  working tree, using categorized expense rows and excluding internal transfers.
+  working tree, using categorized expense rows and the shared internal-transfer
+  exclusion.
 - The category radar excludes categories listed by stable internal slug so
   fixed costs, savings, and shared-expense settlements do not hide anomalies in
   the remaining categories. The exclusions are `mortgage`, `community_fees`,
@@ -1193,7 +1202,8 @@ Risks or decisions:
 
 - Internal transfer detection depends on provider counterparty data. When the
   provider omits the counterparty account identifier, the app should prefer
-  conservative matching over false exclusions.
+  conservative matching over false exclusions and allow the owner-assigned
+  `internal_transfer` category to provide the explicit override.
 
 Do not do yet:
 

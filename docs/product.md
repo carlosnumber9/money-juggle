@@ -78,6 +78,12 @@ This app should make financial review easier by collecting read-only financial d
   income/spending evolution chart. The working app also has a selected-month
   category expense visualization, but it is not yet a complete monthly
   reporting system.
+- Transfers between the owner's own accounts remain visible as imported
+  movements for review, but they are financially neutral. When the app detects
+  them from account data or the owner assigns the `internal_transfer` category,
+  they must not affect transaction-derived income, spending, report totals,
+  report currency selection, category or label charts, or income/expense
+  filters.
 - Previous/next month controls explore stored Supabase data from the transaction
   review and category expense chart. They do not automatically request more
   history from Enable Banking.
