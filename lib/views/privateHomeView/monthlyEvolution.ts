@@ -2,6 +2,7 @@ import type {
   MonthlyEvolutionSummary,
   MonthlyTransactionSummary
 } from "@/definitions";
+import { isInternalTransfer } from "@/lib/domain/internalTransfers";
 
 import { formatDecimal, parseDecimal } from "./decimal";
 
@@ -27,7 +28,10 @@ export function buildMonthlyEvolutionSummary({
   transactions: MonthlyTransactionSummary[];
   year: number;
 }): MonthlyEvolutionSummary {
-  const currency = getPrimaryCurrency(transactions) ?? "EUR";
+  const currency =
+    getPrimaryCurrency(
+      transactions.filter((item) => !isInternalTransfer(item))
+    ) ?? "EUR";
   const totals = MONTH_LABELS.map((monthLabel, index) => ({
     month: index + 1,
     monthLabel,
@@ -54,7 +58,7 @@ export function buildMonthlyEvolutionSummary({
       continue;
     }
 
-    if (transaction.cashflow_type === "internal_transfer") {
+    if (isInternalTransfer(transaction)) {
       excludedInternalTransferCount += 1;
       continue;
     }

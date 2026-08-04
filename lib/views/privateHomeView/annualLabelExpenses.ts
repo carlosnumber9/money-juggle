@@ -2,6 +2,7 @@ import type {
   AnnualLabelExpensesSummary,
   MonthlyTransactionSummary
 } from "@/definitions";
+import { isInternalTransfer } from "@/lib/domain/internalTransfers";
 
 import { formatDecimal, parseDecimal } from "./decimal";
 
@@ -17,7 +18,7 @@ export function buildAnnualLabelExpensesSummary({
 
     return (
       amount !== 0n &&
-      transaction.cashflow_type !== "internal_transfer" &&
+      !isInternalTransfer(transaction) &&
       transaction.labels.length > 0 &&
       isTransactionInYear(transaction.booking_date, year)
     );

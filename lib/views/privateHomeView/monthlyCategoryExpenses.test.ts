@@ -196,6 +196,58 @@ describe("buildMonthlyCategoryExpensesSummary", () => {
         .sort((left, right) => left.localeCompare(right))
     );
   });
+
+  it("excludes manually categorized transfers before choosing the currency", () => {
+    const summary = buildMonthlyCategoryExpensesSummary({
+      periodStart: "2026-07-01",
+      transactions: [
+        createTransaction({
+          id: "expense",
+          amount: "-25",
+          category: createCategory({
+            id: "groceries",
+            name: "Supermercado",
+            slug: "groceries"
+          })
+        }),
+        createTransaction({
+          id: "first-transfer",
+          amount: "-100",
+          currency: "USD",
+          category: createCategory({
+            id: "internal-transfer",
+            name: "Transferencia interna",
+            slug: "internal_transfer"
+          })
+        }),
+        createTransaction({
+          id: "second-transfer",
+          amount: "100",
+          currency: "USD",
+          category: createCategory({
+            id: "internal-transfer",
+            name: "Transferencia interna",
+            slug: "internal_transfer"
+          })
+        }),
+        createTransaction({
+          id: "same-currency-transfer",
+          amount: "-75",
+          category: createCategory({
+            id: "internal-transfer",
+            name: "Transferencia interna",
+            slug: "internal_transfer"
+          })
+        })
+      ]
+    });
+
+    expect(summary.currency).toBe("EUR");
+    expect(summary.points).toHaveLength(1);
+    expect(summary.totalExpenses).toBe(25);
+    expect(summary.transactionCount).toBe(1);
+    expect(summary.excludedInternalTransferCount).toBe(1);
+  });
 });
 
 function createTransaction(

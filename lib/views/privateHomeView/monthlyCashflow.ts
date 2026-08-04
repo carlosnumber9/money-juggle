@@ -3,6 +3,7 @@ import type {
   MonthlyCashflowSummary,
   MonthlyTransactionSummary
 } from "@/definitions";
+import { isInternalTransfer } from "@/lib/domain/internalTransfers";
 
 import { formatDecimal, parseDecimal } from "./decimal";
 
@@ -16,7 +17,7 @@ export function buildMonthlyCashflowSummary(
     const amount = parseDecimal(transaction.amount);
 
     if (amount > 0n) {
-      if (transaction.cashflow_type === "internal_transfer") {
+      if (isInternalTransfer(transaction)) {
         income.excludeInternalTransfer();
         continue;
       }
@@ -26,7 +27,7 @@ export function buildMonthlyCashflowSummary(
     }
 
     if (amount < 0n) {
-      if (transaction.cashflow_type === "internal_transfer") {
+      if (isInternalTransfer(transaction)) {
         expenses.excludeInternalTransfer();
         continue;
       }

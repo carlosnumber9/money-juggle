@@ -88,6 +88,19 @@ describe("buildAnnualLabelExpensesSummary", () => {
           labels: [{ id: "travel", name: "Viaje" }]
         }),
         createTransaction({
+          id: "categorized-transfer",
+          category: {
+            id: "internal-transfer",
+            name: "Transferencia interna",
+            slug: "internal_transfer",
+            group: {
+              id: "transfers",
+              name: "Transferencias y ahorro"
+            }
+          },
+          labels: [{ id: "travel", name: "Viaje" }]
+        }),
+        createTransaction({
           id: "zero",
           amount: "0",
           labels: [{ id: "travel", name: "Viaje" }]

@@ -2,6 +2,7 @@ import type {
   MonthlyCategoryExpensesSummary,
   MonthlyTransactionSummary
 } from "@/definitions";
+import { isInternalTransfer } from "@/lib/domain/internalTransfers";
 
 import { formatDecimal, parseDecimal } from "./decimal";
 
@@ -21,7 +22,10 @@ export function buildMonthlyCategoryExpensesSummary({
   transactions: MonthlyTransactionSummary[];
   periodStart: string;
 }): MonthlyCategoryExpensesSummary {
-  const currency = getPrimaryCurrency(transactions) ?? "EUR";
+  const currency =
+    getPrimaryCurrency(
+      transactions.filter((item) => !isInternalTransfer(item))
+    ) ?? "EUR";
   const totalsByCategory = new Map<
     string,
     {
@@ -46,7 +50,7 @@ export function buildMonthlyCategoryExpensesSummary({
       continue;
     }
 
-    if (transaction.cashflow_type === "internal_transfer") {
+    if (isInternalTransfer(transaction)) {
       excludedInternalTransferCount += 1;
       continue;
     }
