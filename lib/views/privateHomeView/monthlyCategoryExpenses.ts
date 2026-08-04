@@ -31,8 +31,6 @@ export function buildMonthlyCategoryExpensesSummary({
       transactionCount: number;
     }
   >();
-  let transactionCount = 0;
-  let totalExpenses = 0n;
   let uncategorizedExpenseCount = 0;
   let excludedInternalTransferCount = 0;
   const excludedCategoryNames = new Set<string>();
@@ -79,14 +77,24 @@ export function buildMonthlyCategoryExpensesSummary({
       expenses: current.expenses + expenses,
       transactionCount: current.transactionCount + 1
     });
-    totalExpenses += expenses;
-    transactionCount += 1;
   }
+
+  const reportableCategoryTotals = Array.from(
+    totalsByCategory.entries()
+  ).filter(([, total]) => total.expenses > 0n);
+  const totalExpenses = reportableCategoryTotals.reduce(
+    (sum, [, total]) => sum + total.expenses,
+    0n
+  );
+  const transactionCount = reportableCategoryTotals.reduce(
+    (count, [, total]) => count + total.transactionCount,
+    0
+  );
 
   return {
     monthLabel: formatMonthLabel(periodStart),
     currency,
-    points: Array.from(totalsByCategory.entries())
+    points: reportableCategoryTotals
       .sort(([, leftTotal], [, rightTotal]) => {
         const expenseDifference =
           rightTotal.expenses > leftTotal.expenses

@@ -75,6 +75,53 @@ describe("buildMonthlyCategoryExpensesSummary", () => {
     expect(summary.totalExpenses).toBe(100);
   });
 
+  it("omits categories whose net total is income or zero", () => {
+    const restaurants = createCategory({
+      id: "restaurants",
+      name: "Restaurantes",
+      slug: "restaurants"
+    });
+    const rewards = createCategory({
+      id: "rewards",
+      name: "Recompensas",
+      slug: "rewards"
+    });
+    const transport = createCategory({
+      id: "transport",
+      name: "Transporte",
+      slug: "transport"
+    });
+    const salary = createCategory({
+      id: "salary",
+      name: "Salario",
+      slug: "salary"
+    });
+    const summary = buildMonthlyCategoryExpensesSummary({
+      periodStart: "2026-07-01",
+      transactions: [
+        createTransaction({ amount: "-80", category: restaurants }),
+        createTransaction({ amount: "20", category: restaurants }),
+        createTransaction({ amount: "-20", category: rewards }),
+        createTransaction({ amount: "50", category: rewards }),
+        createTransaction({ amount: "-10", category: transport }),
+        createTransaction({ amount: "10", category: transport }),
+        createTransaction({ amount: "40", category: salary })
+      ]
+    });
+
+    expect(summary.points).toEqual([
+      {
+        categoryId: "restaurants",
+        categoryName: "Restaurantes",
+        categoryGroupName: "Ocio",
+        expenses: 60,
+        transactionCount: 2
+      }
+    ]);
+    expect(summary.totalExpenses).toBe(60);
+    expect(summary.transactionCount).toBe(2);
+  });
+
   it("keeps exclusions while counting only uncategorized expenses", () => {
     const excludedCategories = [
       createCategory({

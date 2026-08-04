@@ -1163,6 +1163,10 @@ Implemented so far:
   the remaining categories. The exclusions are `mortgage`, `community_fees`,
   `home_insurance`, `internet_mobile`, `savings_transfer`, and
   `shared_expense_settlement`.
+- Refunds and other positive movements reduce the net spending of their
+  assigned category. The radar and its summary include only categories whose
+  final monthly net spending is greater than zero, omitting net income and
+  zero-value categories.
 - This first slice reuses cached Supabase transaction rows and does not add new
   report tables or external integrations.
 

@@ -1306,3 +1306,43 @@ Possible future revisit trigger:
 
 - If an ASPSP provides a reliable `Retry-After` value that should override the
   default six-hour window.
+
+## ADR-037: Show Only Net Spending In The Category Radar
+
+Status:
+
+- Accepted and implemented.
+
+Context:
+
+- Signed category movements can mix expenses with refunds, reimbursements, or
+  other incoming amounts during the same month.
+- The category radar is intended to explain where the owner incurred spending,
+  not where the owner received a net benefit.
+- Including every non-zero movement can produce negative category values, and
+  filtering only zero-valued transactions still leaves categories whose final
+  monthly net is zero.
+
+Decision:
+
+- Continue netting every included category from its signed monthly movements so
+  refunds and reimbursements reduce the reported expense.
+- Exclude internal transfers and the existing stable category-slug exclusions
+  before calculating reportable category totals.
+- Include a category in the radar only when its final net spending is strictly
+  greater than zero.
+- Calculate the radar summary total and transaction count from those included
+  net-spending categories so the description matches the plotted data.
+
+Consequences:
+
+- Categories that produce net income or break even during the selected month do
+  not appear in the expense radar.
+- A category with both charges and refunds still appears when the remaining net
+  result is an expense.
+- The chart never receives negative or zero expense points.
+
+Possible future revisit trigger:
+
+- If the owner wants a separate visualization for reimbursements, income by
+  category, or categories that break even.
