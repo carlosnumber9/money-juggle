@@ -4,6 +4,10 @@ import type {
   MonthlyTransactionRange,
   MonthlyTransactionSummary
 } from "@/definitions";
+import {
+  getInternalTransferMatchingRange,
+  isBookingDateInRange
+} from "@/lib/domain/internalTransfers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import { getInternalTransferTransactionIds } from "./internalTransfers";
@@ -21,6 +25,7 @@ export async function listMonthlyTransactions({
   range: MonthlyTransactionRange;
 }): Promise<MonthlyTransactionSummary[]> {
   const supabase = await createSupabaseServerClient();
+  const matchingRange = getInternalTransferMatchingRange(range);
   const { data, error } = await supabase
     .from("transactions")
     .select(
@@ -68,8 +73,8 @@ export async function listMonthlyTransactions({
     `
     )
     .eq("user_id", userId)
-    .gte("booking_date", range.from)
-    .lt("booking_date", range.to)
+    .gte("booking_date", matchingRange.from)
+    .lt("booking_date", matchingRange.to)
     .order("booking_date", { ascending: false })
     .order("created_at", { ascending: false });
 
@@ -84,12 +89,14 @@ export async function listMonthlyTransactions({
     ownAccounts
   );
 
-  return rows.map((row) =>
-    mapStoredTransactionToSummary(
-      row,
-      internalTransferIds.has(row.id) ? "internal_transfer" : "external"
-    )
-  );
+  return rows
+    .filter((row) => isBookingDateInRange(row.booking_date, range))
+    .map((row) =>
+      mapStoredTransactionToSummary(
+        row,
+        internalTransferIds.has(row.id) ? "internal_transfer" : "external"
+      )
+    );
 }
 
 async function listOwnAccountsForTransferMatching(

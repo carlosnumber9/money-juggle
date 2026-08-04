@@ -1,11 +1,11 @@
 import "server-only";
 
+import { INTERNAL_TRANSFER_MATCH_DAY_DISTANCE } from "@/lib/domain/internalTransfers";
+
 import type {
   StoredMonthlyTransactionRow,
   StoredOwnAccountForTransferMatching
 } from "./types";
-
-const MAX_PAIRED_TRANSFER_DAY_DISTANCE = 3;
 
 export function getInternalTransferTransactionIds(
   rows: StoredMonthlyTransactionRow[],
@@ -152,7 +152,7 @@ function areDatesClose(left: string | null, right: string | null): boolean {
 
   const dayDistance = Math.abs(leftTime - rightTime) / (24 * 60 * 60 * 1000);
 
-  return dayDistance <= MAX_PAIRED_TRANSFER_DAY_DISTANCE;
+  return dayDistance <= INTERNAL_TRANSFER_MATCH_DAY_DISTANCE;
 }
 
 function parseDecimal(value: string | number): bigint {
