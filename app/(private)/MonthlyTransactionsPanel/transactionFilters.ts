@@ -1,4 +1,5 @@
 import type { MonthlyTransactionSummary } from "@/definitions";
+import { isInternalTransfer } from "@/lib/domain/internalTransfers";
 
 export type TransactionFilterId = "ing" | "caixabank" | "income" | "expense";
 
@@ -183,6 +184,10 @@ function matchesAmountFilter(
 
   if (!showIncome && !showExpenses) {
     return true;
+  }
+
+  if (isInternalTransfer(transaction)) {
+    return false;
   }
 
   const amount = Number(transaction.amount);
