@@ -13,13 +13,13 @@ export function groupTransactionsByDate(
   for (const transaction of transactions) {
     const previousGroup = groups.at(-1);
 
-    if (previousGroup && previousGroup.date === transaction.booking_date) {
+    if (previousGroup && previousGroup.date === transaction.reporting_date) {
       previousGroup.transactions.push(transaction);
       continue;
     }
 
     groups.push({
-      date: transaction.booking_date,
+      date: transaction.reporting_date,
       transactions: [transaction]
     });
   }

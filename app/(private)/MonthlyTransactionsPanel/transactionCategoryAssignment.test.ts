@@ -21,6 +21,7 @@ const TRANSACTION: MonthlyTransactionSummary = {
   account_iban_last4: "1234",
   booking_status: "booked",
   booking_date: "2026-08-03",
+  reporting_date: "2026-08-03",
   cashflow_type: "external",
   amount: "-10.00",
   currency: "EUR",

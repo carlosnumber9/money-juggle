@@ -108,6 +108,7 @@ describe("buildAnnualLabelExpensesSummary", () => {
         createTransaction({
           id: "previous-year",
           booking_date: "2025-12-31",
+          reporting_date: "2025-12-31",
           labels: [{ id: "travel", name: "Viaje" }]
         })
       ]
@@ -149,6 +150,28 @@ describe("buildAnnualLabelExpensesSummary", () => {
     expect(summary.totalExpenses).toBe(15);
     expect(summary.transactionCount).toBe(1);
   });
+
+  it("uses the reporting date to determine the report year", () => {
+    const summary = buildAnnualLabelExpensesSummary({
+      year: 2026,
+      transactions: [
+        createTransaction({
+          booking_date: "2025-12-31",
+          reporting_date: "2026-01-01",
+          labels: [{ id: "new-year", name: "Año nuevo" }]
+        })
+      ]
+    });
+
+    expect(summary.points).toEqual([
+      {
+        labelId: "new-year",
+        labelName: "Año nuevo",
+        expenses: 10,
+        transactionCount: 1
+      }
+    ]);
+  });
 });
 
 function createTransaction(
@@ -164,6 +187,7 @@ function createTransaction(
     account_iban_last4: "1234",
     booking_status: "booked",
     booking_date: "2026-07-15",
+    reporting_date: "2026-07-15",
     cashflow_type: "external",
     amount: "-10",
     currency: "EUR",

@@ -20,7 +20,7 @@ export function buildAnnualLabelExpensesSummary({
       amount !== 0n &&
       !isInternalTransfer(transaction) &&
       transaction.labels.length > 0 &&
-      isTransactionInYear(transaction.booking_date, year)
+      isTransactionInYear(transaction.reporting_date, year)
     );
   });
   const currency = getPrimaryCurrency(eligibleTransactions) ?? "EUR";

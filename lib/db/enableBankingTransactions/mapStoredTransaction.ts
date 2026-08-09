@@ -42,6 +42,7 @@ export function mapStoredTransactionToSummary(
     account_iban_last4: account?.iban_last4 ?? null,
     booking_status: row.booking_status,
     booking_date: row.booking_date,
+    reporting_date: row.reporting_date,
     cashflow_type: cashflowType,
     amount: String(row.amount),
     currency: row.currency,

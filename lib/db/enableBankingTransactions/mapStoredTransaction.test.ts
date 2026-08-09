@@ -42,6 +42,13 @@ describe("mapStoredTransactionToSummary labels", () => {
       mapStoredTransactionToSummary(createStoredTransaction()).labels
     ).toEqual([]);
   });
+
+  it("keeps the bank and reporting dates separate", () => {
+    const summary = mapStoredTransactionToSummary(createStoredTransaction());
+
+    expect(summary.booking_date).toBe("2026-07-19");
+    expect(summary.reporting_date).toBe("2026-07-20");
+  });
 });
 
 function createStoredTransaction(): StoredMonthlyTransactionRow {
@@ -50,6 +57,7 @@ function createStoredTransaction(): StoredMonthlyTransactionRow {
     account_id: "20000000-0000-4000-8000-000000000001",
     booking_status: "booked",
     booking_date: "2026-07-19",
+    reporting_date: "2026-07-20",
     amount: "-10.00",
     currency: "EUR",
     description: "Movimiento",

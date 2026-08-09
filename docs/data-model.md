@@ -11,6 +11,7 @@ The executable schema is defined by the local migration chain:
 - `supabase/migrations/20260719120000_add_transaction_labels.sql`
 - `supabase/migrations/20260719214000_add_shared_expense_settlement_category.sql`
 - `supabase/migrations/20260804120000_add_personal_care_and_rename_vehicle_insurance.sql`
+- `supabase/migrations/20260809120000_add_transaction_reporting_date.sql`
 
 The model should preserve user ownership even though the app starts as a personal project.
 
@@ -371,6 +372,8 @@ Probable fields:
 - `deduplication_fingerprint`.
 - `booking_status`: for example `booked`, `pending`, or `information`.
 - `booking_date`.
+- `reporting_date`: app-owned date used for review and reporting. It starts as
+  the provider booking date and can later be edited by the owner.
 - `booking_datetime`.
 - `value_date`.
 - `value_datetime`.
@@ -469,7 +472,8 @@ The first sync implementation should use an upsert-like flow:
 1. Normalize the provider transaction.
 2. Compute `stable_import_key`.
 3. Look for an existing transaction with the same `user_id`, `account_id`, and `stable_import_key`.
-4. If found, update normalized provider fields and `last_seen_at` without overwriting user-owned categorization.
+4. If found, update normalized provider fields and `last_seen_at` without
+   overwriting app-owned metadata such as `reporting_date` or categorization.
 5. If not found, try reconciliation against recent same-account candidates using the external IDs and fingerprint.
 6. If a compatible candidate is found, update that row and improve its identity fields.
 7. If no candidate is found, insert a new row.
@@ -488,6 +492,25 @@ Pending transactions:
 - The app may store pending rows for visibility, but should treat them as provisional.
 - Permanent categorization and reports should prefer booked transactions unless pending support is intentionally designed.
 - If a pending row is reconciled to a booked row, user-owned metadata should be preserved where safe.
+
+#### App-Owned Reporting Date
+
+`booking_date` remains provider-owned and records the date returned by Enable
+Banking. `reporting_date` is the app-owned date used to select, order, and group
+transactions and to calculate monthly and annual reports.
+
+Recommended behavior:
+
+- Initialize `reporting_date` from `booking_date` for existing and newly
+  imported rows.
+- Preserve a non-null `reporting_date` during later provider synchronization,
+  even if provider-owned fields are refreshed.
+- Fill a still-null `reporting_date` if a later provider response supplies a
+  previously missing booking date.
+- Keep internal-transfer matching based on `booking_date`, because changing a
+  reporting period should not change whether a movement is financially neutral.
+- Update `reporting_date` only through an authenticated, owner-scoped server
+  mutation. Existing transaction read RLS remains unchanged.
 
 #### App-Owned Categorization
 

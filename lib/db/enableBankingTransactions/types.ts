@@ -34,6 +34,7 @@ export type TransactionRow = {
   deduplication_fingerprint: string | null;
   booking_status: "booked" | "pending" | "information";
   booking_date: string | null;
+  reporting_date: string | null;
   booking_datetime: string | null;
   value_date: string | null;
   value_datetime: string | null;
@@ -72,6 +73,7 @@ export type StoredMonthlyTransactionRow = {
   account_id: string;
   booking_status: MonthlyTransactionSummary["booking_status"];
   booking_date: string | null;
+  reporting_date: string | null;
   amount: string | number;
   currency: string;
   description: string | null;

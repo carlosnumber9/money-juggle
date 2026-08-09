@@ -8,16 +8,13 @@ import type {
   TransactionLabelSummary
 } from "@/definitions";
 
-import {
-  formatCurrency,
-  formatTransactionDetailDate,
-  getTransactionConcept
-} from "./formatters";
+import { formatCurrency, getTransactionConcept } from "./formatters";
 import {
   getInstitutionLogo,
   type InstitutionLogoStyle
 } from "./institutionLogo";
 import { TransactionLabelSelector } from "./TransactionLabelSelector";
+import { TransactionReportingDatePicker } from "./TransactionReportingDatePicker";
 
 const DIALOG_TITLE_ID = "transaction-detail-title";
 
@@ -26,6 +23,7 @@ export function TransactionDetailDialog({
   availableLabels,
   onLabelsChange,
   onAvailableLabelAdd,
+  onReportingDateChange,
   onClose
 }: {
   transaction: MonthlyTransactionSummary | null;
@@ -35,6 +33,7 @@ export function TransactionDetailDialog({
     labels: TransactionLabelSummary[]
   ) => void;
   onAvailableLabelAdd: (label: TransactionLabelSummary) => void;
+  onReportingDateChange: (transactionId: string, reportingDate: string) => void;
   onClose: () => void;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -108,10 +107,20 @@ export function TransactionDetailDialog({
             </header>
 
             <dl className="mt-7 grid gap-5 border-t border-border/70 pt-5">
-              <DetailItem
-                label="Fecha"
-                value={formatTransactionDetailDate(transaction.booking_date)}
-              />
+              <div className="grid gap-2">
+                <dt className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                  Fecha
+                </dt>
+                <dd>
+                  <TransactionReportingDatePicker
+                    transaction={transaction}
+                    portalContainer={dialogRef}
+                    onReportingDateChange={(reportingDate) =>
+                      onReportingDateChange(transaction.id, reportingDate)
+                    }
+                  />
+                </dd>
+              </div>
               {description ? (
                 <DetailItem label="Descripción" value={description} />
               ) : null}

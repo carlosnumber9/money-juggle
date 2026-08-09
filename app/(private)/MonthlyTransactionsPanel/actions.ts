@@ -6,12 +6,14 @@ import type { Result, TransactionLabelSummary } from "@/definitions";
 import { isEmailAllowed } from "@/lib/auth/allowlist";
 import { isDemoMode } from "@/lib/demo/mode";
 import { updateTransactionCategoryAssignment } from "@/lib/db/transactionCategories";
+import { updateTransactionReportingDate } from "@/lib/db/enableBankingTransactions";
 import {
   assignTransactionLabel,
   createAndAssignTransactionLabel,
   removeTransactionLabelAssignment
 } from "@/lib/db/transactionLabels";
 import { isValidTransactionLabelName } from "@/lib/domain/labels";
+import { isValidReportingDate } from "@/lib/domain/transactionDates";
 import { getCurrentSupabaseUser } from "@/lib/supabase/currentUser";
 
 export type UpdateTransactionCategoryActionInput = {
@@ -68,6 +70,51 @@ function isValidInput(input: UpdateTransactionCategoryActionInput): boolean {
     UUID_PATTERN.test(input.transactionId) &&
     (input.categoryId === null || UUID_PATTERN.test(input.categoryId))
   );
+}
+
+export async function updateTransactionReportingDateAction(input: {
+  transactionId: string;
+  reportingDate: string;
+}): Promise<Result<{ reportingDate: string }>> {
+  if (
+    !UUID_PATTERN.test(input.transactionId) ||
+    !isValidReportingDate(input.reportingDate)
+  ) {
+    return { ok: false, reason: "La fecha seleccionada no es válida." };
+  }
+
+  if (isDemoMode()) {
+    return {
+      ok: true,
+      value: { reportingDate: input.reportingDate }
+    };
+  }
+
+  const user = await getAllowedUser("guardar la fecha");
+
+  if (!user.ok) {
+    return user;
+  }
+
+  try {
+    const reportingDate = await updateTransactionReportingDate({
+      userId: user.value.id,
+      transactionId: input.transactionId,
+      reportingDate: input.reportingDate
+    });
+    revalidatePath("/");
+
+    return { ok: true, value: { reportingDate } };
+  } catch (error) {
+    console.error("Transaction reporting date update failed.", {
+      message: error instanceof Error ? error.message : "Unknown error."
+    });
+
+    return {
+      ok: false,
+      reason: "No se pudo guardar la fecha. Inténtalo de nuevo."
+    };
+  }
 }
 
 export async function assignTransactionLabelAction(input: {

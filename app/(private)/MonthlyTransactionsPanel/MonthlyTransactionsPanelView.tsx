@@ -26,6 +26,7 @@ import {
 } from "./transactionFilters";
 import { getTransactionCategoryGroupsWithMatches } from "./transactionCategoryFilterOptions";
 import { updateTransactionCategoryInList } from "./transactionCategoryAssignment";
+import { updateTransactionReportingDateInList } from "./transactionReportingDate";
 import { TransactionsTable } from "./TransactionsTable";
 
 export function MonthlyTransactionsPanel({
@@ -120,6 +121,19 @@ export function MonthlyTransactionsPanel({
     );
   }
 
+  function handleTransactionReportingDateChange(
+    transactionId: string,
+    reportingDate: string
+  ) {
+    setDisplayTransactions((currentTransactions) =>
+      updateTransactionReportingDateInList(
+        currentTransactions,
+        transactionId,
+        reportingDate
+      )
+    );
+  }
+
   function handleAvailableLabelAdd(label: TransactionLabelSummary) {
     setAvailableLabels((currentLabels) =>
       currentLabels.some((currentLabel) => currentLabel.id === label.id)
@@ -164,6 +178,7 @@ export function MonthlyTransactionsPanel({
         availableLabels={availableLabels}
         onLabelsChange={handleTransactionLabelsChange}
         onAvailableLabelAdd={handleAvailableLabelAdd}
+        onReportingDateChange={handleTransactionReportingDateChange}
         onClose={() => setSelectedTransactionId(null)}
       />
     </section>

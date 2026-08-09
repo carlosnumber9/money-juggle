@@ -3,6 +3,7 @@ import "server-only";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/serviceRole";
 
 import type { TransactionRow } from "./types";
+import { getReportingDateForSync } from "./reportingDate";
 
 const TRANSACTION_BATCH_SIZE = 100;
 
@@ -25,7 +26,7 @@ export async function persistTransactionRows(
       ];
       const { data: existingRows, error: lookupError } = await supabase
         .from("transactions")
-        .select("account_id, stable_import_key, first_seen_at")
+        .select("account_id, stable_import_key, first_seen_at, reporting_date")
         .eq("user_id", userId)
         .in("account_id", accountIds)
         .in("stable_import_key", stableImportKeys);
@@ -46,9 +47,23 @@ export async function persistTransactionRows(
           row.first_seen_at
         ])
       );
+      const reportingDateByIdentity = new Map(
+        (existingRows ?? []).map((row) => [
+          getIdentityKey({
+            user_id: userId,
+            account_id: row.account_id,
+            stable_import_key: row.stable_import_key
+          }),
+          row.reporting_date
+        ])
+      );
       const { error: upsertError } = await supabase.from("transactions").upsert(
         batch.map((row) => ({
           ...row,
+          reporting_date: getReportingDateForSync(
+            reportingDateByIdentity.get(getIdentityKey(row)),
+            row.booking_date
+          ),
           first_seen_at:
             firstSeenByIdentity.get(getIdentityKey(row)) ?? fetchedAt,
           last_seen_at: fetchedAt

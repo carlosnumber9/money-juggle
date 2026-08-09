@@ -24,6 +24,10 @@ export function mapTransactionToRow({
     return null;
   }
 
+  const bookingDate = getDate(
+    transaction.booking_date ?? transaction.booking_date_time
+  );
+
   const providerTransactionId =
     getTextValue(transaction.transaction_id) ??
     getTextValue(transaction.uid) ??
@@ -75,9 +79,8 @@ export function mapTransactionToRow({
     end_to_end_id: endToEndId,
     deduplication_fingerprint: identity.fingerprint,
     booking_status: getBookingStatus(transaction),
-    booking_date: getDate(
-      transaction.booking_date ?? transaction.booking_date_time
-    ),
+    booking_date: bookingDate,
+    reporting_date: bookingDate,
     booking_datetime: getDateTime(transaction.booking_date_time),
     value_date: getDate(transaction.value_date ?? transaction.value_date_time),
     value_datetime: getDateTime(transaction.value_date_time),

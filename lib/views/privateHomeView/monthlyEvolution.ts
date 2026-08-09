@@ -46,7 +46,7 @@ export function buildMonthlyEvolutionSummary({
       continue;
     }
 
-    const monthIndex = getMonthIndex(transaction.booking_date, year);
+    const monthIndex = getMonthIndex(transaction.reporting_date, year);
 
     if (monthIndex === null) {
       continue;

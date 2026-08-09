@@ -61,6 +61,7 @@ export type MonthlyTransactionSummary = {
   account_iban_last4: string | null;
   booking_status: "booked" | "pending" | "information";
   booking_date: string | null;
+  reporting_date: string | null;
   cashflow_type: "external" | "internal_transfer";
   amount: string;
   currency: string;

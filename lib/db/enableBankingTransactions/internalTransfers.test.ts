@@ -55,6 +55,7 @@ function createTransaction({
     account_id: accountId,
     booking_status: "booked",
     booking_date: bookingDate,
+    reporting_date: bookingDate,
     amount,
     currency: "EUR",
     description: null,

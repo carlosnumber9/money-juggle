@@ -44,6 +44,7 @@ function createTransaction(
     account_iban_last4: "1234",
     booking_status: "booked",
     booking_date: "2026-07-15",
+    reporting_date: "2026-07-15",
     cashflow_type: "external",
     amount: "-10",
     currency: "EUR",

@@ -1361,3 +1361,49 @@ Possible future revisit trigger:
 
 - If the owner wants a separate visualization for reimbursements, income by
   category, or categories that break even.
+
+## ADR-038: Separate Bank And Reporting Transaction Dates
+
+Status:
+
+- Accepted and implemented.
+
+Context:
+
+- Enable Banking supplies `booking_date`, which must remain available as the
+  provider-owned date.
+- Some movements should count toward a different date in the review list and
+  financial reports without changing the bank data.
+- Period queries must find movements moved in from another month, so resolving
+  the date only after loading rows would be incomplete.
+
+Decision:
+
+- Add one app-owned `reporting_date` column to transactions and backfill it from
+  `booking_date`.
+- Initialize new rows from the booking date and preserve every existing
+  non-null reporting date during provider upserts.
+- Use `reporting_date` for period selection, ordering, grouping, cashflow cards,
+  and charts.
+- Continue using `booking_date` for provider identity and internal-transfer
+  matching.
+- Let the owner edit the reporting date from the transaction detail dialog
+  through an authenticated, owner-scoped server action.
+- Save immediately after calendar selection and keep a cross-month movement in
+  the current client-side list until reload or month navigation.
+
+Consequences:
+
+- Manual period corrections survive later bank synchronization.
+- The original bank date remains separately available and highlighted in the
+  date picker.
+- A temporary open list may contain a movement whose reporting date falls
+  outside its selected month, while refreshed cards and charts use the
+  persisted date immediately.
+- The schema does not record whether the current reporting date was explicitly
+  chosen or merely initialized from the bank date.
+
+Possible future revisit trigger:
+
+- If date-change history, an explicit reset state, or audit metadata becomes
+  useful.
