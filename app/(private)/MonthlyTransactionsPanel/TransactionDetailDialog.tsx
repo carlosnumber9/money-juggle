@@ -3,10 +3,12 @@
 import { XIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
 
+import { Button } from "@/components/ui/button";
 import type {
   MonthlyTransactionSummary,
   TransactionLabelSummary
 } from "@/definitions";
+import { isInternalTransfer } from "@/lib/domain/internalTransfers";
 
 import { formatCurrency, getTransactionConcept } from "./formatters";
 import {
@@ -24,6 +26,8 @@ export function TransactionDetailDialog({
   onLabelsChange,
   onAvailableLabelAdd,
   onReportingDateChange,
+  reconciliationEnabled,
+  onReconcile,
   onClose
 }: {
   transaction: MonthlyTransactionSummary | null;
@@ -34,6 +38,8 @@ export function TransactionDetailDialog({
   ) => void;
   onAvailableLabelAdd: (label: TransactionLabelSummary) => void;
   onReportingDateChange: (transactionId: string, reportingDate: string) => void;
+  reconciliationEnabled: boolean;
+  onReconcile: (transaction: MonthlyTransactionSummary) => void;
   onClose: () => void;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -55,6 +61,11 @@ export function TransactionDetailDialog({
   const concept = transaction ? getTransactionConcept(transaction) : "";
   const description = getAdditionalDescription(transaction, concept);
   const logo = transaction ? getInstitutionLogo(transaction) : null;
+  const canReconcile =
+    reconciliationEnabled &&
+    transaction?.booking_status === "booked" &&
+    !isInternalTransfer(transaction) &&
+    !transaction.reconciliation;
 
   return (
     <dialog
@@ -144,6 +155,20 @@ export function TransactionDetailDialog({
                 </dd>
               </div>
             </dl>
+            {canReconcile ? (
+              <div className="mt-7 border-t border-border/70 pt-5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    dialogRef.current?.close();
+                    onReconcile(transaction);
+                  }}
+                >
+                  Compensar
+                </Button>
+              </div>
+            ) : null}
           </div>
         </>
       ) : null}

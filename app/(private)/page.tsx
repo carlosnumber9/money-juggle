@@ -56,6 +56,9 @@ export default async function Home({ searchParams }: PrivateHomePageProps) {
             transactions={view.monthlyTransactions.rows}
             categoryGroups={view.monthlyTransactions.categoryGroups}
             labels={view.monthlyTransactions.labels}
+            reconciliationEnabled={
+              view.monthlyTransactions.reconciliationEnabled
+            }
             selectedMonth={view.selectedMonth}
             error={view.monthlyTransactions.error}
           />

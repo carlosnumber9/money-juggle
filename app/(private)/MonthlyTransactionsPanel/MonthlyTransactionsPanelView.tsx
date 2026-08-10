@@ -11,6 +11,7 @@ import type {
 import { EmptyTransactionsState } from "./EmptyTransactionsState";
 import { MonthlyTransactionsHeader } from "./MonthlyTransactionsHeader";
 import { TransactionDetailDialog } from "./TransactionDetailDialog";
+import { TransactionReconciliationDialog } from "./TransactionReconciliationDialog";
 import {
   clearCategoryFilters,
   DEFAULT_TRANSACTION_FILTERS,
@@ -33,12 +34,16 @@ export function MonthlyTransactionsPanel({
   transactions,
   categoryGroups,
   labels,
+  reconciliationEnabled,
   selectedMonth,
   error
 }: MonthlyTransactionsPanelProps) {
   const [displayTransactions, setDisplayTransactions] = useState(transactions);
   const [availableLabels, setAvailableLabels] = useState(labels);
   const [selectedTransactionId, setSelectedTransactionId] = useState<
+    string | null
+  >(null);
+  const [reconciliationSourceId, setReconciliationSourceId] = useState<
     string | null
   >(null);
   const [transactionFilters, setTransactionFilters] =
@@ -58,6 +63,10 @@ export function MonthlyTransactionsPanel({
   const selectedTransaction =
     displayTransactions.find(
       (transaction) => transaction.id === selectedTransactionId
+    ) ?? null;
+  const reconciliationSource =
+    displayTransactions.find(
+      (transaction) => transaction.id === reconciliationSourceId
     ) ?? null;
   const categoryGroupsWithVisibleTransactions = useMemo(
     () =>
@@ -179,8 +188,44 @@ export function MonthlyTransactionsPanel({
         onLabelsChange={handleTransactionLabelsChange}
         onAvailableLabelAdd={handleAvailableLabelAdd}
         onReportingDateChange={handleTransactionReportingDateChange}
+        reconciliationEnabled={reconciliationEnabled}
+        onReconcile={(transaction) => {
+          setSelectedTransactionId(null);
+          setReconciliationSourceId(transaction.id);
+        }}
         onClose={() => setSelectedTransactionId(null)}
       />
+      {reconciliationSource ? (
+        <TransactionReconciliationDialog
+          key={reconciliationSource.id}
+          sourceTransaction={reconciliationSource}
+          categoryGroups={categoryGroups}
+          availableLabels={availableLabels}
+          onSaved={({
+            reconciliationId,
+            transactionIds,
+            differenceTreatment
+          }) => {
+            const memberIds = new Set(transactionIds);
+
+            setDisplayTransactions((currentTransactions) =>
+              currentTransactions.map((transaction) =>
+                memberIds.has(transaction.id)
+                  ? {
+                      ...transaction,
+                      reconciliation: {
+                        id: reconciliationId,
+                        differenceTreatment,
+                        requiresReview: false
+                      }
+                    }
+                  : transaction
+              )
+            );
+          }}
+          onClose={() => setReconciliationSourceId(null)}
+        />
+      ) : null}
     </section>
   );
 }

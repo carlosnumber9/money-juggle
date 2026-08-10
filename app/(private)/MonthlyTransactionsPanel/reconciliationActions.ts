@@ -161,7 +161,6 @@ export async function deleteReconciliationAction(input: {
 
   try {
     await deleteTransactionReconciliation({
-      userId: user.value.id,
       reconciliationId: input.reconciliationId
     });
     revalidatePath("/");

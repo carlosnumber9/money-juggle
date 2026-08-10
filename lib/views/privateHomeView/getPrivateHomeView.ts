@@ -151,6 +151,7 @@ export async function getPrivateHomeView(
       rows: transactionsResult.ok ? transactionsResult.value : [],
       categoryGroups: categoryGroupsResult.ok ? categoryGroupsResult.value : [],
       labels: labelsResult.ok ? labelsResult.value : [],
+      reconciliationEnabled: dataSource.mode === "real",
       error: getMonthlyTransactionsError(
         transactionsResult,
         categoryGroupsResult,

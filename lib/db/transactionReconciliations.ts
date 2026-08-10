@@ -539,10 +539,8 @@ export async function saveTransactionReconciliation(
 }
 
 export async function deleteTransactionReconciliation({
-  userId: _userId,
   reconciliationId
 }: {
-  userId: string;
   reconciliationId: string;
 }): Promise<void> {
   const supabase = await createSupabaseServerClient();
