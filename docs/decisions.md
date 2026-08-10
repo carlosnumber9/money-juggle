@@ -1407,3 +1407,60 @@ Possible future revisit trigger:
 
 - If date-change history, an explicit reset state, or audit metadata becomes
   useful.
+
+## ADR-039: Reconcile Neutral Cash Flow Through Finalized Groups
+
+Status:
+
+- Accepted and implemented.
+
+Context:
+
+- Loans, reimbursements, and refunds can create bank income and expense rows
+  that should not represent earned income or personal consumption.
+- Related movements can span reporting periods and can retain a small signed
+  difference, so an exact pair or one boolean cannot explain the treatment.
+- Internal transfers already have a separate neutrality rule and must continue
+  to coexist without double counting.
+
+Decision:
+
+- Store finalized, owner-scoped reconciliation groups and ordered transaction
+  memberships. Do not persist open drafts.
+- Require at least two distinct booked, same-currency, externally reportable
+  movements when adding new members. Existing members remain linked if later
+  provider data changes their status or transfer classification.
+- Allow one transaction in at most one reconciliation and use owner-composite
+  foreign keys plus RLS even though the initial deployment has one owner.
+- Derive balance from current transaction amounts rather than snapshots. A
+  zero-saved group that later drifts is neutralized until the owner reviews it.
+- For a non-zero balance, let the owner neutralize it or report it once through
+  an existing reportable category, an editable reporting date, and optional
+  labels.
+- Save group metadata, membership, labels, and new label names through one
+  authenticated PostgreSQL function so concurrent or partial writes cannot
+  leave inconsistent state.
+- Build one reporting-movement source that removes internal transfers and
+  reconciliation members before adding reportable reconciliation differences.
+- Keep original bank transactions visible and unchanged. Expose reconciliation
+  state through `Compensado`, a review dialog, atomic editing, and confirmed hard
+  deletion.
+- Use a centered shadcn dialog on desktop and a borderless, swipeable bottom
+  sheet on narrow screens. Keep the feature hidden in local demo mode.
+
+Consequences:
+
+- Dashboard cards, charts, counts, primary currency, and direction filters share
+  the same financial-neutrality result.
+- A provider amount correction can alter a reportable residual without changing
+  app-owned group metadata. Originally balanced groups surface a review warning
+  instead of silently inventing a reporting category.
+- Deleting a group restores each original transaction to reports unless it is
+  still neutral because it is an internal transfer.
+- Partial allocation within one transaction and persisted open drafts remain
+  outside this version.
+
+Possible future revisit trigger:
+
+- If shared expenses require allocating only part of one bank transaction or if
+  open debt tracking becomes a product goal.

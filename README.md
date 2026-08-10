@@ -58,6 +58,8 @@ supabase/migrations/20260709120000_seed_initial_transaction_categories.sql
 supabase/migrations/20260719120000_add_transaction_labels.sql
 supabase/migrations/20260719214000_add_shared_expense_settlement_category.sql
 supabase/migrations/20260804120000_add_personal_care_and_rename_vehicle_insurance.sql
+supabase/migrations/20260809120000_add_transaction_reporting_date.sql
+supabase/migrations/20260810120000_add_transaction_reconciliations.sql
 ```
 
 Apply pending migrations to the Supabase project to create and evolve the

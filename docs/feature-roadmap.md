@@ -1578,7 +1578,32 @@ Risks or decisions:
 
 Status:
 
-- Planned / exploratory.
+- Implemented.
+
+Implemented outcome:
+
+- The owner can create a finalized reconciliation from any eligible booked
+  transaction, select at least one additional same-currency movement, and save
+  the group atomically.
+- Reconciliations support debt, reimbursement, refund, and other reasons. Notes
+  are optional except for the `other` reason.
+- The signed balance is always calculated from current transaction amounts.
+  Exact zero closes without adjustment metadata; a non-zero balance can either
+  be neutralized or reported through one category, date, and optional labels.
+- Reconciled bank transactions remain visible with a `Compensado` chip but are
+  excluded from cashflow cards, evolution, category and label charts, primary
+  currency selection, counts, and direction filters.
+- A reportable non-zero difference contributes once through the shared
+  reporting-movement pipeline and never appears as a synthetic bank row.
+- The desktop flow uses a centered shadcn dialog. Narrow screens use a
+  borderless bottom sheet that leaves the app visible above it and supports
+  swipe-down dismissal.
+- The owner can review, edit, or permanently delete a reconciliation. Deleting
+  it restores the original movements to reports unless another neutrality rule
+  applies.
+- The feature is intentionally unavailable in local demo mode.
+- Migration `20260810120000_add_transaction_reconciliations.sql` owns the
+  schema, RLS policies, candidate search, and atomic save/delete functions.
 
 Problem:
 
@@ -1597,7 +1622,10 @@ Problem:
   income and spending reports. This feature should complement that behavior,
   not replace or duplicate it.
 
-Product direction to validate:
+Historical product direction considered before implementation:
+
+The following research notes are retained as design history. Where they differ
+from the implemented outcome above, the implemented outcome is authoritative.
 
 - Distinguish bank balance movements from reportable income and spending.
 - Keep every imported transaction visible and unchanged as provider-owned
@@ -1695,7 +1723,7 @@ Smallest useful implementation options to compare:
    smallest way to correct reports immediately, but it provides less auditability
    and may create unexplained exclusions.
 
-Open questions:
+Resolved research questions:
 
 - Is the first scope only loans, or should it also cover shared payments and
   refunds?
@@ -1719,7 +1747,7 @@ Security and ownership:
   belongs to the authenticated user.
 - Provider sync must never delete or overwrite reconciliation metadata.
 
-Suggested acceptance criteria for a future first slice:
+Original acceptance criteria used for the first slice:
 
 - The owner can start from one of their transactions and find candidate
   movements by description or amount across stored months.
@@ -1740,7 +1768,7 @@ Suggested acceptance criteria for a future first slice:
 
 Do not do yet:
 
-- Create reconciliation migrations or UI before choosing the first supported
-  semantics and whether partial or open groups are required.
 - Automatically match personal debts based only on equal amounts.
+- Add open or partially persisted reconciliation drafts.
+- Add allocated partial amounts within one bank transaction.
 - Turn this into a complete lending, collections, or accounting system.
