@@ -1,38 +1,51 @@
 import type {
   MonthlyCashflowBucket,
   MonthlyCashflowSummary,
-  MonthlyTransactionSummary
+  MonthlyTransactionSummary,
+  TransactionReconciliationAdjustment
 } from "@/definitions";
-import { isInternalTransfer } from "@/lib/domain/internalTransfers";
+import { buildReportingMovementSet } from "@/lib/domain/reportingMovements";
 
 import { formatDecimal, parseDecimal } from "./decimal";
 
 export function buildMonthlyCashflowSummary(
-  transactions: MonthlyTransactionSummary[]
+  input:
+    | MonthlyTransactionSummary[]
+    | {
+        transactions: MonthlyTransactionSummary[];
+        adjustments?: TransactionReconciliationAdjustment[];
+      }
 ): MonthlyCashflowSummary {
+  const reporting = buildReportingMovementSet(
+    Array.isArray(input) ? { transactions: input } : input
+  );
   const income = createCashflowBuilder();
   const expenses = createCashflowBuilder();
 
-  for (const transaction of transactions) {
+  for (const transaction of reporting.movements) {
     const amount = parseDecimal(transaction.amount);
 
     if (amount > 0n) {
-      if (isInternalTransfer(transaction)) {
-        income.excludeInternalTransfer();
-        continue;
-      }
-
       income.add(transaction.currency, amount);
       continue;
     }
 
     if (amount < 0n) {
-      if (isInternalTransfer(transaction)) {
-        expenses.excludeInternalTransfer();
-        continue;
-      }
-
       expenses.add(transaction.currency, -amount);
+    }
+  }
+
+  for (const excluded of reporting.excludedTransactions) {
+    if (excluded.reason !== "internal_transfer") {
+      continue;
+    }
+
+    const amount = parseDecimal(excluded.transaction.amount);
+
+    if (amount > 0n) {
+      income.excludeInternalTransfer();
+    } else if (amount < 0n) {
+      expenses.excludeInternalTransfer();
     }
   }
 

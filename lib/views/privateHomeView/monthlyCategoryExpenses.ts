@@ -1,8 +1,9 @@
 import type {
   MonthlyCategoryExpensesSummary,
-  MonthlyTransactionSummary
+  MonthlyTransactionSummary,
+  TransactionReconciliationAdjustment
 } from "@/definitions";
-import { isInternalTransfer } from "@/lib/domain/internalTransfers";
+import { buildReportingMovementSet } from "@/lib/domain/reportingMovements";
 
 import { formatDecimal, parseDecimal } from "./decimal";
 
@@ -17,15 +18,15 @@ const EXCLUDED_CATEGORY_SLUGS = new Set([
 
 export function buildMonthlyCategoryExpensesSummary({
   transactions,
+  adjustments = [],
   periodStart
 }: {
   transactions: MonthlyTransactionSummary[];
+  adjustments?: TransactionReconciliationAdjustment[];
   periodStart: string;
 }): MonthlyCategoryExpensesSummary {
-  const currency =
-    getPrimaryCurrency(
-      transactions.filter((item) => !isInternalTransfer(item))
-    ) ?? "EUR";
+  const reporting = buildReportingMovementSet({ transactions, adjustments });
+  const currency = getPrimaryCurrency(reporting.movements) ?? "EUR";
   const totalsByCategory = new Map<
     string,
     {
@@ -36,10 +37,13 @@ export function buildMonthlyCategoryExpensesSummary({
     }
   >();
   let uncategorizedExpenseCount = 0;
-  let excludedInternalTransferCount = 0;
+  const excludedInternalTransferCount = reporting.excludedTransactions.filter(
+    ({ transaction, reason }) =>
+      reason === "internal_transfer" && transaction.currency === currency
+  ).length;
   const excludedCategoryNames = new Set<string>();
 
-  for (const transaction of transactions) {
+  for (const transaction of reporting.movements) {
     if (transaction.currency !== currency) {
       continue;
     }
@@ -47,11 +51,6 @@ export function buildMonthlyCategoryExpensesSummary({
     const amount = parseDecimal(transaction.amount);
 
     if (amount === 0n) {
-      continue;
-    }
-
-    if (isInternalTransfer(transaction)) {
-      excludedInternalTransferCount += 1;
       continue;
     }
 
@@ -130,7 +129,7 @@ export function buildMonthlyCategoryExpensesSummary({
 }
 
 function getPrimaryCurrency(
-  transactions: MonthlyTransactionSummary[]
+  transactions: Array<{ currency: string }>
 ): string | null {
   const currencyCounts = new Map<string, number>();
 

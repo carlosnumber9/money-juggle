@@ -6,6 +6,7 @@ import type {
   ProviderStatusView,
   Result,
   TransactionCategoryGroupSummary,
+  TransactionReconciliationAdjustment,
   TransactionLabelSummary
 } from "@/definitions";
 
@@ -55,6 +56,27 @@ export async function loadMonthlyTransactions(
     };
   } catch (error) {
     return getFailedResult(error, "No se pudieron cargar los movimientos.");
+  }
+}
+
+export async function loadTransactionReconciliationAdjustments(
+  dataSource: BankingDataSource,
+  userId: string,
+  range: MonthlyTransactionRange
+): Promise<Result<TransactionReconciliationAdjustment[]>> {
+  try {
+    return {
+      ok: true,
+      value: await dataSource.listTransactionReconciliationAdjustments(
+        userId,
+        range
+      )
+    };
+  } catch (error) {
+    return getFailedResult(
+      error,
+      "No se pudieron cargar los ajustes de compensaciones."
+    );
   }
 }
 

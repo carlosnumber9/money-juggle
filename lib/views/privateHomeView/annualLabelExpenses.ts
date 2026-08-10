@@ -1,24 +1,27 @@
 import type {
   AnnualLabelExpensesSummary,
-  MonthlyTransactionSummary
+  MonthlyTransactionSummary,
+  TransactionReconciliationAdjustment
 } from "@/definitions";
-import { isInternalTransfer } from "@/lib/domain/internalTransfers";
+import { buildReportingMovementSet } from "@/lib/domain/reportingMovements";
 
 import { formatDecimal, parseDecimal } from "./decimal";
 
 export function buildAnnualLabelExpensesSummary({
   transactions,
+  adjustments = [],
   year
 }: {
   transactions: MonthlyTransactionSummary[];
+  adjustments?: TransactionReconciliationAdjustment[];
   year: number;
 }): AnnualLabelExpensesSummary {
-  const eligibleTransactions = transactions.filter((transaction) => {
+  const reporting = buildReportingMovementSet({ transactions, adjustments });
+  const eligibleTransactions = reporting.movements.filter((transaction) => {
     const amount = parseDecimal(transaction.amount);
 
     return (
       amount !== 0n &&
-      !isInternalTransfer(transaction) &&
       transaction.labels.length > 0 &&
       isTransactionInYear(transaction.reporting_date, year)
     );
@@ -89,7 +92,7 @@ export function buildAnnualLabelExpensesSummary({
 }
 
 function getPrimaryCurrency(
-  transactions: MonthlyTransactionSummary[]
+  transactions: Array<{ currency: string }>
 ): string | null {
   const currencyCounts = new Map<string, number>();
 

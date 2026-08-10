@@ -15,6 +15,7 @@ import {
   loadMonthlyTransactions,
   loadProviderStatus,
   loadTransactionCategoryGroups,
+  loadTransactionReconciliationAdjustments,
   loadTransactionLabels
 } from "./loaders";
 import { buildAnnualLabelExpensesSummary } from "./annualLabelExpenses";
@@ -51,7 +52,9 @@ export async function getPrivateHomeView(
     transactionsResult,
     yearlyTransactionsResult,
     categoryGroupsResult,
-    labelsResult
+    labelsResult,
+    monthlyAdjustmentsResult,
+    yearlyAdjustmentsResult
   ] = await Promise.all([
     loadConnections(dataSource, user.id),
     loadProviderStatus(dataSource),
@@ -59,7 +62,17 @@ export async function getPrivateHomeView(
     loadMonthlyTransactions(dataSource, user.id, transactionRange),
     loadMonthlyTransactions(dataSource, user.id, yearlyTransactionRange),
     loadTransactionCategoryGroups(dataSource, user.id),
-    loadTransactionLabels(dataSource, user.id)
+    loadTransactionLabels(dataSource, user.id),
+    loadTransactionReconciliationAdjustments(
+      dataSource,
+      user.id,
+      transactionRange
+    ),
+    loadTransactionReconciliationAdjustments(
+      dataSource,
+      user.id,
+      yearlyTransactionRange
+    )
   ]);
   const providerStatus = getProviderStatus(providerResult, dataSource.mode);
   const institutionsResult =
@@ -91,13 +104,19 @@ export async function getPrivateHomeView(
       previousMonth: selectedMonth.previousMonth,
       nextMonth: selectedMonth.nextMonth
     },
-    monthlyCashflow: buildMonthlyCashflowSummary(
-      transactionsResult.ok ? transactionsResult.value : []
-    ),
+    monthlyCashflow: buildMonthlyCashflowSummary({
+      transactions: transactionsResult.ok ? transactionsResult.value : [],
+      adjustments: monthlyAdjustmentsResult.ok
+        ? monthlyAdjustmentsResult.value
+        : []
+    }),
     monthlyEvolution: {
       summary: buildMonthlyEvolutionSummary({
         transactions: yearlyTransactionsResult.ok
           ? yearlyTransactionsResult.value
+          : [],
+        adjustments: yearlyAdjustmentsResult.ok
+          ? yearlyAdjustmentsResult.value
           : [],
         year: reportYear
       }),
@@ -106,6 +125,9 @@ export async function getPrivateHomeView(
         : yearlyTransactionsResult.reason,
       categoryExpenses: buildMonthlyCategoryExpensesSummary({
         transactions: transactionsResult.ok ? transactionsResult.value : [],
+        adjustments: monthlyAdjustmentsResult.ok
+          ? monthlyAdjustmentsResult.value
+          : [],
         periodStart: transactionRange.from
       }),
       categoryExpensesError: transactionsResult.ok
@@ -114,6 +136,9 @@ export async function getPrivateHomeView(
       labelExpenses: buildAnnualLabelExpensesSummary({
         transactions: yearlyTransactionsResult.ok
           ? yearlyTransactionsResult.value
+          : [],
+        adjustments: yearlyAdjustmentsResult.ok
+          ? yearlyAdjustmentsResult.value
           : [],
         year: reportYear
       }),

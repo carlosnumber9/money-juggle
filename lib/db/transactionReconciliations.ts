@@ -8,7 +8,10 @@ import type {
   TransactionReconciliationCandidatePage,
   TransactionReconciliationDetail,
   TransactionReconciliationDifferenceTreatment,
-  TransactionReconciliationKind
+  TransactionReconciliationKind,
+  TransactionReconciliationMembership,
+  TransactionReconciliationAdjustment,
+  MonthlyTransactionRange
 } from "@/definitions";
 import { sumDecimals } from "@/lib/domain/decimal";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -17,12 +20,42 @@ import { getInternalTransferTransactionIds } from "./enableBankingTransactions/i
 import {
   listOwnAccountsForTransferMatching,
   MONTHLY_TRANSACTION_SELECT
-} from "./enableBankingTransactions/listMonthlyTransactions";
+} from "./enableBankingTransactions/transactionReadContext";
 import { mapStoredTransactionToSummary } from "./enableBankingTransactions/mapStoredTransaction";
 import type { StoredMonthlyTransactionRow } from "./enableBankingTransactions/types";
 
 const CANDIDATE_PAGE_SIZE = 50;
 const MATCHING_DAY_DISTANCE = 3;
+
+type StoredAdjustmentGroup = {
+  id: string;
+  currency: string;
+  adjustment_reporting_date: string;
+  transaction_categories:
+    | {
+        id: string;
+        name: string;
+        slug: string;
+        transaction_category_groups:
+          | { id: string; name: string }
+          | Array<{ id: string; name: string }>
+          | null;
+      }
+    | Array<{
+        id: string;
+        name: string;
+        slug: string;
+        transaction_category_groups:
+          | { id: string; name: string }
+          | Array<{ id: string; name: string }>
+          | null;
+      }>
+    | null;
+  transaction_reconciliation_label_assignments: Array<{
+    transaction_labels:
+      { id: string; name: string } | Array<{ id: string; name: string }> | null;
+  }>;
+};
 
 type StoredCandidateRow = {
   id: string;
@@ -58,6 +91,226 @@ type StoredReconciliationRow = {
   adjustment_category_id: string | null;
   adjustment_reporting_date: string | null;
 };
+
+export async function listTransactionReconciliationStates({
+  userId,
+  transactionIds
+}: {
+  userId: string;
+  transactionIds: string[];
+}): Promise<Map<string, TransactionReconciliationMembership>> {
+  if (transactionIds.length === 0) {
+    return new Map();
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: memberships, error: membershipError } = await supabase
+    .from("transaction_reconciliation_items")
+    .select("transaction_id, reconciliation_id")
+    .eq("user_id", userId)
+    .in("transaction_id", transactionIds);
+
+  if (membershipError) {
+    throw new Error(
+      `Could not list transaction reconciliations: ${membershipError.message}`
+    );
+  }
+
+  const reconciliationIds = [
+    ...new Set((memberships ?? []).map((item) => item.reconciliation_id))
+  ];
+
+  if (reconciliationIds.length === 0) {
+    return new Map();
+  }
+
+  const [
+    { data: groups, error: groupError },
+    { data: items, error: itemError }
+  ] = await Promise.all([
+    supabase
+      .from("transaction_reconciliations")
+      .select("id, difference_treatment")
+      .eq("user_id", userId)
+      .in("id", reconciliationIds),
+    supabase
+      .from("transaction_reconciliation_items")
+      .select("reconciliation_id, transactions (amount)")
+      .eq("user_id", userId)
+      .in("reconciliation_id", reconciliationIds)
+  ]);
+
+  if (groupError || itemError) {
+    throw new Error(
+      `Could not load reconciliation state: ${groupError?.message ?? itemError?.message}`
+    );
+  }
+
+  const balanceByReconciliation = new Map<string, string[]>();
+
+  for (const item of items ?? []) {
+    const transaction = Array.isArray(item.transactions)
+      ? item.transactions[0]
+      : item.transactions;
+
+    if (!transaction) {
+      continue;
+    }
+
+    balanceByReconciliation.set(item.reconciliation_id, [
+      ...(balanceByReconciliation.get(item.reconciliation_id) ?? []),
+      String(transaction.amount)
+    ]);
+  }
+
+  const groupById = new Map(
+    (groups ?? []).map((group) => [group.id, group.difference_treatment])
+  );
+
+  return new Map(
+    (memberships ?? []).flatMap((membership) => {
+      const differenceTreatment = groupById.get(
+        membership.reconciliation_id
+      ) as TransactionReconciliationDifferenceTreatment | undefined;
+
+      if (!differenceTreatment) {
+        return [];
+      }
+
+      const balance = sumDecimals(
+        balanceByReconciliation.get(membership.reconciliation_id) ?? []
+      );
+
+      return [
+        [
+          membership.transaction_id,
+          {
+            id: membership.reconciliation_id,
+            differenceTreatment,
+            requiresReview: differenceTreatment === "none" && balance !== "0"
+          }
+        ] as const
+      ];
+    })
+  );
+}
+
+export async function listTransactionReconciliationAdjustments({
+  userId,
+  range
+}: {
+  userId: string;
+  range: MonthlyTransactionRange;
+}): Promise<TransactionReconciliationAdjustment[]> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("transaction_reconciliations")
+    .select(
+      `
+      id,
+      currency,
+      adjustment_reporting_date,
+      transaction_categories (
+        id,
+        name,
+        slug,
+        transaction_category_groups (id, name)
+      ),
+      transaction_reconciliation_label_assignments (
+        transaction_labels (id, name)
+      )
+    `
+    )
+    .eq("user_id", userId)
+    .eq("difference_treatment", "reportable")
+    .gte("adjustment_reporting_date", range.from)
+    .lt("adjustment_reporting_date", range.to);
+
+  if (error) {
+    throw new Error(
+      `Could not list reconciliation adjustments: ${error.message}`
+    );
+  }
+
+  const groups = (data ?? []) as StoredAdjustmentGroup[];
+
+  if (groups.length === 0) {
+    return [];
+  }
+
+  const { data: items, error: itemError } = await supabase
+    .from("transaction_reconciliation_items")
+    .select("reconciliation_id, transactions (amount)")
+    .eq("user_id", userId)
+    .in(
+      "reconciliation_id",
+      groups.map((group) => group.id)
+    );
+
+  if (itemError) {
+    throw new Error(
+      `Could not calculate reconciliation adjustments: ${itemError.message}`
+    );
+  }
+
+  const amountsByGroup = new Map<string, string[]>();
+
+  for (const item of items ?? []) {
+    const transaction = Array.isArray(item.transactions)
+      ? item.transactions[0]
+      : item.transactions;
+
+    if (transaction) {
+      amountsByGroup.set(item.reconciliation_id, [
+        ...(amountsByGroup.get(item.reconciliation_id) ?? []),
+        String(transaction.amount)
+      ]);
+    }
+  }
+
+  return groups.flatMap((group) => {
+    const amount = sumDecimals(amountsByGroup.get(group.id) ?? []);
+    const category = Array.isArray(group.transaction_categories)
+      ? group.transaction_categories[0]
+      : group.transaction_categories;
+    const categoryGroup = Array.isArray(category?.transaction_category_groups)
+      ? category.transaction_category_groups[0]
+      : category?.transaction_category_groups;
+
+    if (
+      amount === "0" ||
+      !group.adjustment_reporting_date ||
+      !category ||
+      !categoryGroup
+    ) {
+      return [];
+    }
+
+    return [
+      {
+        reconciliationId: group.id,
+        reportingDate: group.adjustment_reporting_date,
+        amount,
+        currency: group.currency,
+        category: {
+          id: category.id,
+          name: category.name,
+          slug: category.slug,
+          group: { id: categoryGroup.id, name: categoryGroup.name }
+        },
+        labels: group.transaction_reconciliation_label_assignments
+          .map((assignment) =>
+            Array.isArray(assignment.transaction_labels)
+              ? assignment.transaction_labels[0]
+              : assignment.transaction_labels
+          )
+          .filter((label): label is { id: string; name: string } =>
+            Boolean(label)
+          )
+      }
+    ];
+  });
+}
 
 export async function searchTransactionReconciliationCandidates({
   userId,

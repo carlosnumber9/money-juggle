@@ -1,5 +1,5 @@
 import type { MonthlyTransactionSummary } from "@/definitions";
-import { isInternalTransfer } from "@/lib/domain/internalTransfers";
+import { isFinanciallyNeutralTransaction } from "@/lib/domain/reportingMovements";
 
 export type TransactionFilterId = "ing" | "caixabank" | "income" | "expense";
 
@@ -186,7 +186,7 @@ function matchesAmountFilter(
     return true;
   }
 
-  if (isInternalTransfer(transaction)) {
+  if (isFinanciallyNeutralTransaction(transaction)) {
     return false;
   }
 

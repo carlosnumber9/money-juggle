@@ -70,6 +70,22 @@ export type MonthlyTransactionSummary = {
   counterparty_name: string | null;
   category: MonthlyTransactionCategory | null;
   labels: TransactionLabelSummary[];
+  reconciliation?: TransactionReconciliationMembership | null;
+};
+
+export type TransactionReconciliationMembership = {
+  id: string;
+  differenceTreatment: import("./reconciliation").TransactionReconciliationDifferenceTreatment;
+  requiresReview: boolean;
+};
+
+export type TransactionReconciliationAdjustment = {
+  reconciliationId: string;
+  reportingDate: string;
+  amount: string;
+  currency: string;
+  category: MonthlyTransactionCategory;
+  labels: TransactionLabelSummary[];
 };
 
 export type TransactionLabelSummary = {
@@ -118,6 +134,10 @@ export type BankingDataSource = {
     userId: string,
     range: MonthlyTransactionRange
   ): Promise<MonthlyTransactionSummary[]>;
+  listTransactionReconciliationAdjustments(
+    userId: string,
+    range: MonthlyTransactionRange
+  ): Promise<TransactionReconciliationAdjustment[]>;
   listTransactionCategoryGroups(
     userId: string
   ): Promise<TransactionCategoryGroupSummary[]>;

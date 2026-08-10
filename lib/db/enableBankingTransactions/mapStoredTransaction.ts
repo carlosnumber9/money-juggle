@@ -5,7 +5,8 @@ import type { StoredMonthlyTransactionRow } from "./types";
 
 export function mapStoredTransactionToSummary(
   row: StoredMonthlyTransactionRow,
-  cashflowType: MonthlyTransactionSummary["cashflow_type"] = "external"
+  cashflowType: MonthlyTransactionSummary["cashflow_type"] = "external",
+  reconciliation: MonthlyTransactionSummary["reconciliation"] = null
 ): MonthlyTransactionSummary {
   const account = Array.isArray(row.accounts)
     ? (row.accounts[0] ?? null)
@@ -81,6 +82,7 @@ export function mapStoredTransactionToSummary(
           left.createdAt.localeCompare(right.createdAt) ||
           left.label.name.localeCompare(right.label.name)
       )
-      .map(({ label }) => label)
+      .map(({ label }) => label),
+    reconciliation
   };
 }
