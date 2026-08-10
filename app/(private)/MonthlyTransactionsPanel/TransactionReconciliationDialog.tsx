@@ -8,17 +8,13 @@ import {
   SearchIcon,
   XIcon
 } from "lucide-react";
+import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -55,6 +51,7 @@ import {
   saveReconciliationAction,
   searchReconciliationCandidatesAction
 } from "./reconciliationActions";
+import { useMediaQuery } from "./useMediaQuery";
 
 type DifferenceChoice = Exclude<
   TransactionReconciliationDifferenceTreatment,
@@ -92,6 +89,7 @@ export function TransactionReconciliationDialog({
     () => mapTransactionToReconciliationCandidate(sourceTransaction),
     [sourceTransaction]
   );
+  const isMobile = useMediaQuery("(max-width: 767px)");
   const [kind, setKind] = useState<TransactionReconciliationKind>("debt");
   const [note, setNote] = useState("");
   const [query, setQuery] = useState("");
@@ -336,204 +334,258 @@ export function TransactionReconciliationDialog({
   }
 
   return (
-    <Dialog open onOpenChange={(open) => !open && requestClose()}>
-      <DialogContent
-        showCloseButton={false}
-        className="flex max-h-[calc(100dvh-2rem)] w-[min(58rem,calc(100%-2rem))] max-w-none flex-col gap-0 overflow-hidden p-0"
-      >
-        <DialogHeader className="relative border-b border-border px-6 py-5 pr-16">
-          <DialogTitle>Compensar movimientos</DialogTitle>
-          <DialogDescription>
-            Agrupa movimientos que representan un mismo flujo temporal de
-            dinero.
-          </DialogDescription>
-          <button
-            type="button"
-            aria-label="Cerrar compensación"
-            className="absolute top-3 right-3 flex size-11 items-center justify-center text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/30"
-            onClick={requestClose}
-          >
-            <XIcon aria-hidden className="size-5" />
-          </button>
-        </DialogHeader>
+    <ReconciliationSurface isMobile={isMobile} onClose={requestClose}>
+      <header className="relative border-b border-border px-4 py-4 pr-16 md:px-6 md:py-5">
+        <h2
+          id="transaction-reconciliation-title"
+          className="text-lg leading-none font-semibold tracking-wider uppercase"
+        >
+          Compensar movimientos
+        </h2>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          Agrupa movimientos que representan un mismo flujo temporal de dinero.
+        </p>
+        <button
+          type="button"
+          aria-label="Cerrar compensación"
+          className="absolute top-3 right-3 flex size-11 items-center justify-center text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/30"
+          onClick={requestClose}
+        >
+          <XIcon aria-hidden className="size-5" />
+        </button>
+      </header>
 
-        <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1.6fr)_minmax(16rem,0.8fr)] overflow-hidden">
-          <section className="flex min-h-0 flex-col border-r border-border">
-            <div className="grid gap-4 border-b border-border p-5">
-              <div className="grid grid-cols-2 gap-4">
-                <label className="grid gap-1 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                  Tipo
-                  <Select
-                    value={kind}
-                    onValueChange={(value) => {
-                      setKind(value as TransactionReconciliationKind);
-                      setIsDirty(true);
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {KIND_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </label>
-                <label className="grid gap-1 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                  Nota {kind === "other" ? "obligatoria" : "opcional"}
-                  <Textarea
-                    value={note}
-                    placeholder="Dinero adelantado por mi madre"
-                    className="min-h-10 py-2 normal-case"
-                    onChange={(event) => {
-                      setNote(event.target.value);
-                      setIsDirty(true);
-                    }}
-                  />
-                </label>
-              </div>
-              <label className="relative block">
-                <SearchIcon
-                  aria-hidden
-                  className="absolute top-1/2 left-0 size-4 -translate-y-1/2 text-muted-foreground"
-                />
-                <Input
-                  value={query}
-                  className="pl-6"
-                  placeholder="Buscar por concepto, importe, fecha, banco, categoría o etiqueta"
-                  onChange={(event) => setQuery(event.target.value)}
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:grid md:grid-cols-[minmax(0,1.6fr)_minmax(16rem,0.8fr)]">
+        <section
+          className={cn(
+            "flex min-h-0 flex-1 flex-col md:border-r md:border-border",
+            showDifferenceStep && "max-md:hidden"
+          )}
+        >
+          <div className="grid gap-4 border-b border-border p-4 md:p-5">
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="grid gap-1 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                Tipo
+                <Select
+                  value={kind}
+                  onValueChange={(value) => {
+                    setKind(value as TransactionReconciliationKind);
+                    setIsDirty(true);
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {KIND_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </label>
+              <label className="grid gap-1 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                Nota {kind === "other" ? "obligatoria" : "opcional"}
+                <Textarea
+                  value={note}
+                  placeholder="Dinero adelantado por mi madre"
+                  className="min-h-10 py-2 normal-case"
+                  onChange={(event) => {
+                    setNote(event.target.value);
+                    setIsDirty(true);
+                  }}
                 />
               </label>
             </div>
+            <label className="relative block">
+              <SearchIcon
+                aria-hidden
+                className="absolute top-1/2 left-0 size-4 -translate-y-1/2 text-muted-foreground"
+              />
+              <Input
+                value={query}
+                className="pl-6"
+                placeholder="Buscar por concepto, importe, fecha, banco, categoría o etiqueta"
+                onChange={(event) => setQuery(event.target.value)}
+              />
+            </label>
+          </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto">
-              {candidates.map((candidate) => (
-                <CandidateRow
-                  key={candidate.id}
-                  candidate={candidate}
-                  checked={selectedIds.has(candidate.id)}
-                  locked={candidate.id === source.id}
-                  onToggle={() => toggleCandidate(candidate)}
-                />
-              ))}
-              {isLoading ? (
-                <div className="flex items-center justify-center gap-2 p-5 text-sm text-muted-foreground">
-                  <LoaderCircleIcon
-                    aria-hidden
-                    className="size-4 animate-spin"
-                  />
-                  Cargando movimientos
-                </div>
-              ) : null}
-              {!isLoading && candidates.length === 0 ? (
-                <p className="p-6 text-center text-sm text-muted-foreground">
-                  No hay movimientos compatibles.
-                </p>
-              ) : null}
-              <div ref={sentinelRef} className="h-px" />
-            </div>
-          </section>
-
-          <aside className="flex min-h-0 flex-col bg-muted/20">
-            <div className="min-h-0 flex-1 overflow-y-auto p-5">
-              <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                Seleccionados ({selected.length})
-              </p>
-              <ul className="mt-3 grid gap-2">
-                {selected.map((transaction) => (
-                  <li
-                    key={transaction.id}
-                    className="flex items-start justify-between gap-3 text-sm"
-                  >
-                    <span className="line-clamp-2 min-w-0">
-                      {getCandidateConcept(transaction)}
-                    </span>
-                    <span className="shrink-0 font-medium tabular-nums">
-                      {formatCurrency(transaction.amount, transaction.currency)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              {showDifferenceStep && balanceValue !== 0n ? (
-                <DifferenceControls
-                  choice={differenceChoice}
-                  categoryId={categoryId}
-                  adjustmentDate={adjustmentDate}
-                  categories={reportableCategories}
-                  availableLabels={availableLabels}
-                  selectedLabelIds={selectedLabelIds}
-                  newLabelNames={newLabelNames}
-                  labelInput={labelInput}
-                  onChoiceChange={(choice) => {
-                    setDifferenceChoice(choice);
-                    setIsDirty(true);
-                  }}
-                  onCategoryChange={(value) => {
-                    setCategoryId(value);
-                    setIsDirty(true);
-                  }}
-                  onDateChange={(value) => {
-                    setAdjustmentDate(value);
-                    setIsDirty(true);
-                  }}
-                  onExistingLabelToggle={(labelId) => {
-                    setSelectedLabelIds((current) =>
-                      current.includes(labelId)
-                        ? current.filter((id) => id !== labelId)
-                        : [...current, labelId]
-                    );
-                    setIsDirty(true);
-                  }}
-                  onNewLabelRemove={(name) =>
-                    setNewLabelNames((current) =>
-                      current.filter((labelName) => labelName !== name)
-                    )
-                  }
-                  onLabelInputChange={setLabelInput}
-                  onLabelAdd={addNewLabel}
-                />
-              ) : null}
-            </div>
-
-            <footer className="border-t border-border bg-popover p-5">
-              <div className="flex items-end justify-between gap-4">
-                <div>
-                  <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                    Balance
-                  </p>
-                  <p
-                    className={cn(
-                      "mt-1 text-2xl font-semibold tabular-nums",
-                      balanceValue === 0n ? "text-primary" : "text-foreground"
-                    )}
-                  >
-                    {formatCurrency(balance, source.currency)}
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  disabled={selected.length < 2 || isSaving}
-                  onClick={() => void handleFinish()}
-                >
-                  {isSaving
-                    ? "Guardando…"
-                    : showDifferenceStep
-                      ? "Guardar"
-                      : "Finalizar"}
-                </Button>
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {candidates.map((candidate) => (
+              <CandidateRow
+                key={candidate.id}
+                candidate={candidate}
+                checked={selectedIds.has(candidate.id)}
+                locked={candidate.id === source.id}
+                onToggle={() => toggleCandidate(candidate)}
+              />
+            ))}
+            {isLoading ? (
+              <div className="flex items-center justify-center gap-2 p-5 text-sm text-muted-foreground">
+                <LoaderCircleIcon aria-hidden className="size-4 animate-spin" />
+                Cargando movimientos
               </div>
-              {error ? (
-                <p role="alert" className="mt-3 text-sm text-destructive">
-                  {error}
+            ) : null}
+            {!isLoading && candidates.length === 0 ? (
+              <p className="p-6 text-center text-sm text-muted-foreground">
+                No hay movimientos compatibles.
+              </p>
+            ) : null}
+            <div ref={sentinelRef} className="h-px" />
+          </div>
+        </section>
+
+        <aside className="flex min-h-0 shrink-0 flex-col bg-muted/20 md:flex-1">
+          <div
+            className={cn(
+              "min-h-0 flex-1 overflow-y-auto p-4 md:p-5",
+              !showDifferenceStep && "max-md:hidden"
+            )}
+          >
+            {showDifferenceStep ? (
+              <button
+                type="button"
+                className="mb-4 text-xs font-semibold tracking-wider text-muted-foreground uppercase hover:text-foreground md:hidden"
+                onClick={() => setShowDifferenceStep(false)}
+              >
+                Volver a movimientos
+              </button>
+            ) : null}
+            <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+              Seleccionados ({selected.length})
+            </p>
+            <ul className="mt-3 grid gap-2">
+              {selected.map((transaction) => (
+                <li
+                  key={transaction.id}
+                  className="flex items-start justify-between gap-3 text-sm"
+                >
+                  <span className="line-clamp-2 min-w-0">
+                    {getCandidateConcept(transaction)}
+                  </span>
+                  <span className="shrink-0 font-medium tabular-nums">
+                    {formatCurrency(transaction.amount, transaction.currency)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            {showDifferenceStep && balanceValue !== 0n ? (
+              <DifferenceControls
+                choice={differenceChoice}
+                categoryId={categoryId}
+                adjustmentDate={adjustmentDate}
+                categories={reportableCategories}
+                availableLabels={availableLabels}
+                selectedLabelIds={selectedLabelIds}
+                newLabelNames={newLabelNames}
+                labelInput={labelInput}
+                onChoiceChange={(choice) => {
+                  setDifferenceChoice(choice);
+                  setIsDirty(true);
+                }}
+                onCategoryChange={(value) => {
+                  setCategoryId(value);
+                  setIsDirty(true);
+                }}
+                onDateChange={(value) => {
+                  setAdjustmentDate(value);
+                  setIsDirty(true);
+                }}
+                onExistingLabelToggle={(labelId) => {
+                  setSelectedLabelIds((current) =>
+                    current.includes(labelId)
+                      ? current.filter((id) => id !== labelId)
+                      : [...current, labelId]
+                  );
+                  setIsDirty(true);
+                }}
+                onNewLabelRemove={(name) =>
+                  setNewLabelNames((current) =>
+                    current.filter((labelName) => labelName !== name)
+                  )
+                }
+                onLabelInputChange={setLabelInput}
+                onLabelAdd={addNewLabel}
+              />
+            ) : null}
+          </div>
+
+          <footer className="border-t border-border bg-popover p-4 md:p-5">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                  Balance
                 </p>
-              ) : null}
-            </footer>
-          </aside>
-        </div>
+                <p
+                  className={cn(
+                    "mt-1 text-2xl font-semibold tabular-nums",
+                    balanceValue === 0n ? "text-primary" : "text-foreground"
+                  )}
+                >
+                  {formatCurrency(balance, source.currency)}
+                </p>
+              </div>
+              <Button
+                type="button"
+                disabled={selected.length < 2 || isSaving}
+                onClick={() => void handleFinish()}
+              >
+                {isSaving
+                  ? "Guardando…"
+                  : showDifferenceStep
+                    ? "Guardar"
+                    : "Finalizar"}
+              </Button>
+            </div>
+            {error ? (
+              <p role="alert" className="mt-3 text-sm text-destructive">
+                {error}
+              </p>
+            ) : null}
+          </footer>
+        </aside>
+      </div>
+    </ReconciliationSurface>
+  );
+}
+
+function ReconciliationSurface({
+  isMobile,
+  onClose,
+  children
+}: {
+  isMobile: boolean;
+  onClose: () => void;
+  children: ReactNode;
+}) {
+  if (isMobile) {
+    return (
+      <Drawer
+        open
+        swipeDirection="down"
+        onOpenChange={(open) => !open && onClose()}
+      >
+        <DrawerContent
+          aria-labelledby="transaction-reconciliation-title"
+          className="border-0 [--drawer-content-max-height:calc(100dvh-3rem)]"
+        >
+          {children}
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        aria-labelledby="transaction-reconciliation-title"
+        showCloseButton={false}
+        className="flex max-h-[calc(100dvh-2rem)] w-[min(58rem,calc(100%-2rem))] max-w-none flex-col gap-0 overflow-hidden p-0"
+      >
+        {children}
       </DialogContent>
     </Dialog>
   );
