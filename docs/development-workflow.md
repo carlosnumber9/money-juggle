@@ -130,6 +130,9 @@ The repository's normal publication flow is direct to `main`.
   workflow independently.
 - These repository rules override generic branch, pull-request, and GitHub CLI
   conventions. Re-read this section before every commit or push.
+- Use standard local `git` commands with the configured SSH remote for fetch,
+  pull, and push operations. SSH access is the source of truth for Git
+  transport; do not require the GitHub CLI for authentication or publication.
 
 ## Documentation And Decisions
 

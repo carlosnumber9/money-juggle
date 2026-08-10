@@ -1,8 +1,9 @@
 import type {
   MonthlyEvolutionSummary,
-  MonthlyTransactionSummary
+  MonthlyTransactionSummary,
+  TransactionReconciliationAdjustment
 } from "@/definitions";
-import { isInternalTransfer } from "@/lib/domain/internalTransfers";
+import { buildReportingMovementSet } from "@/lib/domain/reportingMovements";
 
 import { formatDecimal, parseDecimal } from "./decimal";
 
@@ -23,15 +24,15 @@ const MONTH_LABELS = [
 
 export function buildMonthlyEvolutionSummary({
   transactions,
+  adjustments = [],
   year
 }: {
   transactions: MonthlyTransactionSummary[];
+  adjustments?: TransactionReconciliationAdjustment[];
   year: number;
 }): MonthlyEvolutionSummary {
-  const currency =
-    getPrimaryCurrency(
-      transactions.filter((item) => !isInternalTransfer(item))
-    ) ?? "EUR";
+  const reporting = buildReportingMovementSet({ transactions, adjustments });
+  const currency = getPrimaryCurrency(reporting.movements) ?? "EUR";
   const totals = MONTH_LABELS.map((monthLabel, index) => ({
     month: index + 1,
     monthLabel,
@@ -41,7 +42,7 @@ export function buildMonthlyEvolutionSummary({
   let transactionCount = 0;
   let excludedInternalTransferCount = 0;
 
-  for (const transaction of transactions) {
+  for (const transaction of reporting.movements) {
     if (transaction.currency !== currency) {
       continue;
     }
@@ -58,11 +59,6 @@ export function buildMonthlyEvolutionSummary({
       continue;
     }
 
-    if (isInternalTransfer(transaction)) {
-      excludedInternalTransferCount += 1;
-      continue;
-    }
-
     transactionCount += 1;
 
     if (amount > 0n) {
@@ -72,6 +68,14 @@ export function buildMonthlyEvolutionSummary({
 
     totals[monthIndex].expenses += -amount;
   }
+
+  excludedInternalTransferCount = reporting.excludedTransactions.filter(
+    ({ transaction, reason }) =>
+      reason === "internal_transfer" &&
+      transaction.currency === currency &&
+      getMonthIndex(transaction.reporting_date, year) !== null &&
+      parseDecimal(transaction.amount) !== 0n
+  ).length;
 
   return {
     year,
@@ -88,7 +92,7 @@ export function buildMonthlyEvolutionSummary({
 }
 
 function getPrimaryCurrency(
-  transactions: MonthlyTransactionSummary[]
+  transactions: Array<{ currency: string }>
 ): string | null {
   const currencyCounts = new Map<string, number>();
 

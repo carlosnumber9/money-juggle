@@ -19,6 +19,15 @@ describe("monthly transaction direction filters", () => {
       id: "categorized-transfer",
       amount: "-100",
       category: createInternalTransferCategory()
+    }),
+    createTransaction({
+      id: "reconciled-expense",
+      amount: "-30",
+      reconciliation: {
+        id: "reconciliation",
+        differenceTreatment: "neutralized",
+        requiresReview: false
+      }
     })
   ];
 
@@ -31,7 +40,8 @@ describe("monthly transaction direction filters", () => {
       "income",
       "expense",
       "detected-transfer",
-      "categorized-transfer"
+      "categorized-transfer",
+      "reconciled-expense"
     ]);
   });
 

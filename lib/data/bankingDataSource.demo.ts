@@ -67,9 +67,13 @@ export const demoBankingDataSource: BankingDataSource = {
           .map((labelId) =>
             DEMO_TRANSACTION_LABELS.find((label) => label.id === labelId)
           )
-          .filter((label) => label !== undefined)
+          .filter((label) => label !== undefined),
+        reconciliation: null
       };
     });
+  },
+  async listTransactionReconciliationAdjustments() {
+    return [];
   },
   async listTransactionCategoryGroups() {
     return DEMO_TRANSACTION_CATEGORY_GROUPS;

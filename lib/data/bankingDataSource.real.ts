@@ -15,6 +15,7 @@ import {
 } from "@/lib/db/enableBankingTransactions";
 import { listTransactionCategoryGroups } from "@/lib/db/transactionCategories";
 import { listTransactionLabels } from "@/lib/db/transactionLabels";
+import { listTransactionReconciliationAdjustments } from "@/lib/db/transactionReconciliations";
 import {
   getEnableBankingApplication,
   getEnableBankingAspsps
@@ -77,6 +78,9 @@ export const realBankingDataSource: BankingDataSource = {
   },
   async listMonthlyTransactions(userId, range) {
     return listMonthlyTransactions({ userId, range });
+  },
+  async listTransactionReconciliationAdjustments(userId, range) {
+    return listTransactionReconciliationAdjustments({ userId, range });
   },
   async listTransactionCategoryGroups(userId) {
     return listTransactionCategoryGroups({ userId });

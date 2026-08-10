@@ -1,3 +1,4 @@
+import { AlertTriangleIcon } from "lucide-react";
 import type { MouseEvent } from "react";
 
 import { TableCell, TableRow as BaseTableRow } from "@/components/ui/table";
@@ -18,12 +19,14 @@ export function TransactionRow({
   transaction,
   categoryGroups,
   onCategoryChange,
-  onSelect
+  onSelect,
+  onReconciliationSelect
 }: {
   transaction: MonthlyTransactionSummary;
   categoryGroups: TransactionCategoryGroupSummary[];
   onCategoryChange: (category: MonthlyTransactionCategory | null) => void;
   onSelect: (transaction: MonthlyTransactionSummary) => void;
+  onReconciliationSelect: (reconciliationId: string) => void;
 }) {
   const concept = getTransactionConcept(transaction);
   const amount = Number(transaction.amount);
@@ -81,6 +84,25 @@ export function TransactionRow({
             <span className="monthly-transaction-label-chip max-w-52 truncate rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-muted-foreground">
               {labelSummary}
             </span>
+          ) : null}
+          {transaction.reconciliation ? (
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary outline-none hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring/30"
+              aria-label={
+                transaction.reconciliation.requiresReview
+                  ? "Compensado, necesita revisión"
+                  : "Ver compensación"
+              }
+              onClick={() =>
+                onReconciliationSelect(transaction.reconciliation!.id)
+              }
+            >
+              {transaction.reconciliation.requiresReview ? (
+                <AlertTriangleIcon aria-hidden className="size-3" />
+              ) : null}
+              Compensado
+            </button>
           ) : null}
         </div>
       </TableCell>

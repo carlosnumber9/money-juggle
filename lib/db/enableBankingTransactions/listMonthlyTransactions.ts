@@ -5,58 +5,16 @@ import type {
   MonthlyTransactionSummary
 } from "@/definitions";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { listTransactionReconciliationStates } from "@/lib/db/transactionReconciliations";
 
 import { getInternalTransferMatchingRange } from "./internalTransferMatchingRange";
 import { getInternalTransferTransactionIds } from "./internalTransfers";
 import { mapStoredTransactionToSummary } from "./mapStoredTransaction";
-import type {
-  StoredMonthlyTransactionRow,
-  StoredOwnAccountForTransferMatching
-} from "./types";
-
-const MONTHLY_TRANSACTION_SELECT = `
-  id,
-  account_id,
-  booking_status,
-  booking_date,
-  reporting_date,
-  amount,
-  currency,
-  description,
-  merchant_name,
-  counterparty_name,
-  counterparty_account_last4,
-  counterparty_account_fingerprint,
-  category_id,
-  transaction_categories (
-    id,
-    name,
-    slug,
-    transaction_category_groups (
-      id,
-      name
-    )
-  ),
-  transaction_label_assignments (
-    created_at,
-    transaction_labels (
-      id,
-      name
-    )
-  ),
-  accounts!inner (
-    id,
-    name,
-    iban_last4,
-    iban_fingerprint,
-    bank_connections!inner (
-      institutions!inner (
-        provider_institution_id,
-        name
-      )
-    )
-  )
-`;
+import {
+  listOwnAccountsForTransferMatching,
+  MONTHLY_TRANSACTION_SELECT
+} from "./transactionReadContext";
+import type { StoredMonthlyTransactionRow } from "./types";
 
 export async function listMonthlyTransactions({
   userId,
@@ -80,9 +38,13 @@ export async function listMonthlyTransactions({
   }
 
   const rows = (data ?? []) as StoredMonthlyTransactionRow[];
-  const [ownAccounts, matchingRows] = await Promise.all([
+  const [ownAccounts, matchingRows, reconciliationStates] = await Promise.all([
     listOwnAccountsForTransferMatching(userId),
-    listBookingDateCandidates({ userId, rows })
+    listBookingDateCandidates({ userId, rows }),
+    listTransactionReconciliationStates({
+      userId,
+      transactionIds: rows.map((row) => row.id)
+    })
   ]);
   const internalTransferIds = getInternalTransferTransactionIds(
     mergeTransactionRows(rows, matchingRows),
@@ -92,7 +54,8 @@ export async function listMonthlyTransactions({
   return rows.map((row) =>
     mapStoredTransactionToSummary(
       row,
-      internalTransferIds.has(row.id) ? "internal_transfer" : "external"
+      internalTransferIds.has(row.id) ? "internal_transfer" : "external",
+      reconciliationStates.get(row.id) ?? null
     )
   );
 }
@@ -134,22 +97,4 @@ function mergeTransactionRows(
   return [
     ...new Map([...rows, ...matchingRows].map((row) => [row.id, row])).values()
   ];
-}
-
-async function listOwnAccountsForTransferMatching(
-  userId: string
-): Promise<StoredOwnAccountForTransferMatching[]> {
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
-    .from("accounts")
-    .select("id, iban_last4, iban_fingerprint")
-    .eq("user_id", userId);
-
-  if (error) {
-    throw new Error(
-      `Could not list accounts for internal transfer matching: ${error.message}`
-    );
-  }
-
-  return (data ?? []) as StoredOwnAccountForTransferMatching[];
 }

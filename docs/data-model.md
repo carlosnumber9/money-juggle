@@ -12,6 +12,7 @@ The executable schema is defined by the local migration chain:
 - `supabase/migrations/20260719214000_add_shared_expense_settlement_category.sql`
 - `supabase/migrations/20260804120000_add_personal_care_and_rename_vehicle_insurance.sql`
 - `supabase/migrations/20260809120000_add_transaction_reporting_date.sql`
+- `supabase/migrations/20260810120000_add_transaction_reconciliations.sql`
 
 The model should preserve user ownership even though the app starts as a personal project.
 
@@ -28,6 +29,36 @@ connections, account data, balance snapshots, transactions, categorization, sync
 observability, internal transfer matching, and the initial owner-scoped category
 catalog.
 
+### Transaction Reconciliations
+
+`transaction_reconciliations` stores finalized, owner-controlled groups of bank
+transactions whose principal cash flow should be financially neutral. It stores
+the reason, optional note, currency, and the treatment of any current signed
+difference. A reportable difference also references one owner category and one
+reporting date.
+
+`transaction_reconciliation_items` stores ordered group membership. A unique
+transaction constraint prevents one bank transaction from belonging to two
+reconciliations. Composite owner foreign keys prevent cross-user relationships,
+and deleting a reconciliation cascades through memberships while deleting a
+referenced bank transaction remains restricted.
+
+`transaction_reconciliation_label_assignments` links optional owner labels to a
+reportable reconciliation difference. Labels themselves remain reusable after a
+reconciliation is deleted.
+
+All three tables enable RLS and permit authenticated CRUD only when `user_id`
+matches `auth.uid()`. `save_transaction_reconciliation` locks selected
+transactions and atomically validates and writes the complete group. The
+function recalculates the live signed balance and rejects a stale expected
+balance, duplicate membership, mixed currencies, or invalid adjustment data.
+
+No amount snapshot is stored. Provider synchronization may update a booked
+transaction amount, and the reconciliation balance then changes with it. A
+group originally saved at zero becomes review-required if its live balance
+drifts. Reportable differences change contribution automatically; neutralized
+differences remain excluded.
+
 Included tables:
 
 - `profiles`
@@ -40,6 +71,9 @@ Included tables:
 - `transaction_categories`
 - `transaction_labels`
 - `transaction_label_assignments`
+- `transaction_reconciliations`
+- `transaction_reconciliation_items`
+- `transaction_reconciliation_label_assignments`
 - `sync_runs`
 - `consent_events`
 
