@@ -5,5 +5,6 @@ export * from "./enableBanking";
 export * from "./http";
 export * from "./login";
 export * from "./privateView";
+export * from "./reconciliation";
 export * from "./supabase";
 export * from "./ui";

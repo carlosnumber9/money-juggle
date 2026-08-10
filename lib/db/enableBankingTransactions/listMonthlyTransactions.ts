@@ -14,7 +14,7 @@ import type {
   StoredOwnAccountForTransferMatching
 } from "./types";
 
-const MONTHLY_TRANSACTION_SELECT = `
+export const MONTHLY_TRANSACTION_SELECT = `
   id,
   account_id,
   booking_status,
@@ -136,7 +136,7 @@ function mergeTransactionRows(
   ];
 }
 
-async function listOwnAccountsForTransferMatching(
+export async function listOwnAccountsForTransferMatching(
   userId: string
 ): Promise<StoredOwnAccountForTransferMatching[]> {
   const supabase = await createSupabaseServerClient();
