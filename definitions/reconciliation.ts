@@ -48,6 +48,7 @@ export type TransactionReconciliationDetail = {
   currency: string;
   differenceTreatment: TransactionReconciliationDifferenceTreatment;
   adjustmentCategoryId: string | null;
+  adjustmentCategory: MonthlyTransactionCategory | null;
   adjustmentReportingDate: string | null;
   adjustmentLabels: TransactionLabelSummary[];
   members: TransactionReconciliationCandidate[];

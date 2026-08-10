@@ -90,6 +90,26 @@ type StoredReconciliationRow = {
   difference_treatment: TransactionReconciliationDifferenceTreatment;
   adjustment_category_id: string | null;
   adjustment_reporting_date: string | null;
+  transaction_categories:
+    | {
+        id: string;
+        name: string;
+        slug: string;
+        transaction_category_groups:
+          | { id: string; name: string }
+          | Array<{ id: string; name: string }>
+          | null;
+      }
+    | Array<{
+        id: string;
+        name: string;
+        slug: string;
+        transaction_category_groups:
+          | { id: string; name: string }
+          | Array<{ id: string; name: string }>
+          | null;
+      }>
+    | null;
 };
 
 export async function listTransactionReconciliationStates({
@@ -388,7 +408,21 @@ export async function getTransactionReconciliationDetail({
     supabase
       .from("transaction_reconciliations")
       .select(
-        "id, kind, note, currency, difference_treatment, adjustment_category_id, adjustment_reporting_date"
+        `
+          id,
+          kind,
+          note,
+          currency,
+          difference_treatment,
+          adjustment_category_id,
+          adjustment_reporting_date,
+          transaction_categories (
+            id,
+            name,
+            slug,
+            transaction_category_groups (id, name)
+          )
+        `
       )
       .eq("id", reconciliationId)
       .eq("user_id", userId)
@@ -450,6 +484,14 @@ export async function getTransactionReconciliationDetail({
     );
   const currentBalance = sumDecimals(members.map((member) => member.amount));
   const stored = reconciliation as StoredReconciliationRow;
+  const adjustmentCategory = Array.isArray(stored.transaction_categories)
+    ? stored.transaction_categories[0]
+    : stored.transaction_categories;
+  const adjustmentCategoryGroup = Array.isArray(
+    adjustmentCategory?.transaction_category_groups
+  )
+    ? adjustmentCategory.transaction_category_groups[0]
+    : adjustmentCategory?.transaction_category_groups;
 
   return {
     id: stored.id,
@@ -458,6 +500,18 @@ export async function getTransactionReconciliationDetail({
     currency: stored.currency,
     differenceTreatment: stored.difference_treatment,
     adjustmentCategoryId: stored.adjustment_category_id,
+    adjustmentCategory:
+      adjustmentCategory && adjustmentCategoryGroup
+        ? {
+            id: adjustmentCategory.id,
+            name: adjustmentCategory.name,
+            slug: adjustmentCategory.slug,
+            group: {
+              id: adjustmentCategoryGroup.id,
+              name: adjustmentCategoryGroup.name
+            }
+          }
+        : null,
     adjustmentReportingDate: stored.adjustment_reporting_date,
     adjustmentLabels: (labelsResult.data ?? [])
       .map((assignment) => {

@@ -16,7 +16,8 @@ export function TransactionsTable({
   transactions,
   categoryGroups,
   onTransactionCategoryChange,
-  onTransactionSelect
+  onTransactionSelect,
+  onReconciliationSelect
 }: {
   transactions: MonthlyTransactionSummary[];
   categoryGroups: TransactionCategoryGroupSummary[];
@@ -25,6 +26,7 @@ export function TransactionsTable({
     category: MonthlyTransactionCategory | null
   ) => void;
   onTransactionSelect: (transaction: MonthlyTransactionSummary) => void;
+  onReconciliationSelect: (reconciliationId: string) => void;
 }) {
   const transactionGroups = groupTransactionsByDate(transactions);
 
@@ -39,6 +41,7 @@ export function TransactionsTable({
               categoryGroups={categoryGroups}
               onTransactionCategoryChange={onTransactionCategoryChange}
               onTransactionSelect={onTransactionSelect}
+              onReconciliationSelect={onReconciliationSelect}
             />
           ))}
         </TableBody>
@@ -51,7 +54,8 @@ function TransactionDateGroup({
   group,
   categoryGroups,
   onTransactionCategoryChange,
-  onTransactionSelect
+  onTransactionSelect,
+  onReconciliationSelect
 }: {
   group: TransactionDateGroup;
   categoryGroups: TransactionCategoryGroupSummary[];
@@ -60,6 +64,7 @@ function TransactionDateGroup({
     category: MonthlyTransactionCategory | null
   ) => void;
   onTransactionSelect: (transaction: MonthlyTransactionSummary) => void;
+  onReconciliationSelect: (reconciliationId: string) => void;
 }) {
   return (
     <>
@@ -82,6 +87,7 @@ function TransactionDateGroup({
             onTransactionCategoryChange(transaction.id, category)
           }
           onSelect={onTransactionSelect}
+          onReconciliationSelect={onReconciliationSelect}
         />
       ))}
     </>

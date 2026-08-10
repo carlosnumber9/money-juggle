@@ -28,6 +28,7 @@ export function TransactionDetailDialog({
   onReportingDateChange,
   reconciliationEnabled,
   onReconcile,
+  onReconciliationOpen,
   onClose
 }: {
   transaction: MonthlyTransactionSummary | null;
@@ -40,6 +41,7 @@ export function TransactionDetailDialog({
   onReportingDateChange: (transactionId: string, reportingDate: string) => void;
   reconciliationEnabled: boolean;
   onReconcile: (transaction: MonthlyTransactionSummary) => void;
+  onReconciliationOpen: (reconciliationId: string) => void;
   onClose: () => void;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -155,18 +157,32 @@ export function TransactionDetailDialog({
                 </dd>
               </div>
             </dl>
-            {canReconcile ? (
+            {canReconcile || transaction.reconciliation ? (
               <div className="mt-7 border-t border-border/70 pt-5">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    dialogRef.current?.close();
-                    onReconcile(transaction);
-                  }}
-                >
-                  Compensar
-                </Button>
+                {canReconcile ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      dialogRef.current?.close();
+                      onReconcile(transaction);
+                    }}
+                  >
+                    Compensar
+                  </Button>
+                ) : null}
+                {transaction.reconciliation ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      dialogRef.current?.close();
+                      onReconciliationOpen(transaction.reconciliation!.id);
+                    }}
+                  >
+                    Ver compensación
+                  </Button>
+                ) : null}
               </div>
             ) : null}
           </div>

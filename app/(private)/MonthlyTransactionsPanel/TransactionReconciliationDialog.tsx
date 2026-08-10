@@ -31,6 +31,7 @@ import type {
   TransactionReconciliationCandidate,
   TransactionReconciliationCandidateCursor,
   TransactionReconciliationDifferenceTreatment,
+  TransactionReconciliationDetail,
   TransactionReconciliationKind
 } from "@/definitions";
 import { parseDecimal } from "@/lib/domain/decimal";
@@ -70,35 +71,47 @@ const KIND_OPTIONS: Array<{
 
 export function TransactionReconciliationDialog({
   sourceTransaction,
+  initialDetail,
   categoryGroups,
   availableLabels,
   onSaved,
   onClose
 }: {
-  sourceTransaction: MonthlyTransactionSummary;
+  sourceTransaction: MonthlyTransactionSummary | null;
+  initialDetail: TransactionReconciliationDetail | null;
   categoryGroups: TransactionCategoryGroupSummary[];
   availableLabels: TransactionLabelSummary[];
   onSaved: (input: {
     reconciliationId: string;
     transactionIds: string[];
+    previousTransactionIds: string[];
     differenceTreatment: TransactionReconciliationDifferenceTreatment;
   }) => void;
   onClose: () => void;
 }) {
-  const source = useMemo(
-    () => mapTransactionToReconciliationCandidate(sourceTransaction),
-    [sourceTransaction]
+  const isEditing = initialDetail !== null;
+  const initialMembers = useMemo(
+    () =>
+      initialDetail?.members ??
+      (sourceTransaction
+        ? [mapTransactionToReconciliationCandidate(sourceTransaction)]
+        : []),
+    [initialDetail, sourceTransaction]
   );
+  const source = initialMembers[0];
+  if (!source) {
+    throw new Error("A reconciliation editor requires at least one movement.");
+  }
   const isMobile = useMediaQuery("(max-width: 767px)");
-  const [kind, setKind] = useState<TransactionReconciliationKind>("debt");
-  const [note, setNote] = useState("");
+  const [kind, setKind] = useState<TransactionReconciliationKind>(
+    initialDetail?.kind ?? "debt"
+  );
+  const [note, setNote] = useState(initialDetail?.note ?? "");
   const [query, setQuery] = useState("");
-  const [candidates, setCandidates] = useState<
-    TransactionReconciliationCandidate[]
-  >([source]);
-  const [selected, setSelected] = useState<
-    TransactionReconciliationCandidate[]
-  >([source]);
+  const [candidates, setCandidates] =
+    useState<TransactionReconciliationCandidate[]>(initialMembers);
+  const [selected, setSelected] =
+    useState<TransactionReconciliationCandidate[]>(initialMembers);
   const [cursor, setCursor] =
     useState<TransactionReconciliationCandidateCursor | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -106,13 +119,20 @@ export function TransactionReconciliationDialog({
   const [error, setError] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [showDifferenceStep, setShowDifferenceStep] = useState(false);
-  const [differenceChoice, setDifferenceChoice] =
-    useState<DifferenceChoice>("neutralized");
-  const [categoryId, setCategoryId] = useState("");
-  const [adjustmentDate, setAdjustmentDate] = useState(
-    source.reportingDate ?? ""
+  const [differenceChoice, setDifferenceChoice] = useState<DifferenceChoice>(
+    initialDetail?.differenceTreatment === "reportable"
+      ? "reportable"
+      : "neutralized"
   );
-  const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>([]);
+  const [categoryId, setCategoryId] = useState(
+    initialDetail?.adjustmentCategoryId ?? ""
+  );
+  const [adjustmentDate, setAdjustmentDate] = useState(
+    initialDetail?.adjustmentReportingDate ?? source.reportingDate ?? ""
+  );
+  const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>(
+    initialDetail?.adjustmentLabels.map((label) => label.id) ?? []
+  );
   const [newLabelNames, setNewLabelNames] = useState<string[]>([]);
   const [labelInput, setLabelInput] = useState("");
   const loadRequestRef = useRef(0);
@@ -146,7 +166,7 @@ export function TransactionReconciliationDialog({
           currency: source.currency,
           query,
           cursor: null,
-          reconciliationId: null
+          reconciliationId: initialDetail?.id ?? null
         }).catch(() => null);
 
         if (requestId !== loadRequestRef.current) {
@@ -159,14 +179,14 @@ export function TransactionReconciliationDialog({
           return;
         }
 
-        setCandidates(mergeCandidateRows([source], result.value.rows));
+        setCandidates(mergeCandidateRows(initialMembers, result.value.rows));
         setCursor(result.value.nextCursor);
         setIsLoading(false);
       })();
     }, 250);
 
     return () => window.clearTimeout(timeout);
-  }, [query, source]);
+  }, [initialDetail?.id, initialMembers, query, source]);
 
   const loadMoreCandidates = useCallback(async () => {
     if (!cursor || isLoading) {
@@ -179,7 +199,7 @@ export function TransactionReconciliationDialog({
       currency: source.currency,
       query,
       cursor,
-      reconciliationId: null
+      reconciliationId: initialDetail?.id ?? null
     }).catch(() => null);
 
     if (requestId !== loadRequestRef.current) {
@@ -195,7 +215,7 @@ export function TransactionReconciliationDialog({
     setCandidates((current) => mergeCandidateRows(current, result.value.rows));
     setCursor(result.value.nextCursor);
     setIsLoading(false);
-  }, [cursor, isLoading, query, source.currency]);
+  }, [cursor, initialDetail?.id, isLoading, query, source.currency]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -215,7 +235,7 @@ export function TransactionReconciliationDialog({
   }, [cursor, isLoading, loadMoreCandidates]);
 
   function toggleCandidate(candidate: TransactionReconciliationCandidate) {
-    if (candidate.id === source.id) {
+    if (!isEditing && candidate.id === source.id) {
       return;
     }
 
@@ -278,8 +298,8 @@ export function TransactionReconciliationDialog({
               newLabelNames
             } as const);
     const result = await saveReconciliationAction({
-      reconciliationId: null,
-      sourceTransactionId: source.id,
+      reconciliationId: initialDetail?.id ?? null,
+      sourceTransactionId: isEditing ? null : source.id,
       kind,
       note: note.trim() || null,
       transactionIds: selected.map((transaction) => transaction.id),
@@ -297,6 +317,8 @@ export function TransactionReconciliationDialog({
     onSaved({
       reconciliationId: result.value.reconciliationId,
       transactionIds: selected.map((transaction) => transaction.id),
+      previousTransactionIds:
+        initialDetail?.members.map((transaction) => transaction.id) ?? [],
       differenceTreatment: difference.treatment
     });
     setIsSaving(false);
@@ -340,7 +362,7 @@ export function TransactionReconciliationDialog({
           id="transaction-reconciliation-title"
           className="text-lg leading-none font-semibold tracking-wider uppercase"
         >
-          Compensar movimientos
+          {isEditing ? "Editar compensación" : "Compensar movimientos"}
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           Agrupa movimientos que representan un mismo flujo temporal de dinero.
@@ -418,7 +440,7 @@ export function TransactionReconciliationDialog({
                 key={candidate.id}
                 candidate={candidate}
                 checked={selectedIds.has(candidate.id)}
-                locked={candidate.id === source.id}
+                locked={!isEditing && candidate.id === source.id}
                 onToggle={() => toggleCandidate(candidate)}
               />
             ))}

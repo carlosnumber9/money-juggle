@@ -12,6 +12,7 @@ import { EmptyTransactionsState } from "./EmptyTransactionsState";
 import { MonthlyTransactionsHeader } from "./MonthlyTransactionsHeader";
 import { TransactionDetailDialog } from "./TransactionDetailDialog";
 import { TransactionReconciliationDialog } from "./TransactionReconciliationDialog";
+import { TransactionReconciliationDetailDialog } from "./TransactionReconciliationDetailDialog";
 import {
   clearCategoryFilters,
   DEFAULT_TRANSACTION_FILTERS,
@@ -44,6 +45,9 @@ export function MonthlyTransactionsPanel({
     string | null
   >(null);
   const [reconciliationSourceId, setReconciliationSourceId] = useState<
+    string | null
+  >(null);
+  const [selectedReconciliationId, setSelectedReconciliationId] = useState<
     string | null
   >(null);
   const [transactionFilters, setTransactionFilters] =
@@ -153,6 +157,47 @@ export function MonthlyTransactionsPanel({
     );
   }
 
+  function handleReconciliationSaved({
+    reconciliationId,
+    transactionIds,
+    previousTransactionIds = [],
+    differenceTreatment
+  }: {
+    reconciliationId: string;
+    transactionIds: string[];
+    previousTransactionIds?: string[];
+    differenceTreatment: NonNullable<
+      MonthlyTransactionsPanelProps["transactions"][number]["reconciliation"]
+    >["differenceTreatment"];
+  }) {
+    const memberIds = new Set(transactionIds);
+    const previousMemberIds = new Set(previousTransactionIds);
+
+    setDisplayTransactions((currentTransactions) =>
+      currentTransactions.map((transaction) => {
+        if (memberIds.has(transaction.id)) {
+          return {
+            ...transaction,
+            reconciliation: {
+              id: reconciliationId,
+              differenceTreatment,
+              requiresReview: false
+            }
+          };
+        }
+
+        if (
+          previousMemberIds.has(transaction.id) &&
+          transaction.reconciliation?.id === reconciliationId
+        ) {
+          return { ...transaction, reconciliation: null };
+        }
+
+        return transaction;
+      })
+    );
+  }
+
   return (
     <section aria-labelledby="monthly-transactions-title">
       <MonthlyTransactionsHeader
@@ -174,6 +219,7 @@ export function MonthlyTransactionsPanel({
           onTransactionSelect={(transaction) =>
             setSelectedTransactionId(transaction.id)
           }
+          onReconciliationSelect={setSelectedReconciliationId}
         />
       ) : (
         <EmptyTransactionsState
@@ -193,37 +239,40 @@ export function MonthlyTransactionsPanel({
           setSelectedTransactionId(null);
           setReconciliationSourceId(transaction.id);
         }}
+        onReconciliationOpen={(reconciliationId) => {
+          setSelectedTransactionId(null);
+          setSelectedReconciliationId(reconciliationId);
+        }}
         onClose={() => setSelectedTransactionId(null)}
       />
       {reconciliationSource ? (
         <TransactionReconciliationDialog
           key={reconciliationSource.id}
           sourceTransaction={reconciliationSource}
+          initialDetail={null}
           categoryGroups={categoryGroups}
           availableLabels={availableLabels}
-          onSaved={({
-            reconciliationId,
-            transactionIds,
-            differenceTreatment
-          }) => {
-            const memberIds = new Set(transactionIds);
-
+          onSaved={handleReconciliationSaved}
+          onClose={() => setReconciliationSourceId(null)}
+        />
+      ) : null}
+      {selectedReconciliationId ? (
+        <TransactionReconciliationDetailDialog
+          key={selectedReconciliationId}
+          reconciliationId={selectedReconciliationId}
+          categoryGroups={categoryGroups}
+          availableLabels={availableLabels}
+          onSaved={handleReconciliationSaved}
+          onDeleted={(reconciliationId) => {
             setDisplayTransactions((currentTransactions) =>
               currentTransactions.map((transaction) =>
-                memberIds.has(transaction.id)
-                  ? {
-                      ...transaction,
-                      reconciliation: {
-                        id: reconciliationId,
-                        differenceTreatment,
-                        requiresReview: false
-                      }
-                    }
+                transaction.reconciliation?.id === reconciliationId
+                  ? { ...transaction, reconciliation: null }
                   : transaction
               )
             );
           }}
-          onClose={() => setReconciliationSourceId(null)}
+          onClose={() => setSelectedReconciliationId(null)}
         />
       ) : null}
     </section>
