@@ -11,7 +11,6 @@ import type {
   TransactionReconciliationDetail
 } from "@/definitions";
 import { isEmailAllowed } from "@/lib/auth/allowlist";
-import { isDemoMode } from "@/lib/demo/mode";
 import {
   deleteTransactionReconciliation,
   getTransactionReconciliationDetail,
@@ -40,10 +39,6 @@ export async function searchReconciliationCandidatesAction(input: {
         !isValidReportingDate(input.cursor.reportingDate)))
   ) {
     return { ok: false, reason: "La búsqueda no es válida." };
-  }
-
-  if (isDemoMode()) {
-    return getDemoUnsupportedResult();
   }
 
   const user = await getAllowedUser();
@@ -79,10 +74,6 @@ export async function getReconciliationDetailAction(input: {
     return { ok: false, reason: "La compensación no es válida." };
   }
 
-  if (isDemoMode()) {
-    return getDemoUnsupportedResult();
-  }
-
   const user = await getAllowedUser();
 
   if (!user.ok) {
@@ -116,10 +107,6 @@ export async function saveReconciliationAction(
     };
   }
 
-  if (isDemoMode()) {
-    return getDemoUnsupportedResult();
-  }
-
   const user = await getAllowedUser();
 
   if (!user.ok) {
@@ -147,10 +134,6 @@ export async function deleteReconciliationAction(input: {
 }): Promise<Result<null>> {
   if (!isUuid(input.reconciliationId)) {
     return { ok: false, reason: "La compensación no es válida." };
-  }
-
-  if (isDemoMode()) {
-    return getDemoUnsupportedResult();
   }
 
   const user = await getAllowedUser();
@@ -203,13 +186,6 @@ function getSaveErrorReason(error: unknown): string {
   }
 
   return "No se pudo guardar la compensación. Inténtalo de nuevo.";
-}
-
-function getDemoUnsupportedResult(): Result<never> {
-  return {
-    ok: false,
-    reason: "Las compensaciones no están disponibles en modo demo."
-  };
 }
 
 function logReconciliationError(operation: string, error: unknown) {

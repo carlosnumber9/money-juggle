@@ -3,14 +3,9 @@ import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
-import { isDemoMode } from "@/lib/demo/mode";
 import { getSupabaseConfig } from "@/lib/supabase/env";
 
 export async function updateSupabaseSession(request: NextRequest) {
-  if (isDemoMode()) {
-    return NextResponse.next();
-  }
-
   const { url, publishableKey } = getSupabaseConfig();
   let response = createPassThroughResponse(request);
 

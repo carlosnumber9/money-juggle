@@ -65,9 +65,9 @@ lib/views/
 ```
 
 `app/api/` owns thin Route Handlers. `lib/views/` prepares route-level props.
-`lib/data/` selects the real or demo data source. `lib/db/` owns persistence
-helpers. `lib/enable-banking/` owns server-only provider calls and request
-signing.
+`lib/data/` exposes the single application-facing banking data source.
+`lib/db/` owns persistence helpers. `lib/enable-banking/` owns server-only
+provider calls and request signing.
 
 ## Data Source Boundary
 
@@ -75,14 +75,10 @@ UI components should receive prepared props and should not fetch financial data
 directly. Route TSX files should stay thin and delegate data preparation to
 server-side view functions under `lib/views/`.
 
-Data collection should go through interfaces under `lib/data/`. The current
-pattern is a small ports-and-adapters boundary:
-
-- A real adapter reads Supabase Auth/Postgres and Enable Banking.
-- A demo adapter reads local mock financial data.
-- A single selector chooses the adapter from server-only configuration.
-
-This keeps demo mode, provider details, and persistence details out of UI code.
+Data collection should go through the application-facing contract under
+`lib/data/`. Its single server-only implementation reads Supabase Auth/Postgres
+and Enable Banking. This keeps provider and persistence details out of UI code
+without maintaining alternate runtime behavior.
 
 The current private home view is prepared under `lib/views/privateHomeView/`.
 It loads provider status, bank card state, selected-month transactions,

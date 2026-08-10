@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 
 import type { Result, TransactionLabelSummary } from "@/definitions";
 import { isEmailAllowed } from "@/lib/auth/allowlist";
-import { isDemoMode } from "@/lib/demo/mode";
 import { updateTransactionCategoryAssignment } from "@/lib/db/transactionCategories";
 import { updateTransactionReportingDate } from "@/lib/db/enableBankingTransactions";
 import {
@@ -29,10 +28,6 @@ export async function updateTransactionCategoryAction(
 ): Promise<Result<null>> {
   if (!isValidInput(input)) {
     return { ok: false, reason: "La categoría seleccionada no es válida." };
-  }
-
-  if (isDemoMode()) {
-    return { ok: true, value: null };
   }
 
   const user = await getCurrentSupabaseUser();
@@ -83,13 +78,6 @@ export async function updateTransactionReportingDateAction(input: {
     return { ok: false, reason: "La fecha seleccionada no es válida." };
   }
 
-  if (isDemoMode()) {
-    return {
-      ok: true,
-      value: { reportingDate: input.reportingDate }
-    };
-  }
-
   const user = await getAllowedUser("guardar la fecha");
 
   if (!user.ok) {
@@ -128,10 +116,6 @@ export async function assignTransactionLabelAction(input: {
     return { ok: false, reason: "La etiqueta seleccionada no es válida." };
   }
 
-  if (isDemoMode()) {
-    return { ok: true, value: null };
-  }
-
   const user = await getAllowedUser("guardar la etiqueta");
 
   if (!user.ok) {
@@ -164,16 +148,6 @@ export async function createAndAssignTransactionLabelAction(input: {
     return { ok: false, reason: "El nombre de la etiqueta no es válido." };
   }
 
-  if (isDemoMode()) {
-    return {
-      ok: true,
-      value: {
-        id: crypto.randomUUID(),
-        name: input.name.trim().replace(/\s+/g, " ")
-      }
-    };
-  }
-
   const user = await getAllowedUser("guardar la etiqueta");
 
   if (!user.ok) {
@@ -204,10 +178,6 @@ export async function removeTransactionLabelAction(input: {
     !UUID_PATTERN.test(input.labelId)
   ) {
     return { ok: false, reason: "La etiqueta seleccionada no es válida." };
-  }
-
-  if (isDemoMode()) {
-    return { ok: true, value: null };
   }
 
   const user = await getAllowedUser("quitar la etiqueta");

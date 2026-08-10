@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 
-import { getBankingDataSource } from "@/lib/data/getBankingDataSource";
+import { bankingDataSource } from "@/lib/data/bankingDataSource";
 import { EnableBankingRequestError } from "@/lib/enableBanking/client";
 
 export const runtime = "nodejs";
 
 export async function GET() {
-  const dataSource = getBankingDataSource();
-  const user = await dataSource.getCurrentUser();
+  const user = await bankingDataSource.getCurrentUser();
 
   if (!user) {
     return NextResponse.json(
@@ -24,7 +23,7 @@ export async function GET() {
   }
 
   try {
-    const institutions = await dataSource.listAvailableInstitutions();
+    const institutions = await bankingDataSource.listAvailableInstitutions();
 
     return NextResponse.json({
       ok: true,

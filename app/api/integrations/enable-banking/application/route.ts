@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getBankingDataSource } from "@/lib/data/getBankingDataSource";
+import { bankingDataSource } from "@/lib/data/bankingDataSource";
 
 import { getApplicationErrorResponse } from "./utils/errorResponse";
 import { getErrorMetadata } from "./utils/errorMetadata";
@@ -9,8 +9,7 @@ import { getApplicationSuccessResponse } from "./utils/successResponse";
 export const runtime = "nodejs";
 
 export async function GET() {
-  const dataSource = getBankingDataSource();
-  const user = await dataSource.getCurrentUser();
+  const user = await bankingDataSource.getCurrentUser();
 
   if (!user) {
     return NextResponse.json(
@@ -27,7 +26,7 @@ export async function GET() {
   }
 
   try {
-    return await getApplicationSuccessResponse(dataSource);
+    return await getApplicationSuccessResponse(bankingDataSource);
   } catch (error) {
     console.error(
       "Enable Banking application check failed",

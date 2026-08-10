@@ -22,8 +22,7 @@ import {
 } from "@/lib/enableBanking/client";
 import { getCurrentSupabaseUser } from "@/lib/supabase/currentUser";
 
-export const realBankingDataSource: BankingDataSource = {
-  mode: "real",
+export const bankingDataSource: BankingDataSource = {
   async getCurrentUser() {
     const user = await getCurrentSupabaseUser();
 

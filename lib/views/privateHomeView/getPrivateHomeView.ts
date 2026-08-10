@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { PrivateHomeView, ProviderStatusView } from "@/definitions";
-import { getBankingDataSource } from "@/lib/data/getBankingDataSource";
+import { bankingDataSource } from "@/lib/data/bankingDataSource";
 import {
   getCurrentYearTransactionRange,
   getSelectedTransactionMonth
@@ -30,7 +30,7 @@ import {
 export async function getPrivateHomeView(
   requestedMonth?: string
 ): Promise<PrivateHomeView> {
-  const dataSource = getBankingDataSource();
+  const dataSource = bankingDataSource;
   const user = await dataSource.getCurrentUser();
 
   if (!user) {
@@ -74,7 +74,7 @@ export async function getPrivateHomeView(
       yearlyTransactionRange
     )
   ]);
-  const providerStatus = getProviderStatus(providerResult, dataSource.mode);
+  const providerStatus = getProviderStatus(providerResult);
   const institutionsResult =
     providerStatus.status === "success"
       ? await loadInstitutions(dataSource)
@@ -151,7 +151,6 @@ export async function getPrivateHomeView(
       rows: transactionsResult.ok ? transactionsResult.value : [],
       categoryGroups: categoryGroupsResult.ok ? categoryGroupsResult.value : [],
       labels: labelsResult.ok ? labelsResult.value : [],
-      reconciliationEnabled: dataSource.mode === "real",
       error: getMonthlyTransactionsError(
         transactionsResult,
         categoryGroupsResult,
@@ -184,14 +183,12 @@ function getMonthlyTransactionsError(
 }
 
 function getProviderStatus(
-  providerResult: Awaited<ReturnType<typeof loadProviderStatus>>,
-  mode: "demo" | "real"
+  providerResult: Awaited<ReturnType<typeof loadProviderStatus>>
 ): ProviderStatusView {
   return providerResult.ok
     ? providerResult.value
     : {
         status: "error",
-        reason: providerResult.reason,
-        isDemo: mode === "demo"
+        reason: providerResult.reason
       };
 }

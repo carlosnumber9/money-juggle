@@ -26,7 +26,6 @@ export function TransactionDetailDialog({
   onLabelsChange,
   onAvailableLabelAdd,
   onReportingDateChange,
-  reconciliationEnabled,
   onReconcile,
   onReconciliationOpen,
   onClose
@@ -39,7 +38,6 @@ export function TransactionDetailDialog({
   ) => void;
   onAvailableLabelAdd: (label: TransactionLabelSummary) => void;
   onReportingDateChange: (transactionId: string, reportingDate: string) => void;
-  reconciliationEnabled: boolean;
   onReconcile: (transaction: MonthlyTransactionSummary) => void;
   onReconciliationOpen: (reconciliationId: string) => void;
   onClose: () => void;
@@ -64,7 +62,6 @@ export function TransactionDetailDialog({
   const description = getAdditionalDescription(transaction, concept);
   const logo = transaction ? getInstitutionLogo(transaction) : null;
   const canReconcile =
-    reconciliationEnabled &&
     transaction?.booking_status === "booked" &&
     !isInternalTransfer(transaction) &&
     !transaction.reconciliation;

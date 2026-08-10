@@ -2,7 +2,6 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import { isEmailAllowed } from "@/lib/auth/allowlist";
-import { isDemoMode } from "@/lib/demo/mode";
 import {
   listConnectionsForTransactionSync,
   syncEnableBankingTransactions
@@ -15,10 +14,6 @@ import { getCurrentSupabaseUser } from "@/lib/supabase/currentUser";
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
-  if (isDemoMode()) {
-    return NextResponse.json({ synced: false, skipped: true });
-  }
-
   const user = await getCurrentSupabaseUser();
 
   if (!user) {

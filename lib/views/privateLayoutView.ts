@@ -1,12 +1,10 @@
 import "server-only";
 
 import type { PrivateLayoutView } from "@/definitions";
-import { getBankingDataSource } from "@/lib/data/getBankingDataSource";
-import { isDemoMode } from "@/lib/demo/mode";
+import { bankingDataSource } from "@/lib/data/bankingDataSource";
 
 export async function getPrivateLayoutView(): Promise<PrivateLayoutView> {
-  const dataSource = getBankingDataSource();
-  const user = await dataSource.getCurrentUser();
+  const user = await bankingDataSource.getCurrentUser();
 
   if (!user) {
     return { kind: "unauthenticated" };
@@ -18,7 +16,6 @@ export async function getPrivateLayoutView(): Promise<PrivateLayoutView> {
 
   return {
     kind: "authenticated",
-    isDemo: isDemoMode(),
     user: {
       email: user.email
     }

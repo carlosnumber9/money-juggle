@@ -29,11 +29,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </h1>
         </div>
 
-        <form
-          action={signInWithPassword}
-          className="w-full"
-          noValidate={view.isDemo}
-        >
+        <form action={signInWithPassword} className="w-full">
           <LoginFormContent view={view} />
         </form>
       </section>

@@ -35,7 +35,6 @@ export function MonthlyTransactionsPanel({
   transactions,
   categoryGroups,
   labels,
-  reconciliationEnabled,
   selectedMonth,
   error
 }: MonthlyTransactionsPanelProps) {
@@ -234,7 +233,6 @@ export function MonthlyTransactionsPanel({
         onLabelsChange={handleTransactionLabelsChange}
         onAvailableLabelAdd={handleAvailableLabelAdd}
         onReportingDateChange={handleTransactionReportingDateChange}
-        reconciliationEnabled={reconciliationEnabled}
         onReconcile={(transaction) => {
           setSelectedTransactionId(null);
           setReconciliationSourceId(transaction.id);

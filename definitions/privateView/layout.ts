@@ -7,7 +7,6 @@ export type PrivateLayoutView =
     }
   | {
       kind: "authenticated";
-      isDemo: boolean;
       user: {
         email: string | null;
       };

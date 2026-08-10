@@ -48,7 +48,6 @@ export type PrivateHomeView =
         rows: MonthlyTransactionSummary[];
         categoryGroups: TransactionCategoryGroupSummary[];
         labels: TransactionLabelSummary[];
-        reconciliationEnabled: boolean;
         error: string | null;
       };
     };

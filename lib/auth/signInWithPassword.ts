@@ -14,18 +14,10 @@ import {
   maskEmail,
   sanitizeAuthError
 } from "@/lib/auth/authLogging";
-import { isDemoMode } from "@/lib/demo/mode";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function signInWithPassword(formData: FormData) {
   const authLogId = createAuthLogId();
-
-  if (isDemoMode()) {
-    logAuthEvent("info", "Password sign-in skipped in demo mode.", {
-      authLogId
-    });
-    redirect("/");
-  }
 
   const email = normalizeEmail(String(formData.get("email") ?? ""));
   const password = String(formData.get("password") ?? "");

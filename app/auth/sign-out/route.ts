@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-import { isDemoMode } from "@/lib/demo/mode";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
@@ -17,15 +16,6 @@ async function signOut(request: NextRequest) {
     requestUrl.searchParams.get("status") === "not-allowed"
       ? "not-allowed"
       : "signed-out";
-
-  if (isDemoMode()) {
-    return NextResponse.redirect(
-      new URL(`/login?status=${status}`, request.url),
-      {
-        status: 303
-      }
-    );
-  }
 
   const supabase = await createSupabaseServerClient();
 

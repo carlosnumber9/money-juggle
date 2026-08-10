@@ -38,7 +38,6 @@ export type MonthlyTransactionsPanelProps = {
   transactions: import("../dataSource").MonthlyTransactionSummary[];
   categoryGroups: import("../dataSource").TransactionCategoryGroupSummary[];
   labels: import("../dataSource").TransactionLabelSummary[];
-  reconciliationEnabled: boolean;
   selectedMonth: MonthlyPeriodView;
   error: string | null;
 };

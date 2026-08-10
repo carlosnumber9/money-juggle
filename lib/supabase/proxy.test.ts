@@ -19,16 +19,12 @@ const mocks = vi.hoisted(() => ({
   createServerClient: vi.fn(),
   getClaims: vi.fn(),
   getSupabaseConfig: vi.fn(),
-  isDemoMode: vi.fn(),
   observedCookies: [] as { name: string; value: string }[]
 }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@supabase/ssr", () => ({
   createServerClient: mocks.createServerClient
-}));
-vi.mock("@/lib/demo/mode", () => ({
-  isDemoMode: mocks.isDemoMode
 }));
 vi.mock("@/lib/supabase/env", () => ({
   getSupabaseConfig: mocks.getSupabaseConfig
@@ -38,7 +34,6 @@ import { updateSupabaseSession } from "@/lib/supabase/proxy";
 
 describe("updateSupabaseSession", () => {
   beforeEach(() => {
-    mocks.isDemoMode.mockReturnValue(false);
     mocks.getSupabaseConfig.mockReturnValue({
       url: "https://project.supabase.co",
       publishableKey: "sb_publishable_test"
@@ -101,16 +96,5 @@ describe("updateSupabaseSession", () => {
     expect(response.headers.get("expires")).toBe("0");
     expect(response.headers.get("pragma")).toBe("no-cache");
     expect(mocks.getClaims).toHaveBeenCalledOnce();
-  });
-
-  it("does not contact Supabase in local demo mode", async () => {
-    mocks.isDemoMode.mockReturnValue(true);
-
-    const response = await updateSupabaseSession(
-      new NextRequest("https://money-juggle.example/login")
-    );
-
-    expect(response.status).toBe(200);
-    expect(mocks.createServerClient).not.toHaveBeenCalled();
   });
 });

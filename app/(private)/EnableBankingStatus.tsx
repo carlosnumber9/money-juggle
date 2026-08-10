@@ -42,8 +42,8 @@ export function EnableBankingStatus({ status }: EnableBankingStatusProps) {
 
   return (
     <Tooltip
-      triggerLabel={`${status.isDemo ? "Modo demo local" : "Conexión viva con Enable Banking"}. Aplicación verificada: ${status.applicationName}`}
-      label={`${status.isDemo ? "Modo demo local activo" : "Conexión viva con Enable Banking"}. Aplicación verificada: ${status.applicationName}.`}
+      triggerLabel={`Conexión viva con Enable Banking. Aplicación verificada: ${status.applicationName}`}
+      label={`Conexión viva con Enable Banking. Aplicación verificada: ${status.applicationName}.`}
       triggerClassName={`${statusTriggerClassName} text-primary`}
     >
       <WifiIcon className="size-7" aria-hidden />

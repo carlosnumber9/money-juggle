@@ -57,27 +57,23 @@ export function LoginFormContent({ view }: LoginFormContentProps) {
       <Input
         id="email"
         name="email"
-        type={view.isDemo ? "text" : "email"}
+        type="email"
         autoComplete="email"
         placeholder="Email"
-        required={!view.isDemo}
+        required
       />
 
-      {!view.isDemo ? (
-        <>
-          <label className="sr-only" htmlFor="password">
-            Contraseña
-          </label>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            placeholder="Contraseña"
-            required
-          />
-        </>
-      ) : null}
+      <label className="sr-only" htmlFor="password">
+        Contraseña
+      </label>
+      <Input
+        id="password"
+        name="password"
+        type="password"
+        autoComplete="current-password"
+        placeholder="Contraseña"
+        required
+      />
 
       {view.message ? (
         <p
@@ -93,7 +89,7 @@ export function LoginFormContent({ view }: LoginFormContentProps) {
       ) : null}
 
       <Button type="submit" className="w-full">
-        {view.isDemo ? "Entrar en demo" : "Iniciar sesión"}
+        Iniciar sesión
       </Button>
     </div>
   );

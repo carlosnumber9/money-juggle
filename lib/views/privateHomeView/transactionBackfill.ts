@@ -14,11 +14,7 @@ export function buildTransactionBackfillView({
   completedConnectionIdsResult: Result<string[]>;
   providerStatus: ProviderStatusView;
 }): TransactionBackfillView {
-  if (
-    providerStatus.status !== "success" ||
-    providerStatus.isDemo ||
-    !connectionsResult.ok
-  ) {
+  if (providerStatus.status !== "success" || !connectionsResult.ok) {
     return { status: "hidden" };
   }
 
@@ -51,7 +47,6 @@ export function getDashboardSyncEnabled({
 }): boolean {
   return (
     providerStatus.status === "success" &&
-    !providerStatus.isDemo &&
     connectionsResult.ok &&
     getEligibleConnections(connectionsResult.value).length > 0
   );

@@ -1,6 +1,5 @@
 export * from "./common";
 export * from "./dataSource";
-export * from "./demo";
 export * from "./enableBanking";
 export * from "./http";
 export * from "./login";

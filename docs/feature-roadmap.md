@@ -813,8 +813,8 @@ Implemented result:
   home screen loads stale or missing balances.
 - The private institution cards show the latest account balances and per-bank
   totals by currency.
-- Demo mode includes balance data so the UI can be reviewed locally without
-  Supabase or Enable Banking credentials.
+- Local review uses the same authenticated Supabase and Enable Banking path as
+  the deployed application.
 
 Goal:
 
@@ -994,8 +994,7 @@ Implemented result:
   the transaction concept, and the signed amount.
 - Filter chips let the owner narrow the current-month view by institution
   (`ING`, `CaixaBank`) and by direction (`Ingresos`, `Gastos`).
-- Demo mode includes enough transaction data to review the panel without
-  Supabase or Enable Banking credentials.
+- Local transaction review uses synchronized owner data from Supabase.
 
 Goal:
 
@@ -1053,7 +1052,7 @@ Implemented result:
 - Category changes are saved through a small server action that validates input,
   the current Supabase user, the email allowlist, transaction ownership, and
   category ownership.
-- Demo mode accepts category changes optimistically without writing to Supabase.
+- Category changes always use the authenticated, owner-scoped persistence path.
 - Current-month transaction filters can narrow by selected categories or
   uncategorized transactions.
 
@@ -1372,7 +1371,7 @@ Implemented slice:
 - Existing-label suggestions and create-and-assign behavior in transaction
   detail.
 - Removable detail chips and compact transaction-row summaries.
-- Optimistic real and demo mode interaction with rollback on failure.
+- Optimistic interaction with rollback when authenticated persistence fails.
 
 Still planned:
 
@@ -1558,7 +1557,8 @@ Implemented:
 - The previous magic-link request action and email auth callback were removed.
 - A Next.js Proxy refreshes expiring Supabase tokens and returns updated cookies
   with the required no-cache response headers.
-- Local demo mode bypasses Supabase in both the login action and Proxy.
+- Local and deployed authentication both use the password login action and
+  Supabase session-refreshing Proxy.
 - Password login and cookie refresh behavior have focused automated coverage.
 
 Goal:
@@ -1601,7 +1601,7 @@ Implemented outcome:
 - The owner can review, edit, or permanently delete a reconciliation. Deleting
   it restores the original movements to reports unless another neutrality rule
   applies.
-- The feature is intentionally unavailable in local demo mode.
+- The feature is available for eligible authenticated owner transactions.
 - Migration `20260810120000_add_transaction_reconciliations.sql` owns the
   schema, RLS policies, candidate search, and atomic save/delete functions.
 

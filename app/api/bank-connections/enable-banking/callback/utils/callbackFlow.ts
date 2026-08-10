@@ -1,6 +1,5 @@
 import type { NextRequest } from "next/server";
 
-import { isDemoMode } from "@/lib/demo/mode";
 import { getLinkingConnectionByState } from "@/lib/db/enableBankingConnections";
 
 import { authorizeAndCompleteSession } from "./authorizeSession";
@@ -11,10 +10,6 @@ import { redirectWithStatus } from "./redirect";
 
 export async function handleCallbackRequest(request: NextRequest) {
   const requestUrl = new URL(request.url);
-
-  if (isDemoMode()) {
-    return redirectWithStatus(requestUrl, "linked");
-  }
 
   const params = getCallbackParams(requestUrl);
 

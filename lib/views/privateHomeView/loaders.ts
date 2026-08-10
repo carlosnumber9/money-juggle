@@ -22,8 +22,7 @@ export async function loadProviderStatus(
       ok: true,
       value: {
         status: "success",
-        applicationName: application.name,
-        isDemo: dataSource.mode === "demo"
+        applicationName: application.name
       }
     };
   } catch (error) {

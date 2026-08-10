@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 import { isEmailAllowed } from "@/lib/auth/allowlist";
-import { isDemoMode } from "@/lib/demo/mode";
 import { createLinkingEnableBankingConnection } from "@/lib/db/enableBankingConnections";
 import { getCurrentSupabaseUser } from "@/lib/supabase/currentUser";
 
@@ -13,10 +12,6 @@ import { getCallbackUrl, redirectWithStatus } from "./redirect";
 
 export async function handleStartRequest(request: NextRequest) {
   const requestUrl = new URL(request.url);
-
-  if (isDemoMode()) {
-    return redirectWithStatus(requestUrl, "linked");
-  }
 
   const user = await getCurrentSupabaseUser();
 

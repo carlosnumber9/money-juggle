@@ -4,7 +4,6 @@ const mocks = vi.hoisted(() => ({
   createAuthLogId: vi.fn(() => "auth-log-id"),
   createSupabaseServerClient: vi.fn(),
   hasAllowedEmails: vi.fn(),
-  isDemoMode: vi.fn(),
   isEmailAllowed: vi.fn(),
   logAuthEvent: vi.fn(),
   maskEmail: vi.fn(() => "ow***@example.com"),
@@ -36,9 +35,6 @@ vi.mock("@/lib/auth/authLogging", () => ({
   maskEmail: mocks.maskEmail,
   sanitizeAuthError: mocks.sanitizeAuthError
 }));
-vi.mock("@/lib/demo/mode", () => ({
-  isDemoMode: mocks.isDemoMode
-}));
 vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: mocks.createSupabaseServerClient
 }));
@@ -47,7 +43,6 @@ import { signInWithPassword } from "@/lib/auth/signInWithPassword";
 
 describe("signInWithPassword", () => {
   beforeEach(() => {
-    mocks.isDemoMode.mockReturnValue(false);
     mocks.hasAllowedEmails.mockReturnValue(true);
     mocks.isEmailAllowed.mockReturnValue(true);
     mocks.signOut.mockResolvedValue({ error: null });

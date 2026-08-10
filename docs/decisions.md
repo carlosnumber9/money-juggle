@@ -497,43 +497,38 @@ Possible future revisit trigger:
 - If SQL security-definer functions or tighter RLS write policies become a
   better fit for provider-controlled writes.
 
-## ADR-018: Use A Data Source Boundary For Real And Demo Data
+## ADR-018: Use A Data Source Boundary For Alternate Runtime Data
 
 Status:
 
-- Accepted.
+- Superseded by ADR-040.
 
 Context:
 
-- Enable Banking production access is limited and not convenient for everyday
-  local UI development.
+- Enable Banking access was considered inconvenient for everyday local UI
+  development.
 - The UI should not know whether data came from Supabase, Enable Banking, or
-  local mocks.
+  alternate local records.
 - Route TSX files should stay thin and avoid embedding data collection logic.
 
 Decision:
 
 - Use a ports-and-adapters style data source boundary under `lib/data/`.
-- Keep local mock financial data under `lib/demo/`.
 - Prepare route-level view props under `lib/views/`.
-- Select demo data only when `MONEY_JUGGLE_DEMO_MODE=true`, Next.js is running
-  in development, and the app is not running on Vercel.
-- Keep demo mode server-only; do not expose a `NEXT_PUBLIC_` demo switch.
+- Originally support an alternate server-only source backed by static local
+  financial records.
 
 Consequences:
 
 - UI components receive props and do not call Supabase, Enable Banking, or
   internal data endpoints directly.
-- Demo and real data must satisfy the same application-facing contract.
-- Local UI work can proceed without Supabase Auth, Supabase Postgres, or Enable
-  Banking credentials.
-- Production remains on the real adapter and keeps the existing auth, allowlist,
-  RLS, and server-only integration boundaries.
+- Both sources were required to satisfy the same application-facing contract.
+- ADR-040 later removed alternate runtime behavior while preserving the data
+  source boundary.
 
 Possible future revisit trigger:
 
-- If the app introduces additional providers or needs a richer domain service
-  layer above the data source adapters.
+- Superseded; see ADR-040.
 
 ## ADR-019: Keep Shared Definitions Behind A Root Definitions Entry Point
 
@@ -543,15 +538,15 @@ Status:
 
 Context:
 
-- Types, view contracts, demo records, provider constants, and status-message
-  maps were starting to live across several feature files.
+- Types, view contracts, provider constants, and status-message maps were
+  starting to live across several feature files.
 - The project is still small, and a single definitions entry point makes
   imports easy to audit while area-specific files keep definitions navigable.
 
 Decision:
 
-- Keep shared TypeScript types, interfaces, domain constants, demo data, and
-  status maps under the root `definitions/` directory.
+- Keep shared TypeScript types, interfaces, domain constants, and status maps
+  under the root `definitions/` directory.
 - Group definitions by functional area and re-export them from
   `definitions/index.ts`.
 - Import definitions from `@/definitions` so feature modules do not depend on
@@ -1446,7 +1441,8 @@ Decision:
   state through `Compensado`, a review dialog, atomic editing, and confirmed hard
   deletion.
 - Use a centered shadcn dialog on desktop and a borderless, swipeable bottom
-  sheet on narrow screens. Keep the feature hidden in local demo mode.
+  sheet on narrow screens. Expose the feature for eligible authenticated owner
+  transactions.
 
 Consequences:
 
@@ -1464,3 +1460,48 @@ Possible future revisit trigger:
 
 - If shared expenses require allocating only part of one bank transaction or if
   open debt tracking becomes a product goal.
+
+## ADR-040: Use One Authenticated Banking Runtime
+
+Status:
+
+- Accepted and implemented.
+
+Context:
+
+- The application is a small personal repository with one owner and one
+  deployed execution path.
+- The alternate local runtime was unused and added branches across
+  authentication, session refresh, provider flows, synchronization, financial
+  mutations, view contracts, and UI behavior.
+- Simulated successful links and writes could diverge from the authenticated,
+  owner-scoped behavior that matters in production.
+
+Decision:
+
+- Keep one server-only `BankingDataSource` implementation backed by Supabase
+  Auth, Supabase Postgres, and Enable Banking.
+- Remove the runtime switch, static local financial records, authentication
+  bypasses, simulated provider responses, and non-persistent mutations.
+- Require local development to configure and use the same authenticated service
+  paths as the deployed application.
+- Preserve the application-facing data source and prepared-view boundaries so
+  UI modules remain independent from provider and persistence details.
+- Preserve `incremental` and `backfill` transaction synchronization modes;
+  those describe synchronization scope, not alternate application runtimes.
+
+Consequences:
+
+- Local and deployed behavior now exercise the same authentication, allowlist,
+  ownership, RLS, persistence, and provider boundaries.
+- The codebase loses cross-cutting runtime branches and static financial data.
+- Private local UI work now requires valid development configuration and cannot
+  run as an offline financial-data simulation.
+- Focused unit tests may still mock individual network or persistence boundaries,
+  but the application has no alternate runtime source.
+
+Possible future revisit trigger:
+
+- If repeatable integration testing needs isolated fixtures, introduce them as
+  explicit test-only infrastructure without adding an application runtime
+  switch or authentication bypass.

@@ -5,11 +5,9 @@ import {
   type LoginStatusMessage,
   type LoginView
 } from "@/definitions";
-import { isDemoMode } from "@/lib/demo/mode";
 
 export function getLoginView({ status }: { status?: string }): LoginView {
   return {
-    isDemo: isDemoMode(),
     message: getStatusMessage(status)
   };
 }

@@ -15,8 +15,7 @@ export async function getApplicationSuccessResponse(
       environment: application.environment,
       active: application.active,
       countries: application.countries,
-      services: application.services,
-      mode: dataSource.mode
+      services: application.services
     }
   });
 }

@@ -4,7 +4,6 @@ export type LoginStatusMessage = {
 };
 
 export type LoginView = {
-  isDemo: boolean;
   message: LoginStatusMessage | null;
 };
 

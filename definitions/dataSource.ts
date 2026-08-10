@@ -122,7 +122,6 @@ export type MonthlyTransactionRange = {
 };
 
 export type BankingDataSource = {
-  mode: "demo" | "real";
   getCurrentUser(): Promise<AppUser | null>;
   getProviderApplication(): Promise<ProviderApplication>;
   listAvailableInstitutions(): Promise<InstitutionAvailability[]>;
