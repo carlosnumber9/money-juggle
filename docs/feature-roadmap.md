@@ -37,7 +37,7 @@ Use this checklist as the source of truth for what remains to be implemented. Ke
 - [ ] 29. Explore Cobee by Pluxee consumption reports.
 - [x] 30. Add monthly period navigation for transactions and charts.
 - [x] 31. Replace magic links with owner password login and session refresh.
-- [ ] 32. Investigate neutral cash-flow reconciliation for debts and reimbursements.
+- [x] 32. Investigate neutral cash-flow reconciliation for debts and reimbursements.
 
 ## 1. Bootstrap The Next.js Project
 
