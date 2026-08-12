@@ -1558,3 +1558,56 @@ Possible future revisit trigger:
 
 - If Trade Republic or another safe official provider exposes portfolio
   positions and valuations through a supported read-only API.
+
+## ADR-042: Recover Bank Callbacks Across iOS Web App Contexts
+
+Status:
+
+- Accepted and implemented.
+
+Context:
+
+- Money Juggle runs as an installed iOS Home Screen web app with standalone
+  display mode.
+- Home Screen web apps and default browsers use separate browsing contexts,
+  cookies, and storage.
+- Trade Republic can leave the web app for native strong customer
+  authentication and return the HTTPS callback to the default browser instead
+  of the installed web app.
+- A pure web app cannot claim the native Universal Link needed to force iOS to
+  reopen its existing standalone instance.
+
+Decision:
+
+- When running in standalone mode, start Enable Banking authorization in a
+  named context created synchronously with `window.open`; keep normal
+  same-window navigation as the browser and popup-blocked fallback.
+- Remove the opened context's `window.opener` reference before it visits the
+  provider so external authorization pages cannot navigate the private
+  dashboard.
+- Complete and validate every callback through the existing server-only state
+  lookup regardless of which browser context receives it.
+- Redirect callbacks to a public, no-index result page that displays only an
+  allowlisted status message, attempts to close script-opened windows, and
+  tells the owner how to return manually when iOS used the default browser.
+- While a connection remains `linking`, refresh the private server view when
+  the web app becomes visible, receives focus, or is restored, so the linked
+  state appears immediately after returning.
+- Do not add custom protocols, pretend a manifest scope can replace Universal
+  Links, or introduce a native wrapper for this focused recovery change.
+
+Consequences:
+
+- OAuth-style redirects stay in the installed web app when iOS preserves the
+  opened authorization context.
+- Native bank flows that still return through the default browser complete
+  safely and require only a manual switch back to the Home Screen app.
+- Browser and web app sessions do not need to share cookies because the
+  callback continues using the stored, unguessable provider state and the
+  private app refreshes with its own authenticated session.
+- No schema, migration, RLS, or provider credential changes are required.
+
+Possible future revisit trigger:
+
+- If automatic reopening becomes essential, package Money Juggle as a native
+  application and configure associated domains and Universal Links.

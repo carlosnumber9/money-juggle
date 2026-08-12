@@ -13,6 +13,10 @@ import {
   getStatusIcon
 } from "./statusHelpers";
 import { getStatusToneClass } from "./statusTone";
+import {
+  BANK_AUTHORIZATION_STARTED_EVENT,
+  prepareBankAuthorizationWindow
+} from "./bankAuthorizationWindow";
 import { getLinkingStaleDelay, markLinkingCardStale } from "./liveLinkingState";
 
 export function BankStatusIcon({ card }: { card: BankInstitutionCard }) {
@@ -88,6 +92,9 @@ function ConnectionForm({
           return;
         }
 
+        if (prepareBankAuthorizationWindow(event.currentTarget)) {
+          window.dispatchEvent(new Event(BANK_AUTHORIZATION_STARTED_EVENT));
+        }
         isSubmittingRef.current = true;
         onSubmittingChange(true);
       }}

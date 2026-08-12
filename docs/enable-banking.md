@@ -182,6 +182,22 @@ connection remains `linking` for audit history. The server prepares a
 browser. When the deadline passes, its spinner becomes a retry action without
 requiring a reload or a new sign-in.
 
+On an installed iOS Home Screen web app, the connection form opens the provider
+authorization in a named browser context created with `window.open`. This keeps
+third-party authorization inside the web app when WebKit can preserve the
+original context. The new context does not retain `window.opener` access to the
+private dashboard.
+
+Some bank app-to-app flows can still return the HTTPS callback to the owner's
+default browser because a Home Screen web app cannot claim native Universal
+Links. The callback therefore ends on the public
+`/bank-connection-result` page, which reveals no account data and attempts to
+close a script-opened authorization window. If the callback lands in a regular
+browser tab, it tells the owner to return through the Money Juggle Home Screen
+icon. While a card is `linking`, the private web app refreshes its server view
+when it becomes visible, receives focus, or is restored from page history, so a
+completed connection appears without reloading or waiting for the stale timer.
+
 The app stores account metadata returned by the authorized session, including
 Enable Banking account `uid`, display name, currency, account type, and only
 the last four IBAN characters when available.
