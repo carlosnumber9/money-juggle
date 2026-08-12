@@ -29,7 +29,7 @@ Use this checklist as the source of truth for what remains to be implemented. Ke
 - [x] 21. Add current-month transaction review.
 - [x] 22. Add transaction categorization.
 - [ ] 23. Add monthly reports.
-- [ ] 24. Add manual assets for Trade Republic / investments.
+- [ ] 24. Add manual assets for Trade Republic brokerage / crypto investments.
 - [ ] 25. Add scheduled sync with Vercel Cron.
 - [ ] 26. Add error and reconnection flows.
 - [ ] 27. Security hardening.
@@ -485,8 +485,9 @@ Implemented result:
 - A production restricted Enable Banking application was created for own linked
   accounts.
 - CaixaBank and ING appear as available ASPSPs and have been linked manually.
-- Trade Republic does not appear as an available ASPSP and remains a manual or
-  future separate-integration case.
+- Trade Republic now appears as a beta personal AIS ASPSP for Spain and Germany.
+  Its current-account cash and movements use the existing Enable Banking path;
+  brokerage and crypto valuation remain a future separate-integration case.
 - The app is deployed at `https://money-juggle.vercel.app/`.
 - Enable Banking registered URLs are documented in `docs/enable-banking.md`.
 - A local RSA private key and public certificate were generated under
@@ -1209,15 +1210,17 @@ Do not do yet:
 
 - Add tax or accounting features.
 
-## 24. Add Manual Assets For Trade Republic / Investments
+## 24. Add Manual Assets For Trade Republic Brokerage / Crypto Investments
 
 Goal:
 
-- Track assets not available through PSD2.
+- Track brokerage positions, crypto holdings, and other assets not available
+  through PSD2.
 
 Expected result:
 
-- Manual Trade Republic or investment values can be included.
+- Manual Trade Republic brokerage, crypto, or other investment values can be
+  included without altering the synchronized current-account cash balance.
 
 Concepts learned:
 

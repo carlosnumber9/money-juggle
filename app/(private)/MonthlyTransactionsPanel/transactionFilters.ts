@@ -1,7 +1,8 @@
 import type { MonthlyTransactionSummary } from "@/definitions";
 import { isFinanciallyNeutralTransaction } from "@/lib/domain/reportingMovements";
 
-export type TransactionFilterId = "ing" | "caixabank" | "income" | "expense";
+export type TransactionFilterId =
+  "ing" | "caixabank" | "trade-republic" | "income" | "expense";
 
 type InstitutionFilterId = Extract<
   MonthlyTransactionSummary["institution_slug"],
@@ -151,6 +152,13 @@ export function isTransactionChipFilterDisabled(
   filterId: TransactionFilterId,
   activeChipFilters: TransactionFilterId[]
 ): boolean {
+  if (isInstitutionFilter(filterId)) {
+    return activeChipFilters.some(
+      (activeFilter) =>
+        isInstitutionFilter(activeFilter) && activeFilter !== filterId
+    );
+  }
+
   const oppositeFilter = getOppositeFilter(filterId);
 
   return oppositeFilter ? activeChipFilters.includes(oppositeFilter) : false;
@@ -215,20 +223,22 @@ function matchesCategoryFilter(
 function isInstitutionFilter(
   filterId: TransactionFilterId
 ): filterId is InstitutionFilterId {
-  return filterId === "ing" || filterId === "caixabank";
+  return (
+    filterId === "ing" ||
+    filterId === "caixabank" ||
+    filterId === "trade-republic"
+  );
 }
 
 function getOppositeFilter(
   filterId: TransactionFilterId
 ): TransactionFilterId | null {
   switch (filterId) {
-    case "ing":
-      return "caixabank";
-    case "caixabank":
-      return "ing";
     case "income":
       return "expense";
     case "expense":
       return "income";
+    default:
+      return null;
   }
 }

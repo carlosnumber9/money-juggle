@@ -65,7 +65,7 @@ This app should make financial review easier by collecting read-only financial d
 | ----------------------- | ---------------------------------- | --------------------------------------------------------------------------- |
 | CaixaBank               | Enable Banking Account Information | Primary PSD2 path; linked as an own account.                                |
 | ING                     | Enable Banking Account Information | Primary PSD2 path; linked as an own account.                                |
-| Trade Republic          | Special case                       | Investment data may not be available through PSD2.                          |
+| Trade Republic          | Enable Banking Account Information | Cash balance and movements only; brokerage and crypto remain separate.      |
 | Cobee by Pluxee         | Exploratory official API           | Flexible compensation consumptions; separate from bank Account Information. |
 
 ## Initial Limitations
@@ -99,7 +99,9 @@ This app should make financial review easier by collecting read-only financial d
   should wait until API access, available data granularity, and credential
   handling are confirmed.
 - Investment data should not block the banking foundation.
-- Trade Republic may begin as manual assets or another isolated approach.
+- Trade Republic current-account cash and movements use Enable Banking AIS.
+  Brokerage positions, crypto holdings, and portfolio valuation remain future
+  manual-asset or separate-integration work.
 - No banking credentials should ever be stored.
 
 ## Read-Only Meaning
@@ -114,9 +116,12 @@ Manual exports are slow and easy to forget. They often produce inconsistent form
 
 ## Why Trade Republic Is Special
 
-PSD2 access is focused on payment accounts. Investment positions, broker statements, cash movements, and portfolio performance may not be exposed through the same APIs or through Enable Banking coverage.
+PSD2 access is focused on payment accounts. Enable Banking can read the Trade
+Republic current-account cash balance and booked cash movements, but it does
+not expose investment positions, crypto holdings, or portfolio performance.
 
-Trade Republic should therefore be handled separately. Possible future approaches include:
+The current account should use the standard Enable Banking path. Brokerage and
+crypto valuation should remain separate. Possible future approaches include:
 
 - Manual asset entries.
 - CSV import if available and acceptable.

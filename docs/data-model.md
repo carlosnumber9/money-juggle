@@ -82,7 +82,8 @@ Deferred tables:
 - `transaction_category_rules`: useful later, after manual categorization exists.
 - Cobee integration tables: useful later after API access and desired
   consumption granularity are confirmed.
-- `manual_assets`: useful later for Trade Republic and other non-PSD2 assets.
+- `manual_assets`: useful later for Trade Republic brokerage or crypto holdings
+  and other non-PSD2 assets.
 - Report cache or materialized report tables.
 - Advanced sync scheduler metadata.
 
@@ -855,14 +856,17 @@ Source:
 
 Purpose:
 
-- Stores assets or investment values that are not available through PSD2, especially possible Trade Republic investment data.
+- Stores assets or investment values that are not available through PSD2,
+  especially Trade Republic brokerage positions, crypto holdings, and portfolio
+  valuations. Trade Republic current-account cash belongs in the standard
+  Enable Banking account and balance tables instead.
 
 Probable fields:
 
 - `id`.
 - `user_id`.
 - `name`.
-- `asset_type`: for example `brokerage`, `cash`, `investment`, `other`.
+- `asset_type`: for example `brokerage`, `crypto`, `investment`, `other`.
 - `platform`: for example `Trade Republic`.
 - `amount`.
 - `currency`.

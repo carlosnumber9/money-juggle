@@ -33,10 +33,11 @@ Initial target institutions and platforms:
 - ING
 - Trade Republic
 
-CaixaBank and ING should initially use Enable Banking Account Information through
-Open Banking / PSD2. Trade Republic is a special case because investment data
-is not available through the current PSD2 path and may require manual input, a
-separate integration, or a future solution.
+CaixaBank, ING, and the Trade Republic current account should use Enable Banking
+Account Information through Open Banking / PSD2. Trade Republic brokerage
+positions, crypto assets, and portfolio valuation remain a special case because
+they are not available through the current PSD2 path and may require manual
+input, a separate integration, or a future solution.
 
 ## Language Rules
 

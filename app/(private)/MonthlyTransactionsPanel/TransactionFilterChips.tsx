@@ -11,6 +11,7 @@ const transactionFilters: {
 }[] = [
   { id: "ing", label: "ING" },
   { id: "caixabank", label: "CaixaBank" },
+  { id: "trade-republic", label: "Trade Republic" },
   { id: "income", label: "Ingresos" },
   { id: "expense", label: "Gastos" }
 ];

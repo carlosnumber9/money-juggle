@@ -177,7 +177,9 @@ Possible future revisit trigger:
 
 Status:
 
-- Accepted.
+- Superseded by ADR-041 for Trade Republic current-account cash and movements.
+- Still applicable to brokerage positions, crypto holdings, and portfolio
+  valuation.
 
 Context:
 
@@ -423,15 +425,15 @@ Status:
 Context:
 
 - The product needs read-only account, balance, and transaction access for
-  CaixaBank and ING.
+  CaixaBank, ING, and the Trade Republic current account.
 - GoCardless Bank Account Data was originally selected, but new private signups
   were unavailable when the project reached provider setup.
 - Enable Banking supports Account Information through PSD2/Open Banking.
 - Enable Banking allows a production application restricted to the owner's own
   linked accounts, which matches the current personal-use scope.
 - CaixaBank and ING appear as available ASPSPs and have been linked manually.
-- Trade Republic does not appear as an available ASPSP and remains outside the
-  initial PSD2 path.
+- Trade Republic was not available when this decision was accepted. It was
+  added as a beta personal AIS integration in August 2026.
 
 Decision:
 
@@ -1505,3 +1507,49 @@ Possible future revisit trigger:
 - If repeatable integration testing needs isolated fixtures, introduce them as
   explicit test-only infrastructure without adding an application runtime
   switch or authentication bypass.
+
+## ADR-041: Use Enable Banking AIS For Trade Republic Cash Only
+
+Status:
+
+- Accepted and implemented.
+
+Context:
+
+- Enable Banking added Trade Republic as a beta personal AIS ASPSP for Spain
+  and Germany in August 2026.
+- The integration exposes current-account details, current and available cash
+  balances, and booked cash movements.
+- Brokerage positions, crypto holdings, and total portfolio valuation remain
+  outside the AIS response.
+
+Decision:
+
+- Connect the Trade Republic current account through the existing server-only
+  Enable Banking authorization, balance, transaction, and backfill flows.
+- Normalize Trade Republic cash movements into the same owner-scoped
+  `transactions` rows used for CaixaBank and ING.
+- Display the selected latest current-account balance on the dashboard and
+  label it `Efectivo`; never present it as combined Trade Republic wealth.
+- Use the existing balance selection priority, which prefers `CLBD` over
+  `CLAV` for balances fetched at the same time.
+- Keep brokerage and crypto valuation as a separate future manual-asset or
+  official-integration capability.
+- Keep Trade Republic read-only. Do not add payment initiation, scraping, a
+  direct integration client, or Trade Republic-specific persistence tables.
+
+Consequences:
+
+- Trade Republic cash movements participate in the existing transaction list,
+  filters, categorization, labels, reconciliation, transfer detection, and
+  reports.
+- The dashboard card can show a smaller value than the total displayed by the
+  Trade Republic app because securities and crypto are intentionally excluded.
+- The existing ownership model and RLS boundaries require no schema migration.
+- Beta provider behavior may require focused mapper adjustments after a real
+  owner-authorized synchronization, but it must not create a parallel model.
+
+Possible future revisit trigger:
+
+- If Trade Republic or another safe official provider exposes portfolio
+  positions and valuations through a supported read-only API.

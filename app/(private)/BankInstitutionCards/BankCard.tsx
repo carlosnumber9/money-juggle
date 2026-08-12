@@ -21,9 +21,16 @@ export function BankCard({ card }: { card: BankInstitutionCard }) {
       <CardContent className="relative z-10 p-4 text-left">
         <div className="flex w-full flex-col gap-3">
           <div className="min-w-0 pr-9">
-            <span className="block truncate text-base font-semibold">
-              {card.name}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="block truncate text-base font-semibold">
+                {card.name}
+              </span>
+              {card.beta ? (
+                <span className="border border-border px-1.5 py-0.5 text-[0.625rem] font-medium tracking-wide text-muted-foreground uppercase">
+                  Beta
+                </span>
+              ) : null}
+            </div>
             <BankBalanceSummary card={card} />
           </div>
           <BankAccountList card={card} />

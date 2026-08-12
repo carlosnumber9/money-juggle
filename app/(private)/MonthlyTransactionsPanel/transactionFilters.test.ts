@@ -3,7 +3,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   DEFAULT_TRANSACTION_FILTERS,
-  filterMonthlyTransactions
+  filterMonthlyTransactions,
+  isTransactionChipFilterDisabled
 } from "./transactionFilters";
 
 describe("monthly transaction direction filters", () => {
@@ -61,6 +62,37 @@ describe("monthly transaction direction filters", () => {
         activeChipFilters: ["expense"]
       }).map((transaction) => transaction.id)
     ).toEqual(["expense"]);
+  });
+});
+
+describe("monthly transaction institution filters", () => {
+  const transactions = [
+    createTransaction({ id: "ing", institution_slug: "ing" }),
+    createTransaction({ id: "caixabank", institution_slug: "caixabank" }),
+    createTransaction({
+      id: "trade-republic",
+      institution_slug: "trade-republic",
+      institution_name: "Trade Republic",
+      institution_provider_id: "ES:Trade Republic"
+    })
+  ];
+
+  it("filters Trade Republic movements like other bank movements", () => {
+    expect(
+      filterMonthlyTransactions(transactions, {
+        ...DEFAULT_TRANSACTION_FILTERS,
+        activeChipFilters: ["trade-republic"]
+      }).map((transaction) => transaction.id)
+    ).toEqual(["trade-republic"]);
+  });
+
+  it("keeps bank filters mutually exclusive", () => {
+    expect(
+      isTransactionChipFilterDisabled("trade-republic", ["caixabank"])
+    ).toBe(true);
+    expect(
+      isTransactionChipFilterDisabled("trade-republic", ["trade-republic"])
+    ).toBe(false);
   });
 });
 

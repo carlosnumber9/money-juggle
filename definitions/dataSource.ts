@@ -53,7 +53,7 @@ export type BankConnectionSummary = {
 
 export type MonthlyTransactionSummary = {
   id: string;
-  institution_slug: "caixabank" | "ing" | "unknown";
+  institution_slug: "caixabank" | "ing" | "trade-republic" | "unknown";
   institution_name: string;
   institution_provider_id: string | null;
   account_id: string;
@@ -143,4 +143,8 @@ export type BankingDataSource = {
   listTransactionLabels(userId: string): Promise<TransactionLabelSummary[]>;
 };
 
-export const INITIAL_BANK_NAMES = ["CaixaBank", "ING"] as const;
+export const INITIAL_BANK_NAMES = [
+  "CaixaBank",
+  "ING",
+  "Trade Republic"
+] as const;

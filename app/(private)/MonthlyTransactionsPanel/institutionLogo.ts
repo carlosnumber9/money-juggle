@@ -35,6 +35,15 @@ export function getInstitutionLogo(
     };
   }
 
+  if (transaction.institution_slug === "trade-republic") {
+    return {
+      color: "var(--bank-color-trade-republic)",
+      fallback: "T",
+      label: transaction.institution_name,
+      path: "/assets/institutions/trade-republic.svg"
+    };
+  }
+
   return {
     color: "var(--muted-foreground)",
     fallback: getInstitutionFallback(transaction.institution_name),

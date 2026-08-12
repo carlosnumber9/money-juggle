@@ -18,8 +18,12 @@ Status:
 - Application mode: restricted to own linked accounts.
 - CaixaBank and ING appear as available ASPSPs and have been linked manually in
   the Enable Banking portal.
-- Trade Republic does not appear as an available ASPSP and remains outside the
-  initial PSD2 banking path.
+- Trade Republic appears as a Spanish and German personal AIS ASPSP. The
+  integration is currently marked beta and reports a maximum consent validity
+  of 90 days.
+- Trade Republic AIS covers its current-account cash balance and booked cash
+  movements. It does not expose brokerage positions, crypto holdings, or total
+  portfolio valuation.
 
 Registered application URLs:
 
@@ -73,7 +77,7 @@ use Account Information.
 
 An ASPSP is an Account Servicing Payment Service Provider. In practice, for this
 app, it usually means the bank or financial institution that holds the account,
-such as CaixaBank or ING.
+such as CaixaBank, ING, or Trade Republic.
 
 The app's `institutions` table can store Enable Banking ASPSP references as
 provider-specific institution identifiers.
@@ -107,8 +111,8 @@ This fits the initial `money-juggle` scope:
 
 - The app is personal.
 - The owner is the only intended user.
-- CaixaBank and ING can be linked without requesting general commercial
-  availability.
+- CaixaBank, ING, and the Trade Republic current account can be linked without
+  requesting general commercial availability.
 - The app should still model ownership with `user_id` so it can grow safely.
 
 ## Conceptual Integration Flow
@@ -175,6 +179,13 @@ return request.
 The app stores account metadata returned by the authorized session, including
 Enable Banking account `uid`, display name, currency, account type, and only
 the last four IBAN characters when available.
+
+Trade Republic uses this same connection flow and normalized storage. Its
+dashboard card labels the synchronized total as `Efectivo` because the total is
+the selected current-account cash balance, not the combined value of cash,
+brokerage positions, and crypto holdings. Its cash movements use the same
+`transactions` rows, deduplication rules, categorization, labels,
+reconciliations, filters, and reports as CaixaBank and ING movements.
 
 Balances are synchronized automatically by server-only code after a connection
 is completed and through an internal `POST /api/sync/balances` request when the

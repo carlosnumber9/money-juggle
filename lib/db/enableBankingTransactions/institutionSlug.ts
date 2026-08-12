@@ -17,5 +17,12 @@ export function getInstitutionSlug(
     return "caixabank";
   }
 
+  if (
+    normalized.includes("trade republic") ||
+    normalized.includes("trade-republic")
+  ) {
+    return "trade-republic";
+  }
+
   return "unknown";
 }

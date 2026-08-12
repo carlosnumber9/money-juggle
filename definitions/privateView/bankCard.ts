@@ -3,6 +3,8 @@ export type BankInstitutionCard = {
   name: string;
   logoPath: string;
   provider: "enable_banking" | "manual";
+  balanceLabel?: string;
+  beta?: boolean;
   aspspName?: string;
   country?: string;
   state:
@@ -51,6 +53,7 @@ export const BANKS = [
     slug: "trade-republic",
     name: "Trade Republic",
     logoPath: "/assets/institutions/trade-republic.svg",
-    provider: "manual"
+    provider: "enable_banking",
+    balanceLabel: "Efectivo"
   }
 ] as const;

@@ -219,7 +219,8 @@ Examples:
 - What RLS protects.
 - Why Enable Banking calls are server-only.
 - What an ASPSP and account information authorization flow are.
-- Why Trade Republic is modeled separately.
+- Why Trade Republic cash uses AIS while brokerage and crypto valuation remain
+  separate.
 
 ## Future Prompts
 

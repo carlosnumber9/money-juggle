@@ -20,15 +20,6 @@ export function buildBankCards(input: {
   providerStatus?: ProviderStatusView;
 }): BankInstitutionCard[] {
   return BANKS.map((bank): BankInstitutionCard => {
-    if (bank.provider === "manual") {
-      return {
-        ...bank,
-        state: "unavailable",
-        tooltip:
-          "Trade Republic todavía no está disponible en esta conexión automática."
-      };
-    }
-
     return buildEnableBankingCard(bank, input);
   });
 }
@@ -38,20 +29,35 @@ function buildEnableBankingCard(
   input: Parameters<typeof buildBankCards>[0]
 ): BankInstitutionCard {
   const connection = getMatchingConnection(bank.name, input.connectionsResult);
+  const beta = getMatchingInstitution(
+    bank.name,
+    input.institutionsResult
+  )?.beta;
 
   if (connection?.status === "linked") {
-    return buildConnectedBankCard(bank, connection);
+    return { ...buildConnectedBankCard(bank, connection), beta };
   }
 
   if (connection?.status === "linking") {
-    return buildLinkingBankCard(bank, connection);
+    return { ...buildLinkingBankCard(bank, connection), beta };
   }
 
   if (connection?.status === "error") {
-    return buildErroredBankCard(bank, connection);
+    return { ...buildErroredBankCard(bank, connection), beta };
   }
 
   return buildAvailabilityBankCard(bank, input);
+}
+
+function getMatchingInstitution(
+  bankName: string,
+  institutionsResult: Result<InstitutionAvailability[]> | undefined
+) {
+  return institutionsResult?.ok
+    ? institutionsResult.value.find((candidate) =>
+        candidate.name.toLowerCase().includes(bankName.toLowerCase())
+      )
+    : undefined;
 }
 
 function getMatchingConnection(

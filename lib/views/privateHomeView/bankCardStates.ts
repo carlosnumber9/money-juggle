@@ -90,9 +90,12 @@ function buildInstitutionAvailabilityCard(
 
   return {
     ...bank,
+    beta: institution.beta,
     aspspName: institution.name,
     country: institution.country,
     state: "idle",
-    tooltip: `${bank.name} disponible en Enable Banking.`
+    tooltip: institution.beta
+      ? `${bank.name} disponible en Enable Banking como integración beta.`
+      : `${bank.name} disponible en Enable Banking.`
   };
 }

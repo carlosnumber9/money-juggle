@@ -13,13 +13,18 @@ export function BankBalanceSummary({ card }: { card: BankInstitutionCard }) {
   if (!card.balanceTotals || card.balanceTotals.length === 0) {
     return (
       <p className="mt-5 max-w-48 text-sm text-muted-foreground">
-        Saldo pendiente de sincronizar.
+        {card.balanceLabel ?? "Saldo"} pendiente de sincronizar.
       </p>
     );
   }
 
   return (
     <div className="mt-4 space-y-1">
+      {card.balanceLabel ? (
+        <p className="text-xs font-medium text-muted-foreground">
+          {card.balanceLabel}
+        </p>
+      ) : null}
       {card.balanceTotals.map((total) => (
         <p
           key={total.currency}

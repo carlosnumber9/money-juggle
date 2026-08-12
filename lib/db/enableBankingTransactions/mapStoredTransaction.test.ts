@@ -49,6 +49,29 @@ describe("mapStoredTransactionToSummary labels", () => {
     expect(summary.booking_date).toBe("2026-07-19");
     expect(summary.reporting_date).toBe("2026-07-20");
   });
+
+  it("maps Trade Republic to its stable institution slug", () => {
+    const transaction = createStoredTransaction();
+    const account = Array.isArray(transaction.accounts)
+      ? transaction.accounts[0]
+      : transaction.accounts;
+    const connection = Array.isArray(account?.bank_connections)
+      ? account?.bank_connections[0]
+      : account?.bank_connections;
+
+    if (!connection) {
+      throw new Error("Missing test bank connection.");
+    }
+
+    connection.institutions = {
+      provider_institution_id: "ES:Trade Republic",
+      name: "Trade Republic"
+    };
+
+    expect(mapStoredTransactionToSummary(transaction).institution_slug).toBe(
+      "trade-republic"
+    );
+  });
 });
 
 function createStoredTransaction(): StoredMonthlyTransactionRow {
