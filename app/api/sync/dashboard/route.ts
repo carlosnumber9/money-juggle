@@ -30,10 +30,13 @@ export async function POST(request: NextRequest) {
     const connections = await listUserEnableBankingConnections(user.id, {
       useServiceRole: true
     });
+    const linkedConnections = connections.filter(
+      (connection) => connection.status === "linked"
+    );
     const range = getIncrementalProviderDateRange();
     const leaseResult = await withConnectionSyncLeases({
       userId: user.id,
-      bankConnectionIds: connections.map((connection) => connection.id),
+      bankConnectionIds: linkedConnections.map((connection) => connection.id),
       run: async (acquiredConnectionIds) => {
         const psuHeadersByConnectionId =
           await getInteractivePsuHeadersByConnection({
@@ -43,7 +46,7 @@ export async function POST(request: NextRequest) {
           });
         const balances = await syncStaleEnableBankingBalances({
           userId: user.id,
-          connections: connections.filter((connection) =>
+          connections: linkedConnections.filter((connection) =>
             acquiredConnectionIds.has(connection.id)
           ),
           force,

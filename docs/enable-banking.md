@@ -178,9 +178,15 @@ return request.
 
 If an authorization redirect is abandoned and no callback arrives, the stored
 connection remains `linking` for audit history. The server prepares a
-15-minute stale deadline and the bank card schedules that transition in the
-browser. When the deadline passes, its spinner becomes a retry action without
-requiring a reload or a new sign-in.
+15-minute stale deadline from the attempt's immutable `created_at` timestamp,
+and the bank card schedules that transition in the browser. Operational updates
+to the connection row do not postpone this deadline. When the deadline passes,
+its spinner becomes a retry action without requiring a reload or a new sign-in.
+
+Dashboard and balance synchronization acquire operational leases only for
+connections already marked `linked`. Pending or failed authorization attempts
+are not sync candidates and cannot have their stale clocks affected by sync
+bookkeeping.
 
 On an installed iOS Home Screen web app, the connection form opens the provider
 authorization in a named browser context created with `window.open`. This keeps

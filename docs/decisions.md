@@ -660,8 +660,9 @@ Context:
 
 Decision:
 
-- Treat a `linking` connection as stale when its `updated_at` timestamp is more
-  than 15 minutes old.
+- Treat a `linking` connection as stale when its `created_at` timestamp is more
+  than 15 minutes old. Do not use `updated_at`, because operational metadata and
+  sync-lease updates can touch the same row without restarting authorization.
 - Present stale linking attempts as a recoverable UI state instead of an
   indefinite loading state.
 - Send the stale deadline to the client and schedule the retryable state while
@@ -682,6 +683,9 @@ Consequences:
   Enable Banking credentials remain off the browser.
 - Stale authorization rows may remain in the database until a later cleanup or
   explicit cancellation feature is implemented.
+- Balance and dashboard synchronization acquire leases only for `linked`
+  connections, so abandoned and failed attempts do not receive unrelated
+  operational updates.
 
 Possible future revisit trigger:
 

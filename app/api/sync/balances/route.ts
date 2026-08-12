@@ -26,9 +26,12 @@ export async function POST(request: NextRequest) {
     const connections = await listUserEnableBankingConnections(user.id, {
       useServiceRole: true
     });
+    const linkedConnections = connections.filter(
+      (connection) => connection.status === "linked"
+    );
     const leaseResult = await withConnectionSyncLeases({
       userId: user.id,
-      bankConnectionIds: connections.map((connection) => connection.id),
+      bankConnectionIds: linkedConnections.map((connection) => connection.id),
       run: async (acquiredConnectionIds) => {
         const psuHeadersByConnectionId =
           await getInteractivePsuHeadersByConnection({
@@ -39,7 +42,7 @@ export async function POST(request: NextRequest) {
 
         return syncStaleEnableBankingBalances({
           userId: user.id,
-          connections: connections.filter((connection) =>
+          connections: linkedConnections.filter((connection) =>
             acquiredConnectionIds.has(connection.id)
           ),
           force,
@@ -51,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     console.info("Balance sync completed", {
       user_id_suffix: user.id.slice(-8),
-      connection_count: connections.length,
+      connection_count: linkedConnections.length,
       force,
       synced: result.synced,
       attempted_connection_count: result.attemptedConnectionCount,
