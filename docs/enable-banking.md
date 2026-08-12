@@ -176,6 +176,12 @@ uses that pending connection's stored `user_id` so the bank redirect can
 complete even if the browser does not present a fresh Supabase session on the
 return request.
 
+If an authorization redirect is abandoned and no callback arrives, the stored
+connection remains `linking` for audit history. The server prepares a
+15-minute stale deadline and the bank card schedules that transition in the
+browser. When the deadline passes, its spinner becomes a retry action without
+requiring a reload or a new sign-in.
+
 The app stores account metadata returned by the authorized session, including
 Enable Banking account `uid`, display name, currency, account type, and only
 the last four IBAN characters when available.

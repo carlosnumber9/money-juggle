@@ -664,6 +664,9 @@ Decision:
   than 15 minutes old.
 - Present stale linking attempts as a recoverable UI state instead of an
   indefinite loading state.
+- Send the stale deadline to the client and schedule the retryable state while
+  the card remains mounted, so the owner does not need to reload or reopen the
+  private view after an abandoned redirect.
 - Allow the owner to retry the connection from that state by using the existing
   server-side Enable Banking start flow.
 - Do not delete or mutate the stale attempt as part of this first recovery UI;
@@ -673,6 +676,8 @@ Consequences:
 
 - The owner can recover from abandoned or failed provider redirects without
   manual database changes.
+- The spinner changes into the existing retry control when the 15-minute
+  deadline passes, including after the owner returns to a suspended page.
 - The retry still uses the existing server-only provider flow, so sensitive
   Enable Banking credentials remain off the browser.
 - Stale authorization rows may remain in the database until a later cleanup or

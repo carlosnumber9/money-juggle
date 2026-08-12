@@ -7,7 +7,7 @@ import type {
   Result
 } from "@/definitions";
 
-import { isStaleLinkingConnection } from "./linkingState";
+import { getLinkingStaleAt, isStaleLinkingConnection } from "./linkingState";
 
 type BaseBank = (typeof BANKS)[number];
 
@@ -21,6 +21,7 @@ export function buildLinkingBankCard(
     ...bank,
     aspspName: connection.institution?.name ?? bank.name,
     country: connection.institution?.country ?? undefined,
+    linkingStaleAt: getLinkingStaleAt(connection) ?? undefined,
     state: isStaleLinking ? "stale-linking" : "linking",
     tooltip: isStaleLinking
       ? `La conexión con ${bank.name} parece atascada. Puedes reintentarla.`

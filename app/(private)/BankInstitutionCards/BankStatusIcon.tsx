@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip } from "@/components/ui/tooltip";
@@ -13,15 +13,37 @@ import {
   getStatusIcon
 } from "./statusHelpers";
 import { getStatusToneClass } from "./statusTone";
+import { getLinkingStaleDelay, markLinkingCardStale } from "./liveLinkingState";
 
 export function BankStatusIcon({ card }: { card: BankInstitutionCard }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [expiredLinkingStaleAt, setExpiredLinkingStaleAt] = useState<
+    string | null
+  >(null);
   const isSubmittingRef = useRef(false);
+  const liveCard =
+    card.state === "linking" && expiredLinkingStaleAt === card.linkingStaleAt
+      ? markLinkingCardStale(card)
+      : card;
 
-  if (canStartConnection(card)) {
+  useEffect(() => {
+    const delay = getLinkingStaleDelay(card);
+
+    if (delay === null || !card.linkingStaleAt) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setExpiredLinkingStaleAt(card.linkingStaleAt ?? null);
+    }, delay);
+
+    return () => window.clearTimeout(timeout);
+  }, [card]);
+
+  if (canStartConnection(liveCard)) {
     return (
       <ConnectionForm
-        card={card}
+        card={liveCard}
         isSubmitting={isSubmitting}
         onSubmittingChange={setIsSubmitting}
         isSubmittingRef={isSubmittingRef}
@@ -31,11 +53,11 @@ export function BankStatusIcon({ card }: { card: BankInstitutionCard }) {
 
   return (
     <Tooltip
-      triggerLabel={card.tooltip}
-      label={card.tooltip}
-      triggerClassName={`absolute top-3 right-3 z-20 ${getStatusToneClass(card.state)}`}
+      triggerLabel={liveCard.tooltip}
+      label={liveCard.tooltip}
+      triggerClassName={`absolute top-3 right-3 z-20 ${getStatusToneClass(liveCard.state)}`}
     >
-      {getStatusIcon(card.state)}
+      {getStatusIcon(liveCard.state)}
     </Tooltip>
   );
 }
