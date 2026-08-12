@@ -42,6 +42,16 @@ export function buildErroredBankCard(
   };
 }
 
+export function buildMissingAccountsBankCard(
+  bank: BaseBank,
+  connection: BankConnectionSummary
+): BankInstitutionCard {
+  return {
+    ...buildErroredBankCard(bank, connection),
+    tooltip: `${bank.name} no devolvió ninguna cuenta autorizada. Puedes reintentar la conexión.`
+  };
+}
+
 export function buildAvailabilityBankCard(
   bank: BaseBank,
   input: {

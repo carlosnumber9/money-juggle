@@ -31,7 +31,8 @@ export async function POST(request: NextRequest) {
       useServiceRole: true
     });
     const linkedConnections = connections.filter(
-      (connection) => connection.status === "linked"
+      (connection) =>
+        connection.status === "linked" && connection.accounts.length > 0
     );
     const range = getIncrementalProviderDateRange();
     const leaseResult = await withConnectionSyncLeases({

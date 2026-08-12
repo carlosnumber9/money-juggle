@@ -19,6 +19,26 @@ export async function authorizeAndCompleteSession({
 }) {
   try {
     const session = await authorizeEnableBankingSession(code);
+
+    if (session.accounts.length === 0) {
+      const status = "no-accounts-added";
+      const metadata = {
+        account_count: 0,
+        session_id: session.session_id
+      };
+
+      await failEnableBankingConnection({
+        userId: connection.user_id,
+        bankConnectionId: connection.id,
+        providerStatus: status,
+        message:
+          "Enable Banking authorized the session without returning any accounts.",
+        metadata
+      });
+
+      return { ok: false, status, metadata } as const;
+    }
+
     const psuHeadersByConnectionId = await getInteractivePsuHeadersByConnection(
       {
         userId: connection.user_id,

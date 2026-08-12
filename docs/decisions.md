@@ -1615,3 +1615,49 @@ Possible future revisit trigger:
 
 - If automatic reopening becomes essential, package Money Juggle as a native
   application and configure associated domains and Universal Links.
+
+## ADR-043: Reject Authorized Bank Sessions Without Accounts
+
+Status:
+
+- Accepted and implemented.
+
+Context:
+
+- Enable Banking can return an `AUTHORIZED` session whose `accounts` list is
+  empty.
+- A real Trade Republic beta authorization produced this response even though
+  balance and transaction access were both requested.
+- The previous callback marked every successful `POST /sessions` response as
+  `linked`, so the dashboard showed cash as pending synchronization even though
+  no provider account ID existed for a balance request.
+
+Decision:
+
+- Require at least one account in the session authorization response before
+  completing an Enable Banking connection.
+- Store an empty session as `error` with provider status
+  `no-accounts-added`, retain non-sensitive diagnostic metadata, and skip PSU
+  header discovery, account persistence, and initial balance synchronization.
+- Interpret historical `linked` connections with no accounts as retryable
+  errors in the prepared dashboard view without rewriting or deleting their
+  audit rows.
+- Acquire balance and dashboard synchronization leases only for `linked`
+  connections that contain at least one stored account.
+- Keep the existing server-only callback, ownership checks, and RLS model.
+
+Consequences:
+
+- The owner sees a truthful retry action instead of an indefinitely pending
+  cash balance.
+- Provider sessions that cannot expose an account never enter account balance
+  or transaction synchronization.
+- Existing empty connection history remains available for diagnosis.
+- This handling does not make Trade Republic expose an account; provider-side
+  beta behavior or application account restrictions may still need resolution.
+- No schema migration is required.
+
+Possible future revisit trigger:
+
+- If Enable Banking documents an asynchronous account-discovery state that
+  requires polling an authorized empty session before treating it as failed.

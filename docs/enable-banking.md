@@ -176,6 +176,15 @@ uses that pending connection's stored `user_id` so the bank redirect can
 complete even if the browser does not present a fresh Supabase session on the
 return request.
 
+An authorization is successful only when `POST /sessions` returns at least one
+account. Enable Banking can report an `AUTHORIZED` session with an empty
+account list, particularly while an ASPSP integration is in beta. The callback
+stores that outcome as `error` with public status `no-accounts-added`, skips PSU
+header discovery and initial balance synchronization, and presents a retryable
+institution card. A historical `linked` row with no accounts is interpreted the
+same way by the private view and is excluded from synchronization. This avoids
+presenting an impossible balance refresh as merely pending.
+
 If an authorization redirect is abandoned and no callback arrives, the stored
 connection remains `linking` for audit history. The server prepares a
 15-minute stale deadline from the attempt's immutable `created_at` timestamp,
@@ -184,9 +193,9 @@ to the connection row do not postpone this deadline. When the deadline passes,
 its spinner becomes a retry action without requiring a reload or a new sign-in.
 
 Dashboard and balance synchronization acquire operational leases only for
-connections already marked `linked`. Pending or failed authorization attempts
-are not sync candidates and cannot have their stale clocks affected by sync
-bookkeeping.
+connections already marked `linked` that contain at least one account. Pending,
+failed, or empty authorization attempts are not sync candidates and cannot have
+their stale clocks affected by sync bookkeeping.
 
 On an installed iOS Home Screen web app, the connection form opens the provider
 authorization in a named browser context created with `window.open`. This keeps

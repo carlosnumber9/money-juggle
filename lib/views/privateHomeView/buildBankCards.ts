@@ -11,7 +11,8 @@ import { buildConnectedBankCard } from "./connectedBankCard";
 import {
   buildAvailabilityBankCard,
   buildErroredBankCard,
-  buildLinkingBankCard
+  buildLinkingBankCard,
+  buildMissingAccountsBankCard
 } from "./bankCardStates";
 
 export function buildBankCards(input: {
@@ -35,6 +36,10 @@ function buildEnableBankingCard(
   )?.beta;
 
   if (connection?.status === "linked") {
+    if (connection.accounts.length === 0) {
+      return { ...buildMissingAccountsBankCard(bank, connection), beta };
+    }
+
     return { ...buildConnectedBankCard(bank, connection), beta };
   }
 
