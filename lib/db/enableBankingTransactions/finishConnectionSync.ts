@@ -20,6 +20,7 @@ type FinishConnectionSyncInput = {
   mode: TransactionSyncMode;
   rows: TransactionRow[];
   failures: unknown[];
+  warnings: unknown[];
 };
 
 export async function persistRowsAndFinishRun(
@@ -39,7 +40,8 @@ export async function persistRowsAndFinishRun(
       mode: input.mode,
       metadata: {
         transaction_count: input.rows.length,
-        failures: input.failures
+        failures: input.failures,
+        warnings: input.warnings
       }
     });
     throw error;
@@ -52,7 +54,7 @@ async function finishSuccessfulRun(input: FinishConnectionSyncInput) {
   const status =
     input.failures.length > 0 && input.rows.length === 0
       ? "failed"
-      : input.failures.length > 0
+      : input.failures.length > 0 || input.warnings.length > 0
         ? "partial"
         : "succeeded";
 
@@ -65,7 +67,8 @@ async function finishSuccessfulRun(input: FinishConnectionSyncInput) {
     mode: input.mode,
     metadata: {
       transaction_count: input.rows.length,
-      failures: input.failures
+      failures: input.failures,
+      warnings: input.warnings
     }
   });
 

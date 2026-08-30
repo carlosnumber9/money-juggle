@@ -38,6 +38,7 @@ export async function syncConnectionTransactions(input: {
   const fetchedAt = new Date().toISOString();
   const rows: TransactionRow[] = [];
   const failures = [];
+  const warnings = [];
   let attemptedAccountCount = 0;
   let succeededAccountCount = 0;
   let rateLimitedAccountCount = 0;
@@ -82,7 +83,7 @@ export async function syncConnectionTransactions(input: {
         account_id: account.id,
         message: error.message
       });
-      failures.push(getAccountFailure(account, error));
+      warnings.push(getAccountFailure(account, error));
     } catch (error) {
       console.error("Enable Banking transaction account fetch failed", {
         bank_connection_id: input.connection.id,
@@ -107,7 +108,8 @@ export async function syncConnectionTransactions(input: {
     syncRunId,
     fetchedAt,
     rows,
-    failures
+    failures,
+    warnings
   });
 
   return {

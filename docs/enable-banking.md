@@ -258,9 +258,11 @@ page for the requested period has been processed. Every follow-up request keeps
 the original date parameters and adds only the provider continuation key. If
 the provider repeats a continuation key, the app stops pagination instead of
 allowing an unbounded request loop. It retains only the pages completed before
-the repeated key, records the account sync as partial, and advances transaction
-freshness when those pages contain usable rows. This keeps cached data available
-without hiding the provider truncation from sync observability.
+the repeated key, records the account sync as partial with an operational
+warning, and advances transaction freshness after the tolerated provider
+response. Pagination warnings remain visible in sync observability but do not
+count as account failures or put the dashboard refresh control into its retry
+state. This keeps cached data available without hiding provider truncation.
 
 Normalized transaction rows are deduplicated by their owner-scoped stable
 identity and persisted in bounded batches. Each batch preserves the original

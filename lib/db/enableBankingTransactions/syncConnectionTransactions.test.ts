@@ -78,7 +78,7 @@ describe("syncConnectionTransactions", () => {
       synced: true,
       attemptedAccountCount: 1,
       succeededAccountCount: 1,
-      failedAccountCount: 1,
+      failedAccountCount: 0,
       rateLimitedAccountCount: 0
     });
     expect(persistRowsAndFinishRunMock).toHaveBeenCalledWith(
@@ -89,7 +89,8 @@ describe("syncConnectionTransactions", () => {
             provider_transaction_id: "provider-transaction-id"
           })
         ],
-        failures: [
+        failures: [],
+        warnings: [
           expect.objectContaining({
             account_id: "account-id",
             message:
