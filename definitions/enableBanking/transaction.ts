@@ -45,4 +45,9 @@ export type EnableBankingTransactionsResponse =
     }
   | EnableBankingTransactionResource[];
 
+export type EnableBankingTransactionsResult = {
+  transactions: EnableBankingTransactionResource[];
+  paginationTruncated: boolean;
+};
+
 export type EnableBankingTransactionsFetchStrategy = "default" | "longest";

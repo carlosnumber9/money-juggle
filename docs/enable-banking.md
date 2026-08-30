@@ -255,9 +255,12 @@ cached Supabase rows while the refresh runs.
 
 Transaction retrieval follows Enable Banking continuation keys until every
 page for the requested period has been processed. Every follow-up request keeps
-the original date parameters and adds only the provider continuation key. A
-repeated continuation key aborts the sync instead of allowing an unbounded
-request loop.
+the original date parameters and adds only the provider continuation key. If
+the provider repeats a continuation key, the app stops pagination instead of
+allowing an unbounded request loop. It retains only the pages completed before
+the repeated key, records the account sync as partial, and advances transaction
+freshness when those pages contain usable rows. This keeps cached data available
+without hiding the provider truncation from sync observability.
 
 Normalized transaction rows are deduplicated by their owner-scoped stable
 identity and persisted in bounded batches. Each batch preserves the original

@@ -9,6 +9,7 @@ import type {
   EnableBankingStartAuthorizationInput,
   EnableBankingStartAuthorizationResponse,
   EnableBankingTransactionsFetchStrategy,
+  EnableBankingTransactionsResult,
   EnableBankingTransactionResource,
   EnableBankingTransactionsResponse,
   EnableBankingPsuHeaders
@@ -72,7 +73,7 @@ export async function getEnableBankingAccountTransactions(input: {
   dateTo: string;
   strategy: EnableBankingTransactionsFetchStrategy;
   psuHeaders?: EnableBankingPsuHeaders;
-}): Promise<EnableBankingTransactionResource[]> {
+}): Promise<EnableBankingTransactionsResult> {
   const baseSearchParams = new URLSearchParams({
     date_from: input.dateFrom,
     date_to: input.dateTo,
@@ -81,6 +82,7 @@ export async function getEnableBankingAccountTransactions(input: {
   const transactions: EnableBankingTransactionResource[] = [];
   const seenContinuationKeys = new Set<string>();
   let continuationKey: string | null = null;
+  let paginationTruncated = false;
 
   do {
     const searchParams = new URLSearchParams(baseSearchParams);
@@ -95,23 +97,24 @@ export async function getEnableBankingAccountTransactions(input: {
         { psuHeaders: input.psuHeaders }
       );
 
+    const nextContinuationKey = getContinuationKey(response);
+
+    if (nextContinuationKey && seenContinuationKeys.has(nextContinuationKey)) {
+      paginationTruncated = true;
+      break;
+    }
+
     transactions.push(
       ...(Array.isArray(response) ? response : response.transactions)
     );
-    continuationKey = getContinuationKey(response);
+    continuationKey = nextContinuationKey;
 
     if (continuationKey) {
-      if (seenContinuationKeys.has(continuationKey)) {
-        throw new Error(
-          "Enable Banking returned a repeated transaction continuation key."
-        );
-      }
-
       seenContinuationKeys.add(continuationKey);
     }
   } while (continuationKey);
 
-  return transactions;
+  return { transactions, paginationTruncated };
 }
 
 function getContinuationKey(

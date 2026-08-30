@@ -16,6 +16,9 @@ import type {
   TransactionSyncMode
 } from "./types";
 
+const REPEATED_CONTINUATION_KEY_MESSAGE =
+  "Enable Banking returned a repeated transaction continuation key.";
+
 export async function syncConnectionTransactions(input: {
   userId: string;
   connection: StoredConnectionForTransactionSync;
@@ -43,7 +46,7 @@ export async function syncConnectionTransactions(input: {
     attemptedAccountCount += 1;
 
     try {
-      const transactions = await getEnableBankingAccountTransactions({
+      const transactionResult = await getEnableBankingAccountTransactions({
         accountId: account.provider_account_id,
         dateFrom: input.dateFrom,
         dateTo: input.dateTo,
@@ -51,18 +54,35 @@ export async function syncConnectionTransactions(input: {
         psuHeaders: input.psuHeaders
       });
 
-      rows.push(
-        ...transactions
-          .map((transaction) =>
-            mapTransactionToRow({
-              userId: input.userId,
-              account,
-              transaction
-            })
-          )
-          .filter((row): row is TransactionRow => Boolean(row))
-      );
-      succeededAccountCount += 1;
+      const accountRows = transactionResult.transactions
+        .map((transaction) =>
+          mapTransactionToRow({
+            userId: input.userId,
+            account,
+            transaction
+          })
+        )
+        .filter((row): row is TransactionRow => Boolean(row));
+
+      rows.push(...accountRows);
+
+      if (!transactionResult.paginationTruncated) {
+        succeededAccountCount += 1;
+        continue;
+      }
+
+      if (accountRows.length > 0) {
+        succeededAccountCount += 1;
+      }
+
+      const error = new Error(REPEATED_CONTINUATION_KEY_MESSAGE);
+
+      console.warn("Enable Banking transaction pagination truncated", {
+        bank_connection_id: input.connection.id,
+        account_id: account.id,
+        message: error.message
+      });
+      failures.push(getAccountFailure(account, error));
     } catch (error) {
       console.error("Enable Banking transaction account fetch failed", {
         bank_connection_id: input.connection.id,
