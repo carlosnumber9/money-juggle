@@ -1170,7 +1170,7 @@ Implemented so far:
   spending in its subtitle, and keeps the lines continuous without permanent
   point markers.
 - A second full-width line chart appears after every other evolution
-  visualization. It shows the current year's monthly total of negative
+  visualization. It shows the current year's monthly total of positive
   movements categorized as `savings_transfer`, using one continuous savings
   line and the same dimensions as the income-versus-expense chart. It reads
   owner-assigned categories directly, so an internal transfer or reconciled

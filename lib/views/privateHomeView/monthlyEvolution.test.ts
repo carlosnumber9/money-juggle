@@ -45,50 +45,51 @@ describe("buildMonthlyEvolutionSummary", () => {
     expect(summary.points[7]).toMatchObject({ income: 0, expenses: 25 });
   });
 
-  it("sums categorized savings charges regardless of report neutrality", () => {
+  it("sums categorized savings movements across every month", () => {
     const summary = buildMonthlyEvolutionSummary({
       year: 2026,
       transactions: [
         createTransaction({
+          id: "june-savings",
+          amount: "100",
+          reporting_date: "2026-06-10",
+          category: createSavingsCategory()
+        }),
+        createTransaction({
           id: "july-savings",
-          amount: "-100",
-          category: createSavingsCategory()
-        }),
-        createTransaction({
-          id: "august-savings",
-          amount: "-50",
-          reporting_date: "2026-08-10",
-          category: createSavingsCategory()
-        }),
-        createTransaction({
-          id: "savings-income",
-          amount: "500",
-          category: createSavingsCategory()
-        }),
-        createTransaction({ id: "other-expense", amount: "-20" }),
-        createTransaction({
-          id: "internal-savings",
-          amount: "-25",
+          amount: "200",
           cashflow_type: "internal_transfer",
           category: createSavingsCategory()
         }),
         createTransaction({
-          id: "reconciled-savings",
-          amount: "-25",
-          reporting_date: "2026-08-15",
+          id: "august-savings",
+          amount: "300",
+          reporting_date: "2026-08-10",
           category: createSavingsCategory(),
           reconciliation: {
             id: "reconciliation",
             differenceTreatment: "neutralized",
             requiresReview: false
           }
-        })
+        }),
+        createTransaction({
+          id: "september-savings",
+          amount: "400",
+          reporting_date: "2026-09-10",
+          category: createSavingsCategory()
+        }),
+        createTransaction({
+          id: "negative-counterpart",
+          amount: "-200",
+          category: createSavingsCategory()
+        }),
+        createTransaction({ id: "other-income", amount: "500" })
       ],
       adjustments: [
         {
           reconciliationId: "adjustment",
           reportingDate: "2026-08-20",
-          amount: "-500",
+          amount: "500",
           currency: "EUR",
           category: createSavingsCategory(),
           labels: []
@@ -97,8 +98,10 @@ describe("buildMonthlyEvolutionSummary", () => {
     });
 
     expect(summary.savingsCurrency).toBe("EUR");
-    expect(summary.points[6]).toMatchObject({ savings: 125 });
-    expect(summary.points[7]).toMatchObject({ savings: 75 });
+    expect(summary.points[5]).toMatchObject({ savings: 100 });
+    expect(summary.points[6]).toMatchObject({ savings: 200 });
+    expect(summary.points[7]).toMatchObject({ savings: 300 });
+    expect(summary.points[8]).toMatchObject({ savings: 400 });
   });
 
   it("excludes savings transfers from income and currency selection", () => {

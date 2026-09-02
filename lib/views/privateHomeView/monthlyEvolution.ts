@@ -40,14 +40,14 @@ export function buildMonthlyEvolutionSummary({
     return amount <= 0n || !isExcludedFromIncomeReports(movement);
   });
   const currency = getPrimaryCurrency(reportableMovements) ?? "EUR";
-  const savingsCharges = transactions.filter((transaction) => {
+  const savingsMovements = transactions.filter((transaction) => {
     return (
       isSavingsTransferCategory(transaction) &&
-      parseDecimal(transaction.amount) < 0n &&
+      parseDecimal(transaction.amount) > 0n &&
       getMonthIndex(transaction.reporting_date, year) !== null
     );
   });
-  const savingsCurrency = getPrimaryCurrency(savingsCharges) ?? currency;
+  const savingsCurrency = getPrimaryCurrency(savingsMovements) ?? currency;
   const totals = MONTH_LABELS.map((monthLabel, index) => ({
     month: index + 1,
     monthLabel,
@@ -85,7 +85,7 @@ export function buildMonthlyEvolutionSummary({
     totals[monthIndex].expenses += -amount;
   }
 
-  for (const transaction of savingsCharges) {
+  for (const transaction of savingsMovements) {
     if (transaction.currency !== savingsCurrency) {
       continue;
     }
@@ -96,7 +96,7 @@ export function buildMonthlyEvolutionSummary({
       continue;
     }
 
-    totals[monthIndex].savings += -parseDecimal(transaction.amount);
+    totals[monthIndex].savings += parseDecimal(transaction.amount);
   }
 
   excludedInternalTransferCount = reporting.excludedTransactions.filter(

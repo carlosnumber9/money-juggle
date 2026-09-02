@@ -95,7 +95,7 @@ describe("monthly evolution formatters", () => {
     });
 
     expect(normalizeWhitespace(description)).toBe(
-      "175,50 € en cargos categorizados como ahorro"
+      "175,50 € en movimientos categorizados como ahorro"
     );
   });
 

@@ -1699,7 +1699,7 @@ Possible future revisit trigger:
 - If savings movements should become financially neutral in every report and
   direction filter instead of only being excluded from reported income.
 
-## ADR-045: Show Annual Savings Charges As A Separate Evolution
+## ADR-045: Show Annual Savings Movements As A Separate Evolution
 
 Status:
 
@@ -1707,8 +1707,8 @@ Status:
 
 Context:
 
-- Negative movements categorized as `savings_transfer` remain expenses in the
-  existing cashflow model but are excluded from the category expense radar.
+- Positive movements categorized as `savings_transfer` represent money arriving
+  in savings and are excluded from reported income by ADR-044.
 - The owner needs a dedicated view of how much money was directed to savings
   during each month of the current year.
 
@@ -1717,15 +1717,16 @@ Decision:
 - Add a full-width line chart at the end of the `Evolución` section with the
   same dimensions and monthly axis as the existing income-versus-expense line
   chart.
-- Sum only negative current-year movements categorized as
-  `savings_transfer`, displaying their absolute values as one savings line.
+- Sum only positive current-year movements categorized as
+  `savings_transfer`, displaying their values as one savings line. Ignore
+  negative counterparts so transfers are not counted twice.
 - Read category assignments directly from original cached transactions because
   this chart measures owner-categorized savings rather than reportable
   cashflow.
-- Include categorized savings charges even when they are detected as internal
+- Include categorized savings movements even when they are detected as internal
   transfers or belong to a reconciliation. Do not count synthetic
   reconciliation adjustments as categorized bank movements.
-- Select the chart currency from eligible savings charges and keep all 12
+- Select the chart currency from eligible savings movements and keep all 12
   months visible, including zero-value months.
 - Reuse cached current-year transaction data without adding persistence or
   provider calls.
