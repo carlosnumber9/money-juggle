@@ -44,6 +44,36 @@ describe("buildMonthlyEvolutionSummary", () => {
     expect(summary.points[6]).toMatchObject({ income: 0, expenses: 0 });
     expect(summary.points[7]).toMatchObject({ income: 0, expenses: 25 });
   });
+
+  it("excludes savings transfers from income and currency selection", () => {
+    const summary = buildMonthlyEvolutionSummary({
+      year: 2026,
+      transactions: [
+        createTransaction({ id: "income", amount: "100" }),
+        createTransaction({
+          id: "savings-income",
+          amount: "50",
+          category: createSavingsCategory()
+        }),
+        createTransaction({
+          id: "usd-savings-income-1",
+          amount: "500",
+          currency: "USD",
+          category: createSavingsCategory()
+        }),
+        createTransaction({
+          id: "usd-savings-income-2",
+          amount: "600",
+          currency: "USD",
+          category: createSavingsCategory()
+        })
+      ]
+    });
+
+    expect(summary.currency).toBe("EUR");
+    expect(summary.points[6]).toMatchObject({ income: 100, expenses: 0 });
+    expect(summary.transactionCount).toBe(1);
+  });
 });
 
 function createTransaction(
@@ -77,6 +107,18 @@ function createInternalTransferCategory() {
     id: "internal-transfer",
     name: "Transferencia interna",
     slug: "internal_transfer",
+    group: {
+      id: "transfers",
+      name: "Transferencias y ahorro"
+    }
+  };
+}
+
+function createSavingsCategory() {
+  return {
+    id: "savings-transfer",
+    name: "Ahorro",
+    slug: "savings_transfer",
     group: {
       id: "transfers",
       name: "Transferencias y ahorro"

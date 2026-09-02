@@ -1661,3 +1661,40 @@ Possible future revisit trigger:
 
 - If Enable Banking documents an asynchronous account-discovery state that
   requires polling an authorized empty session before treating it as failed.
+
+## ADR-044: Exclude Savings Withdrawals From Reported Income
+
+Status:
+
+- Accepted and implemented.
+
+Context:
+
+- A positive bank movement categorized as `savings_transfer` represents money
+  returning from the owner's savings, not newly earned income.
+- Counting that movement in the dashboard income card and annual evolution
+  overstates income even when the underlying bank balance movement is correct.
+
+Decision:
+
+- Exclude positive movements categorized as `savings_transfer` from reported
+  income in the monthly dashboard card and annual evolution chart.
+- Exclude those movements before choosing the annual chart's primary currency
+  and calculating its transaction count.
+- Keep negative savings movements under their existing expense treatment.
+- Keep savings movements visible in the transaction list and available to its
+  category and direction filters.
+- Apply the same rule to bank transactions and reportable reconciliation
+  adjustments through a shared domain predicate.
+
+Consequences:
+
+- Dashboard and evolution income totals represent external income rather than
+  withdrawals from savings.
+- No schema, migration, RLS, ownership, or provider integration change is
+  required.
+
+Possible future revisit trigger:
+
+- If savings movements should become financially neutral in every report and
+  direction filter instead of only being excluded from reported income.

@@ -29,6 +29,30 @@ describe("buildMonthlyCashflowSummary", () => {
     expect(summary.income.excludedInternalTransferCount).toBe(1);
     expect(summary.expenses.excludedInternalTransferCount).toBe(1);
   });
+
+  it("excludes savings transfers from income but not expenses", () => {
+    const savingsCategory = createSavingsCategory();
+    const summary = buildMonthlyCashflowSummary([
+      createTransaction({ id: "income", amount: "100" }),
+      createTransaction({
+        id: "savings-withdrawal",
+        amount: "50",
+        category: savingsCategory
+      }),
+      createTransaction({
+        id: "savings-deposit",
+        amount: "-40",
+        category: savingsCategory
+      })
+    ]);
+
+    expect(summary.income.totals).toEqual([
+      { amount: "100", currency: "EUR", transactionCount: 1 }
+    ]);
+    expect(summary.expenses.totals).toEqual([
+      { amount: "40", currency: "EUR", transactionCount: 1 }
+    ]);
+  });
 });
 
 function createTransaction(
@@ -62,6 +86,18 @@ function createInternalTransferCategory() {
     id: "internal-transfer",
     name: "Transferencia interna",
     slug: "internal_transfer",
+    group: {
+      id: "transfers",
+      name: "Transferencias y ahorro"
+    }
+  };
+}
+
+function createSavingsCategory() {
+  return {
+    id: "savings-transfer",
+    name: "Ahorro",
+    slug: "savings_transfer",
     group: {
       id: "transfers",
       name: "Transferencias y ahorro"

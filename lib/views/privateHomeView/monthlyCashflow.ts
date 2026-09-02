@@ -4,6 +4,7 @@ import type {
   MonthlyTransactionSummary,
   TransactionReconciliationAdjustment
 } from "@/definitions";
+import { isExcludedFromIncomeReports } from "@/lib/domain/incomeReporting";
 import { buildReportingMovementSet } from "@/lib/domain/reportingMovements";
 
 import { formatDecimal, parseDecimal } from "./decimal";
@@ -26,7 +27,10 @@ export function buildMonthlyCashflowSummary(
     const amount = parseDecimal(transaction.amount);
 
     if (amount > 0n) {
-      income.add(transaction.currency, amount);
+      if (!isExcludedFromIncomeReports(transaction)) {
+        income.add(transaction.currency, amount);
+      }
+
       continue;
     }
 

@@ -3,6 +3,7 @@ import type {
   MonthlyTransactionSummary,
   TransactionReconciliationAdjustment
 } from "@/definitions";
+import { isExcludedFromIncomeReports } from "@/lib/domain/incomeReporting";
 import { buildReportingMovementSet } from "@/lib/domain/reportingMovements";
 
 import { formatDecimal, parseDecimal } from "./decimal";
@@ -32,7 +33,12 @@ export function buildMonthlyEvolutionSummary({
   year: number;
 }): MonthlyEvolutionSummary {
   const reporting = buildReportingMovementSet({ transactions, adjustments });
-  const currency = getPrimaryCurrency(reporting.movements) ?? "EUR";
+  const reportableMovements = reporting.movements.filter((movement) => {
+    const amount = parseDecimal(movement.amount);
+
+    return amount <= 0n || !isExcludedFromIncomeReports(movement);
+  });
+  const currency = getPrimaryCurrency(reportableMovements) ?? "EUR";
   const totals = MONTH_LABELS.map((monthLabel, index) => ({
     month: index + 1,
     monthLabel,
@@ -42,7 +48,7 @@ export function buildMonthlyEvolutionSummary({
   let transactionCount = 0;
   let excludedInternalTransferCount = 0;
 
-  for (const transaction of reporting.movements) {
+  for (const transaction of reportableMovements) {
     if (transaction.currency !== currency) {
       continue;
     }

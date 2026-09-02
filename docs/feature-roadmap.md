@@ -1146,6 +1146,10 @@ Implemented so far:
   summary cards.
 - Totals are grouped by currency and use signed transaction amounts: positive
   amounts count as income, negative amounts count as expenses.
+- Positive movements categorized as `savings_transfer` are excluded from the
+  dashboard income card and annual income evolution because they represent
+  money returning from savings rather than earned income. Negative movements
+  in that category retain their existing expense treatment.
 - Transfers between the owner's own accounts are excluded from every
   transaction-derived financial metric when detected from server-only account
   fingerprints, matched through the conservative paired last-4 fallback, or
