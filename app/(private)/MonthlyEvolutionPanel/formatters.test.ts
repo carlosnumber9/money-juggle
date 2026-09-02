@@ -12,6 +12,7 @@ describe("monthly evolution formatters", () => {
     const description = formatAnnualTotals({
       year: 2026,
       currency: "EUR",
+      savingsCurrency: "EUR",
       points: [
         {
           month: 1,
@@ -72,6 +73,7 @@ describe("monthly evolution formatters", () => {
     const description = formatAnnualSavingsDescription({
       year: 2026,
       currency: "EUR",
+      savingsCurrency: "EUR",
       points: [
         {
           month: 1,

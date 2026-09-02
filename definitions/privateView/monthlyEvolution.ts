@@ -9,6 +9,7 @@ export type MonthlyEvolutionPoint = {
 export type MonthlyEvolutionSummary = {
   year: number;
   currency: string;
+  savingsCurrency: string;
   points: MonthlyEvolutionPoint[];
   transactionCount: number;
   excludedInternalTransferCount: number;

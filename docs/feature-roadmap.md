@@ -1172,7 +1172,9 @@ Implemented so far:
 - A second full-width line chart appears after every other evolution
   visualization. It shows the current year's monthly total of negative
   movements categorized as `savings_transfer`, using one continuous savings
-  line and the same dimensions as the income-versus-expense chart.
+  line and the same dimensions as the income-versus-expense chart. It reads
+  owner-assigned categories directly, so an internal transfer or reconciled
+  movement still contributes when categorized as savings.
 - A current-month category expense radar visualization is present in the
   working tree, using categorized expense rows and the shared internal-transfer
   exclusion.

@@ -59,7 +59,7 @@ export function AnnualSavingsLineChart({
             tickMargin={8}
             width={76}
             tickFormatter={(value) =>
-              formatCompactCurrency(Number(value), summary.currency)
+              formatCompactCurrency(Number(value), summary.savingsCurrency)
             }
           />
           <ChartTooltip

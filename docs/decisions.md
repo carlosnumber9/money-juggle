@@ -1719,11 +1719,14 @@ Decision:
   chart.
 - Sum only negative current-year movements categorized as
   `savings_transfer`, displaying their absolute values as one savings line.
-- Apply the shared reporting-movement pipeline first so internal transfers and
-  reconciliation members remain excluded while reportable reconciliation
-  adjustments can contribute.
-- Use the annual evolution report's selected currency and keep all 12 months
-  visible, including zero-value months.
+- Read category assignments directly from original cached transactions because
+  this chart measures owner-categorized savings rather than reportable
+  cashflow.
+- Include categorized savings charges even when they are detected as internal
+  transfers or belong to a reconciliation. Do not count synthetic
+  reconciliation adjustments as categorized bank movements.
+- Select the chart currency from eligible savings charges and keep all 12
+  months visible, including zero-value months.
 - Reuse cached current-year transaction data without adding persistence or
   provider calls.
 

@@ -24,7 +24,7 @@ export function formatAnnualSavingsDescription(
     0
   );
 
-  return `${formatCurrency(totalSavings, summary.currency)} en cargos categorizados como ahorro`;
+  return `${formatCurrency(totalSavings, summary.savingsCurrency)} en cargos categorizados como ahorro`;
 }
 
 export function formatAnnualLabelExpensesDescription(

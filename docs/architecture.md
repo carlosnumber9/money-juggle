@@ -101,8 +101,9 @@ The private UI is split into three tabs:
   points, annual income and spending totals, a selected-month category expense
   radar, and a same-sized radial current-year expense breakdown that includes
   only labeled transactions. A full-width annual savings line chart appears
-  last and totals negative movements categorized as `savings_transfer` by
-  month. The visualizations are calculated from cached transaction rows with
+  last and totals negative original transaction rows categorized as
+  `savings_transfer` by month, regardless of their financial-neutrality state.
+  The visualizations are calculated from cached transaction rows with
   shadcn/Recharts.
 
 The selected month is shared by transaction rows, cashflow cards, and the
