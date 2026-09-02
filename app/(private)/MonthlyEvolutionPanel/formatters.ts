@@ -16,6 +16,17 @@ export function formatAnnualTotals(evolution: MonthlyEvolutionSummary): string {
   return `${formatCurrency(totals.income, evolution.currency)} ingresados | ${formatCurrency(totals.expenses, evolution.currency)} gastados`;
 }
 
+export function formatAnnualSavingsDescription(
+  summary: MonthlyEvolutionSummary
+): string {
+  const totalSavings = summary.points.reduce(
+    (total, point) => total + point.savings,
+    0
+  );
+
+  return `${formatCurrency(totalSavings, summary.currency)} en cargos categorizados como ahorro`;
+}
+
 export function formatAnnualLabelExpensesDescription(
   summary: AnnualLabelExpensesSummary
 ): string {

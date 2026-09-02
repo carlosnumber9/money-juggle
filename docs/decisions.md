@@ -1698,3 +1698,43 @@ Possible future revisit trigger:
 
 - If savings movements should become financially neutral in every report and
   direction filter instead of only being excluded from reported income.
+
+## ADR-045: Show Annual Savings Charges As A Separate Evolution
+
+Status:
+
+- Accepted and implemented.
+
+Context:
+
+- Negative movements categorized as `savings_transfer` remain expenses in the
+  existing cashflow model but are excluded from the category expense radar.
+- The owner needs a dedicated view of how much money was directed to savings
+  during each month of the current year.
+
+Decision:
+
+- Add a full-width line chart at the end of the `Evolución` section with the
+  same dimensions and monthly axis as the existing income-versus-expense line
+  chart.
+- Sum only negative current-year movements categorized as
+  `savings_transfer`, displaying their absolute values as one savings line.
+- Apply the shared reporting-movement pipeline first so internal transfers and
+  reconciliation members remain excluded while reportable reconciliation
+  adjustments can contribute.
+- Use the annual evolution report's selected currency and keep all 12 months
+  visible, including zero-value months.
+- Reuse cached current-year transaction data without adding persistence or
+  provider calls.
+
+Consequences:
+
+- Savings progress is visible without reclassifying it as earned income or
+  making it dominate the category expense radar.
+- No schema, migration, RLS, ownership, or provider integration change is
+  required.
+
+Possible future revisit trigger:
+
+- If savings targets, account-specific savings, or multiple-currency totals
+  need first-class modeling.

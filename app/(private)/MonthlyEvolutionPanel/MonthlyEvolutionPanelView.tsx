@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/chart";
 import type { MonthlyEvolutionPanelProps } from "@/definitions";
 
+import { AnnualSavingsLineChart } from "./AnnualSavingsLineChart";
 import { AnnualLabelExpensesRadialChart } from "./AnnualLabelExpensesRadialChart";
 import { CategoryExpensesRadarChart } from "./CategoryExpensesRadarChart";
 import { ChartContainer } from "./ChartContainer";
@@ -109,6 +110,7 @@ export function MonthlyEvolutionPanel({
           error={labelExpensesError}
         />
       </div>
+      <AnnualSavingsLineChart summary={evolution} error={error} />
     </section>
   );
 }

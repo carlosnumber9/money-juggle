@@ -5,6 +5,7 @@ import type {
 } from "@/definitions";
 import { isExcludedFromIncomeReports } from "@/lib/domain/incomeReporting";
 import { buildReportingMovementSet } from "@/lib/domain/reportingMovements";
+import { isSavingsTransferCategory } from "@/lib/domain/savingsTransfers";
 
 import { formatDecimal, parseDecimal } from "./decimal";
 
@@ -43,7 +44,8 @@ export function buildMonthlyEvolutionSummary({
     month: index + 1,
     monthLabel,
     income: 0n,
-    expenses: 0n
+    expenses: 0n,
+    savings: 0n
   }));
   let transactionCount = 0;
   let excludedInternalTransferCount = 0;
@@ -72,7 +74,13 @@ export function buildMonthlyEvolutionSummary({
       continue;
     }
 
-    totals[monthIndex].expenses += -amount;
+    const expenses = -amount;
+
+    totals[monthIndex].expenses += expenses;
+
+    if (isSavingsTransferCategory(transaction)) {
+      totals[monthIndex].savings += expenses;
+    }
   }
 
   excludedInternalTransferCount = reporting.excludedTransactions.filter(
@@ -90,7 +98,8 @@ export function buildMonthlyEvolutionSummary({
       month: point.month,
       monthLabel: point.monthLabel,
       income: Number(formatDecimal(point.income)),
-      expenses: Number(formatDecimal(point.expenses))
+      expenses: Number(formatDecimal(point.expenses)),
+      savings: Number(formatDecimal(point.savings))
     })),
     transactionCount,
     excludedInternalTransferCount

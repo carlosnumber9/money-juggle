@@ -100,14 +100,16 @@ The private UI is split into three tabs:
 - `Evolución`: current-year income and expense trend chart with 12 monthly
   points, annual income and spending totals, a selected-month category expense
   radar, and a same-sized radial current-year expense breakdown that includes
-  only labeled transactions. The visualizations are calculated from cached
-  transaction rows with shadcn/Recharts.
+  only labeled transactions. A full-width annual savings line chart appears
+  last and totals negative movements categorized as `savings_transfer` by
+  month. The visualizations are calculated from cached transaction rows with
+  shadcn/Recharts.
 
 The selected month is shared by transaction rows, cashflow cards, and the
 category expense radar. Moving between periods updates the URL and queries only
 cached Supabase rows; it does not trigger historical Enable Banking requests.
-The annual evolution line and labeled-expense radial do not change with the
-selected month.
+The annual evolution line, labeled-expense radial, and annual savings line do
+not change with the selected month.
 
 ## Supabase Responsibilities
 

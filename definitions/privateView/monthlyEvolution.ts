@@ -3,6 +3,7 @@ export type MonthlyEvolutionPoint = {
   monthLabel: string;
   income: number;
   expenses: number;
+  savings: number;
 };
 
 export type MonthlyEvolutionSummary = {

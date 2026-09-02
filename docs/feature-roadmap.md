@@ -1169,6 +1169,10 @@ Implemented so far:
 - The annual chart is titled `Progreso anual`, summarizes annual income and
   spending in its subtitle, and keeps the lines continuous without permanent
   point markers.
+- A second full-width line chart appears after every other evolution
+  visualization. It shows the current year's monthly total of negative
+  movements categorized as `savings_transfer`, using one continuous savings
+  line and the same dimensions as the income-versus-expense chart.
 - A current-month category expense radar visualization is present in the
   working tree, using categorized expense rows and the shared internal-transfer
   exclusion.

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   formatAnnualLabelExpensesDescription,
+  formatAnnualSavingsDescription,
   formatAnnualTotals,
   formatMonthlyCategoryExpensesDescription
 } from "./formatters";
@@ -16,13 +17,15 @@ describe("monthly evolution formatters", () => {
           month: 1,
           monthLabel: "Ene",
           income: 100,
-          expenses: 25
+          expenses: 25,
+          savings: 0
         },
         {
           month: 2,
           monthLabel: "Feb",
           income: 50,
-          expenses: 10.5
+          expenses: 10.5,
+          savings: 0
         }
       ],
       transactionCount: 4,
@@ -63,6 +66,35 @@ describe("monthly evolution formatters", () => {
         transactionCount: 0
       })
     ).toBe("Los gastos sin etiqueta no se incluyen.");
+  });
+
+  it("formats the annual savings total", () => {
+    const description = formatAnnualSavingsDescription({
+      year: 2026,
+      currency: "EUR",
+      points: [
+        {
+          month: 1,
+          monthLabel: "Ene",
+          income: 0,
+          expenses: 100,
+          savings: 100
+        },
+        {
+          month: 2,
+          monthLabel: "Feb",
+          income: 0,
+          expenses: 75.5,
+          savings: 75.5
+        }
+      ],
+      transactionCount: 2,
+      excludedInternalTransferCount: 0
+    });
+
+    expect(normalizeWhitespace(description)).toBe(
+      "175,50 € en cargos categorizados como ahorro"
+    );
   });
 
   it("preserves the monthly category description", () => {
