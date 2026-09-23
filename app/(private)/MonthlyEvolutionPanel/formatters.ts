@@ -24,7 +24,7 @@ export function formatAnnualSavingsDescription(
     0
   );
 
-  return `${formatCurrency(totalSavings, summary.savingsCurrency)} en movimientos categorizados como ahorro`;
+  return `${formatCurrency(totalSavings, summary.savingsCurrency)} de ahorro neto`;
 }
 
 export function formatAnnualLabelExpensesDescription(

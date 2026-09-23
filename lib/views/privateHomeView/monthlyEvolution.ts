@@ -43,7 +43,7 @@ export function buildMonthlyEvolutionSummary({
   const savingsMovements = transactions.filter((transaction) => {
     return (
       isSavingsTransferCategory(transaction) &&
-      parseDecimal(transaction.amount) > 0n &&
+      parseDecimal(transaction.amount) !== 0n &&
       getMonthIndex(transaction.reporting_date, year) !== null
     );
   });

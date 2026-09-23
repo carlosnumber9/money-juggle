@@ -45,7 +45,7 @@ describe("buildMonthlyEvolutionSummary", () => {
     expect(summary.points[7]).toMatchObject({ income: 0, expenses: 25 });
   });
 
-  it("sums categorized savings movements across every month", () => {
+  it("nets positive and negative categorized savings movements by month", () => {
     const summary = buildMonthlyEvolutionSummary({
       year: 2026,
       transactions: [
@@ -80,7 +80,8 @@ describe("buildMonthlyEvolutionSummary", () => {
         }),
         createTransaction({
           id: "negative-counterpart",
-          amount: "-200",
+          amount: "-600",
+          reporting_date: "2026-09-20",
           category: createSavingsCategory()
         }),
         createTransaction({ id: "other-income", amount: "500" })
@@ -101,7 +102,7 @@ describe("buildMonthlyEvolutionSummary", () => {
     expect(summary.points[5]).toMatchObject({ savings: 100 });
     expect(summary.points[6]).toMatchObject({ savings: 200 });
     expect(summary.points[7]).toMatchObject({ savings: 300 });
-    expect(summary.points[8]).toMatchObject({ savings: 400 });
+    expect(summary.points[8]).toMatchObject({ savings: -200 });
   });
 
   it("excludes savings transfers from income and currency selection", () => {

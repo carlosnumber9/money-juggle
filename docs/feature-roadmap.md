@@ -1170,9 +1170,10 @@ Implemented so far:
   spending in its subtitle, and keeps the lines continuous without permanent
   point markers.
 - A second full-width line chart appears after every other evolution
-  visualization. It shows the current year's monthly total of positive
+  visualization. It shows the current year's net monthly total of signed
   movements categorized as `savings_transfer`, using one continuous savings
-  line and the same dimensions as the income-versus-expense chart. It reads
+  line and the same dimensions as the income-versus-expense chart. Negative
+  movements reduce savings and can produce a negative month. It reads
   owner-assigned categories directly, so an internal transfer or reconciled
   movement still contributes when categorized as savings.
 - A current-month category expense radar visualization is present in the

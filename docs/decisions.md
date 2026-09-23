@@ -1703,7 +1703,7 @@ Possible future revisit trigger:
 
 Status:
 
-- Accepted and implemented.
+- Accepted and implemented; savings aggregation superseded by ADR-046.
 
 Context:
 
@@ -1742,3 +1742,41 @@ Possible future revisit trigger:
 
 - If savings targets, account-specific savings, or multiple-currency totals
   need first-class modeling.
+
+## ADR-046: Report Categorized Savings As A Net Monthly Amount
+
+Status:
+
+- Accepted and implemented.
+
+Context:
+
+- ADR-045 originally counted only positive movements categorized as
+  `savings_transfer` in the annual savings evolution.
+- A negative movement can represent money taken from savings to pay an expense.
+  Ignoring it overstates saved money and cannot represent a month with negative
+  savings.
+
+Decision:
+
+- Calculate each month's savings as the signed sum of all non-zero current-year
+  bank movements categorized as `savings_transfer`.
+- Let negative categorized movements reduce positive savings and let a monthly
+  result remain negative when withdrawals exceed contributions.
+- Keep reading owner-assigned categories directly from original cached
+  transactions, including internal transfers and reconciled movements, without
+  adding synthetic reconciliation adjustments.
+- Describe the annual aggregate as net savings.
+
+Consequences:
+
+- The savings line can cross below zero and accurately show months funded from
+  savings.
+- Existing income and expense reporting remains unchanged.
+- No schema, migration, RLS, ownership, or provider integration change is
+  required.
+
+Possible future revisit trigger:
+
+- If the report needs to distinguish savings contributions, withdrawals, and
+  cumulative savings balance as separate series.

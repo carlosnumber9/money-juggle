@@ -87,16 +87,14 @@ describe("monthly evolution formatters", () => {
           monthLabel: "Feb",
           income: 0,
           expenses: 75.5,
-          savings: 75.5
+          savings: -75.5
         }
       ],
       transactionCount: 2,
       excludedInternalTransferCount: 0
     });
 
-    expect(normalizeWhitespace(description)).toBe(
-      "175,50 € en movimientos categorizados como ahorro"
-    );
+    expect(normalizeWhitespace(description)).toBe("24,50 € de ahorro neto");
   });
 
   it("preserves the monthly category description", () => {
