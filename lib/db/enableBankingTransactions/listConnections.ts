@@ -17,6 +17,7 @@ export async function listConnectionsForTransactionSync(
       user_id,
       status,
       provider_session_id,
+      consent_expires_at,
       provider_rate_limited_until,
       last_transaction_synced_at,
       accounts (
@@ -43,6 +44,7 @@ export async function listConnectionsForTransactionSync(
     user_id: connection.user_id,
     status: connection.status,
     provider_session_id: connection.provider_session_id,
+    consent_expires_at: connection.consent_expires_at,
     provider_rate_limited_until: connection.provider_rate_limited_until,
     last_transaction_synced_at: connection.last_transaction_synced_at,
     accounts: connection.accounts ?? []

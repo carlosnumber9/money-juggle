@@ -8,6 +8,7 @@ import type {
 } from "@/definitions";
 
 import { buildConnectedBankCard } from "./connectedBankCard";
+import { hasExpiredConsent } from "@/lib/enableBanking/sessionStatus";
 import {
   buildAvailabilityBankCard,
   buildErroredBankCard,
@@ -34,6 +35,24 @@ function buildEnableBankingCard(
     bank.name,
     input.institutionsResult
   )?.beta;
+
+  if (
+    connection &&
+    (connection.status === "expired" ||
+      connection.status === "revoked" ||
+      (connection.status === "linked" &&
+        connection.accounts.length > 0 &&
+        hasExpiredConsent(connection.consent_expires_at)))
+  ) {
+    return {
+      ...buildConnectedBankCard(bank, connection),
+      beta,
+      aspspName: connection.institution?.name ?? bank.name,
+      country: connection.institution?.country ?? undefined,
+      state: "reconnection-required",
+      tooltip: `El acceso a ${bank.name} ya no es válido. Vuelve a autorizar la conexión.`
+    };
+  }
 
   if (connection?.status === "linked") {
     if (connection.accounts.length === 0) {

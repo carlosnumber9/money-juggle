@@ -12,6 +12,7 @@ export type BankInstitutionCard = {
     | "loading"
     | "idle"
     | "connected"
+    | "reconnection-required"
     | "linking"
     | "stale-linking"
     | "error"

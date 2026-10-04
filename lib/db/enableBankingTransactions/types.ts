@@ -16,6 +16,7 @@ export type StoredConnectionForTransactionSync = {
   user_id: string;
   status: string;
   provider_session_id: string | null;
+  consent_expires_at?: string | null;
   provider_rate_limited_until: string | null;
   last_transaction_synced_at: string | null;
   accounts: StoredAccountForTransactionSync[];

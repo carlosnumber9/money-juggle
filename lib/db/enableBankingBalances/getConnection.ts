@@ -21,6 +21,7 @@ export async function getConnectionForBalanceSync({
       user_id,
       status,
       provider_session_id,
+      consent_expires_at,
       provider_rate_limited_until,
       accounts (
         id,
@@ -49,6 +50,7 @@ export async function getConnectionForBalanceSync({
     user_id: data.user_id,
     status: data.status,
     provider_session_id: data.provider_session_id,
+    consent_expires_at: data.consent_expires_at,
     provider_rate_limited_until: data.provider_rate_limited_until,
     accounts: data.accounts ?? []
   };

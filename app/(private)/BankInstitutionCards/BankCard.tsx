@@ -32,6 +32,11 @@ export function BankCard({ card }: { card: BankInstitutionCard }) {
               ) : null}
             </div>
             <BankBalanceSummary card={card} />
+            {card.state === "reconnection-required" ? (
+              <p className="mt-3 text-sm text-destructive">
+                Necesita reconexión. Los datos guardados se conservan.
+              </p>
+            ) : null}
           </div>
           <BankAccountList card={card} />
         </div>

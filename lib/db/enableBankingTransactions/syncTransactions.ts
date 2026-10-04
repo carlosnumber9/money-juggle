@@ -1,4 +1,5 @@
 import "server-only";
+import { expireConnectionConsent } from "../enableBankingSync/invalidSession";
 
 import type { EnableBankingPsuHeaders } from "@/definitions";
 import { getErrorMessage } from "../shared/getErrorMessage";
@@ -52,6 +53,17 @@ export async function syncEnableBankingTransactions({
       !shouldSyncConnection(connection) ||
       (bankConnectionIds && !bankConnectionIds.has(connection.id)) ||
       completedBackfillConnectionIds.has(connection.id)
+    ) {
+      continue;
+    }
+
+    if (
+      await expireConnectionConsent({
+        userId,
+        bankConnectionId: connection.id,
+        providerSessionId: connection.provider_session_id,
+        consentExpiresAt: connection.consent_expires_at
+      })
     ) {
       continue;
     }

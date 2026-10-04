@@ -7,6 +7,9 @@ vi.mock("@/lib/enableBanking/client", () => ({
 vi.mock("../enableBankingSync/rateLimitCooldown", () => ({
   setConnectionRateLimitCooldown: vi.fn()
 }));
+vi.mock("../enableBankingSync/invalidSession", () => ({
+  invalidateConnectionSession: vi.fn().mockResolvedValue(false)
+}));
 vi.mock("./finishConnectionSync", () => ({
   persistRowsAndFinishRun: vi.fn()
 }));

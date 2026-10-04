@@ -18,6 +18,7 @@ export function canStartConnection(
     card.provider === "enable_banking" &&
     (card.state === "idle" ||
       card.state === "error" ||
+      card.state === "reconnection-required" ||
       card.state === "stale-linking") &&
     Boolean(card.aspspName) &&
     Boolean(card.country)
@@ -25,6 +26,9 @@ export function canStartConnection(
 }
 
 export function getConnectionActionLabel(card: BankInstitutionCard): string {
+  if (card.state === "reconnection-required") {
+    return `Reconectar ${card.name}. ${card.tooltip}`;
+  }
   if (card.state === "error" || card.state === "stale-linking") {
     return `Reintentar conexión con ${card.name}. ${card.tooltip}`;
   }

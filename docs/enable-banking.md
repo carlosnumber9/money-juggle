@@ -451,6 +451,12 @@ Pending transactions should be treated as provisional:
 
 ## Consent Expiration
 
+Sync checks stored consent deadlines before provider requests. An expired,
+closed, or revoked provider session changes the connection to `expired` or
+`revoked` and records a consent event. The update is scoped to the owner and
+current session ID, preserving accounts and financial history. The dashboard
+shows a Spanish reconnection action and does not retry invalid sessions.
+
 PSD2 consents expire. The app should make expiration visible in the data model
 and UI.
 

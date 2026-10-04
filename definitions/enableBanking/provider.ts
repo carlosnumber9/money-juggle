@@ -12,4 +12,11 @@ export type StoredBankConnection = {
 
 export type UserBankConnectionSummary = BankConnectionSummary;
 
-export type ConsentEventType = "created" | "redirected" | "linked" | "failed";
+export type ConsentEventType =
+  | "created"
+  | "redirected"
+  | "linked"
+  | "failed"
+  | "expired"
+  | "revoked"
+  | "reconnected";

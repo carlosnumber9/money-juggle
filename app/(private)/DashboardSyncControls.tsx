@@ -39,9 +39,7 @@ export function DashboardSyncControls({
       .then((result) => {
         setShouldRetryRefresh(result.partialFailure);
 
-        if (result.synced) {
-          router.refresh();
-        }
+        router.refresh();
       })
       .catch((error: unknown) => {
         if (isAbortError(error)) {

@@ -5,6 +5,10 @@ import { getEnableBankingAccountBalances } from "@/lib/enableBanking/client";
 
 import { getAccountSyncFailure } from "../shared/accountSyncFailure";
 import {
+  expireConnectionConsent,
+  invalidateConnectionSession
+} from "../enableBankingSync/invalidSession";
+import {
   getActiveRateLimitCooldown,
   setConnectionRateLimitCooldown
 } from "../enableBankingSync/rateLimitCooldown";
@@ -36,6 +40,17 @@ export async function syncEnableBankingConnectionBalances(input: {
   const cooldownUntil = getActiveRateLimitCooldown(
     connection.provider_rate_limited_until
   );
+
+  if (
+    await expireConnectionConsent({
+      userId: input.userId,
+      bankConnectionId: input.bankConnectionId,
+      providerSessionId: connection.provider_session_id,
+      consentExpiresAt: connection.consent_expires_at
+    })
+  ) {
+    return { status: "skipped" as const };
+  }
 
   if (cooldownUntil) {
     console.info("Balance sync skipped during provider rate-limit cooldown", {
@@ -88,6 +103,16 @@ export async function syncEnableBankingConnectionBalances(input: {
         http_status: failure.http_status,
         provider_error: failure.provider_error
       });
+      if (
+        await invalidateConnectionSession({
+          userId: input.userId,
+          bankConnectionId: input.bankConnectionId,
+          providerSessionId: connection.provider_session_id,
+          providerError: failure.provider_error
+        })
+      ) {
+        break;
+      }
 
       if (failure.rate_limited) {
         await setConnectionRateLimitCooldown(input);
