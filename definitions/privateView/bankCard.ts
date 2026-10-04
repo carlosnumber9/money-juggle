@@ -7,6 +7,7 @@ export type BankInstitutionCard = {
   beta?: boolean;
   aspspName?: string;
   country?: string;
+  bankConnectionId?: string;
   linkingStaleAt?: string;
   state:
     | "loading"

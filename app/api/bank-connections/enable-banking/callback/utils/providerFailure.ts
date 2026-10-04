@@ -9,6 +9,7 @@ export async function storeProviderError(input: {
   await failEnableBankingConnection({
     userId: input.connection.user_id,
     bankConnectionId: input.connection.id,
+    providerState: input.connection.provider_state,
     providerStatus: input.providerError,
     message: "Enable Banking returned an authorization error.",
     metadata: {
@@ -22,6 +23,7 @@ export async function storeMissingCode(connection: StoredBankConnection) {
   await failEnableBankingConnection({
     userId: connection.user_id,
     bankConnectionId: connection.id,
+    providerState: connection.provider_state,
     providerStatus: "missing-code",
     message: "Enable Banking callback did not include an authorization code."
   });

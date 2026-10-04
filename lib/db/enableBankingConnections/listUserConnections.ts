@@ -6,6 +6,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/serviceRole";
 
 import { listLatestBalancesByAccountId } from "./latestBalances";
+import { getRecord } from "./records";
 
 export async function listUserEnableBankingConnections(
   userId: string,
@@ -21,6 +22,7 @@ export async function listUserEnableBankingConnections(
       id,
       status,
       consent_expires_at,
+      provider_metadata,
       created_at,
       updated_at,
       institutions ( name, country, logo_url ),
@@ -47,6 +49,11 @@ export async function listUserEnableBankingConnections(
     id: connection.id,
     status: connection.status,
     consent_expires_at: connection.consent_expires_at,
+    linking_started_at:
+      typeof getRecord(connection.provider_metadata).linking_started_at ===
+      "string"
+        ? (getRecord(connection.provider_metadata).linking_started_at as string)
+        : null,
     created_at: connection.created_at,
     updated_at: connection.updated_at,
     institution: Array.isArray(connection.institutions)

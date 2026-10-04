@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { isEmailAllowed } from "@/lib/auth/allowlist";
 import { createLinkingEnableBankingConnection } from "@/lib/db/enableBankingConnections";
+import { getConnectionForReconnection } from "@/lib/db/enableBankingConnections/reconnection";
 import { getCurrentSupabaseUser } from "@/lib/supabase/currentUser";
 
 import { createAuthorization } from "./createAuthorization";
@@ -30,6 +31,15 @@ export async function handleStartRequest(request: NextRequest) {
       country: getRequiredFormValue(formData, "country")
     });
     const callbackUrl = getCallbackUrl(requestUrl);
+    const bankConnectionId = formData.get("bankConnectionId");
+    const reconnectConnection =
+      typeof bankConnectionId === "string" && bankConnectionId
+        ? await getConnectionForReconnection({
+            userId: user.id,
+            bankConnectionId,
+            aspsp
+          })
+        : undefined;
     const created = await createAuthorization({ user, aspsp, callbackUrl });
 
     await createLinkingEnableBankingConnection({
@@ -39,7 +49,8 @@ export async function handleStartRequest(request: NextRequest) {
       state: created.state,
       redirectUrl: callbackUrl,
       requestedAccess: created.access,
-      authorization: created.authorization
+      authorization: created.authorization,
+      reconnectConnection
     });
 
     return NextResponse.redirect(created.authorization.url, { status: 303 });

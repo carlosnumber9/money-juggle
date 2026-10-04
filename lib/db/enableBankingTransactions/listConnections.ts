@@ -23,6 +23,7 @@ export async function listConnectionsForTransactionSync(
       accounts (
         id,
         provider_account_id,
+        status,
         name,
         iban_last4,
         iban_fingerprint
@@ -47,6 +48,8 @@ export async function listConnectionsForTransactionSync(
     consent_expires_at: connection.consent_expires_at,
     provider_rate_limited_until: connection.provider_rate_limited_until,
     last_transaction_synced_at: connection.last_transaction_synced_at,
-    accounts: connection.accounts ?? []
+    accounts: (connection.accounts ?? []).filter(
+      (account) => account.status === "active"
+    )
   }));
 }

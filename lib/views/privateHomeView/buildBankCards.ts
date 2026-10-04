@@ -47,6 +47,7 @@ function buildEnableBankingCard(
     return {
       ...buildConnectedBankCard(bank, connection),
       beta,
+      bankConnectionId: connection.id,
       aspspName: connection.institution?.name ?? bank.name,
       country: connection.institution?.country ?? undefined,
       state: "reconnection-required",

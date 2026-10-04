@@ -1,4 +1,10 @@
 export const BANK_CONNECTION_STATUS_MESSAGES: Record<string, string> = {
+  "reconnection-required":
+    "El acceso al banco ya no es válido. Vuelve a autorizar la conexión.",
+  "account-match-required":
+    "No se pudieron identificar las cuentas con seguridad. El histórico se conserva; hay que revisar la correspondencia antes de reconectar.",
+  "connection-busy":
+    "La conexión se está procesando. Espera unos instantes y vuelve al panel.",
   linked: "Banco conectado. Ya puedo ver las cuentas autorizadas.",
   "provider-cancelled": "La conexión se canceló antes de autorizar el acceso.",
   "provider-error": "Enable Banking devolvió un error durante la conexión.",

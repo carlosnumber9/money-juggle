@@ -9,28 +9,67 @@ import { createSupabaseServiceRoleClient } from "@/lib/supabase/serviceRole";
 
 import { getErrorMessage } from "../shared/getErrorMessage";
 import { getSuffix } from "../shared/getSuffix";
-import { mapEnableBankingAccountToRow } from "./accountRow";
+import { persistSessionAccounts } from "./persistSessionAccounts";
+import { getRecord } from "./records";
 import { insertConsentEvent } from "./consentEvents";
 
 export async function completeEnableBankingConnection({
   userId,
   bankConnectionId,
   session,
-  psuHeaders
+  psuHeaders,
+  providerState
 }: {
   userId: string;
   bankConnectionId: string;
   session: EnableBankingAuthorizeSessionResponse;
   psuHeaders?: EnableBankingPsuHeaders;
+  providerState: string | null;
 }) {
   const consentExpiresAt = session.access.valid_until;
 
-  await markConnectionLinked({ userId, bankConnectionId, session });
-  await upsertAccounts({ userId, bankConnectionId, session });
+  const supabase = createSupabaseServiceRoleClient();
+  const { data: storedConnection, error } = await supabase
+    .from("bank_connections")
+    .select("provider_metadata,provider_session_id,provider_state,status")
+    .eq("id", bankConnectionId)
+    .eq("user_id", userId)
+    .single();
+  if (error)
+    throw new Error(`Could not load bank connection: ${error.message}`);
+  if (
+    storedConnection.status !== "linking" ||
+    storedConnection.provider_state !== providerState
+  ) {
+    throw new Error("Bank authorization state has changed.");
+  }
+  const providerMetadata = getRecord(storedConnection.provider_metadata);
+  const expectedAspsp = getRecord(providerMetadata.aspsp);
+  if (
+    expectedAspsp.name !== session.aspsp.name ||
+    expectedAspsp.country !== session.aspsp.country
+  ) {
+    throw new Error(
+      "Authorized institution does not match the bank connection."
+    );
+  }
+  const accountIdentifications = await persistSessionAccounts({
+    userId,
+    bankConnectionId,
+    accounts: session.accounts,
+    providerMetadata
+  });
+  await markConnectionLinked(
+    { userId, bankConnectionId, session, providerState },
+    {
+      ...providerMetadata,
+      account_identifications: accountIdentifications
+    }
+  );
   await insertConsentEvent({
     userId,
     bankConnectionId,
-    eventType: "linked",
+    eventType: storedConnection.provider_session_id ? "reconnected" : "linked",
     providerStatus: "linked",
     message: "Enable Banking session was authorized and accounts were stored.",
     metadata: {
@@ -42,20 +81,11 @@ export async function completeEnableBankingConnection({
   await syncInitialBalances({ userId, bankConnectionId, psuHeaders });
 }
 
-async function markConnectionLinked(input: CompleteConnectionInput) {
+async function markConnectionLinked(
+  input: CompleteConnectionInput,
+  providerMetadata: Record<string, unknown>
+) {
   const supabase = createSupabaseServiceRoleClient();
-  const { data: storedConnection, error: loadError } = await supabase
-    .from("bank_connections")
-    .select("provider_metadata")
-    .eq("id", input.bankConnectionId)
-    .eq("user_id", input.userId)
-    .single();
-
-  if (loadError) {
-    throw new Error(`Could not load bank connection: ${loadError.message}`);
-  }
-
-  const providerMetadata = getRecord(storedConnection.provider_metadata);
   const storedAspsp = getRecord(providerMetadata.aspsp);
   const { error } = await supabase
     .from("bank_connections")
@@ -63,6 +93,8 @@ async function markConnectionLinked(input: CompleteConnectionInput) {
       status: "linked",
       provider_session_id: input.session.session_id,
       consent_expires_at: input.session.access.valid_until,
+      last_transaction_synced_at: null,
+      provider_rate_limited_until: null,
       provider_metadata: {
         ...providerMetadata,
         aspsp: { ...storedAspsp, ...input.session.aspsp },
@@ -72,7 +104,11 @@ async function markConnectionLinked(input: CompleteConnectionInput) {
       }
     })
     .eq("id", input.bankConnectionId)
-    .eq("user_id", input.userId);
+    .eq("user_id", input.userId)
+    .eq("status", "linking")
+    .eq("provider_state", input.providerState ?? "")
+    .select("id")
+    .single();
 
   if (error) {
     throw new Error(`Could not complete bank connection: ${error.message}`);
@@ -84,34 +120,14 @@ type CompleteConnectionInput = {
   bankConnectionId: string;
   session: EnableBankingAuthorizeSessionResponse;
   psuHeaders?: EnableBankingPsuHeaders;
+  providerState: string | null;
 };
 
-function getRecord(value: unknown): Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
-}
-
-async function upsertAccounts(input: CompleteConnectionInput) {
-  if (input.session.accounts.length === 0) {
-    return;
-  }
-
-  const supabase = createSupabaseServiceRoleClient();
-  const { error } = await supabase.from("accounts").upsert(
-    input.session.accounts.map((account) =>
-      mapEnableBankingAccountToRow({ ...input, account })
-    ),
-    { onConflict: "user_id,bank_connection_id,provider_account_id" }
-  );
-
-  if (error) {
-    throw new Error(`Could not store connected accounts: ${error.message}`);
-  }
-}
-
 async function syncInitialBalances(
-  input: Omit<CompleteConnectionInput, "session">
+  input: Pick<
+    CompleteConnectionInput,
+    "userId" | "bankConnectionId" | "psuHeaders"
+  >
 ) {
   try {
     await syncEnableBankingConnectionBalances(input);

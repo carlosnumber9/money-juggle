@@ -4,7 +4,10 @@ import {
   getEnableBankingErrorStatus
 } from "@/lib/enableBanking/client";
 
+import { BankAccountMatchError } from "@/lib/db/enableBankingConnections/accountMatching";
+
 export function getPublicErrorStatus(error: unknown): string {
+  if (error instanceof BankAccountMatchError) return "account-match-required";
   if (error instanceof EnableBankingRequestError) {
     return getEnableBankingErrorStatus(error);
   }

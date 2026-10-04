@@ -10,6 +10,12 @@ export function buildConnectedBankCard(
   bank: (typeof BANKS)[number],
   connection: BankConnectionSummary
 ): BankInstitutionCard {
+  connection = {
+    ...connection,
+    accounts: connection.accounts.filter(
+      (account) => account.status === "active"
+    )
+  };
   return {
     ...bank,
     state: "connected",

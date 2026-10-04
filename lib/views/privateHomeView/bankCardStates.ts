@@ -19,6 +19,7 @@ export function buildLinkingBankCard(
 
   return {
     ...bank,
+    bankConnectionId: connection.id,
     aspspName: connection.institution?.name ?? bank.name,
     country: connection.institution?.country ?? undefined,
     linkingStaleAt: getLinkingStaleAt(connection) ?? undefined,
@@ -35,6 +36,7 @@ export function buildErroredBankCard(
 ): BankInstitutionCard {
   return {
     ...bank,
+    bankConnectionId: connection.id,
     aspspName: connection.institution?.name ?? bank.name,
     country: connection.institution?.country ?? undefined,
     state: "error",

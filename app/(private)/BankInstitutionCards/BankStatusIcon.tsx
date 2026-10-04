@@ -101,6 +101,13 @@ function ConnectionForm({
     >
       <input type="hidden" name="aspspName" value={card.aspspName} />
       <input type="hidden" name="country" value={card.country} />
+      {card.bankConnectionId ? (
+        <input
+          type="hidden"
+          name="bankConnectionId"
+          value={card.bankConnectionId}
+        />
+      ) : null}
       <Tooltip
         triggerType="submit"
         triggerLabel={label}

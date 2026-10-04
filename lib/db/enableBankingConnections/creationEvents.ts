@@ -16,6 +16,12 @@ export type CreateLinkingConnectionInput = {
   redirectUrl: string;
   requestedAccess: EnableBankingAccess;
   authorization: EnableBankingStartAuthorizationResponse;
+  reconnectConnection?: {
+    id: string;
+    status: string;
+    provider_state: string | null;
+    provider_metadata: unknown;
+  };
 };
 
 export function getProviderMetadata(input: CreateLinkingConnectionInput) {

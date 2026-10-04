@@ -187,7 +187,8 @@ presenting an impossible balance refresh as merely pending.
 
 If an authorization redirect is abandoned and no callback arrives, the stored
 connection remains `linking` for audit history. The server prepares a
-15-minute stale deadline from the attempt's immutable `created_at` timestamp,
+15-minute stale deadline from the attempt's `linking_started_at` timestamp
+(stored in provider metadata), falling back to `created_at` for older rows,
 and the bank card schedules that transition in the browser. Operational updates
 to the connection row do not postpone this deadline. When the deadline passes,
 its spinner becomes a retry action without requiring a reload or a new sign-in.
@@ -469,6 +470,24 @@ Future behavior should include:
   intentionally removes it.
 
 ## Reconnection
+
+The dashboard posts the existing connection ID for reconnection. The start
+handler verifies owner, provider, institution, and retry eligibility before
+starting authorization, then reuses the connection with a fresh callback state
+and start timestamp. The original connection creation date and consent events
+remain intact.
+
+Callbacks match returned accounts using provider identification hashes, the
+server-generated IBAN fingerprint, or unchanged provider account IDs. They
+validate the complete matching plan before writing accounts. Ambiguous or
+unidentifiable historical accounts stop completion with `account-match-required`;
+name or last-four matching is never sufficient. Internal account IDs remain
+unchanged, preserving balances, transactions, categories, and labels. Accounts
+omitted from the new consent become inactive and are excluded from sync and
+current balance totals, while their historical transactions remain accessible.
+Provider identification hashes are retained in server-only connection metadata.
+Reconnection clears transaction freshness and rate-limit cooldown, and records a
+`reconnected` consent event. No schema or RLS changes are required.
 
 Reconnection should be treated as a normal lifecycle event, not an exceptional
 state.

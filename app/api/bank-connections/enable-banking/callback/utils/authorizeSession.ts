@@ -6,17 +6,33 @@ import {
 import { authorizeEnableBankingSession } from "@/lib/enableBanking/client";
 import { getInteractivePsuHeadersByConnection } from "@/lib/db/enableBankingSync/interactivePsuHeaders";
 
+import { withConnectionSyncLeases } from "@/lib/db/enableBankingSync/connectionLease";
+
 import { getPublicErrorMetadata, getPublicErrorStatus } from "./errors";
 
-export async function authorizeAndCompleteSession({
-  connection,
-  code,
-  requestHeaders
-}: {
+type AuthorizationInput = {
   connection: StoredBankConnection;
   code: string;
   requestHeaders: RequestHeaders;
-}) {
+};
+
+export async function authorizeAndCompleteSession(input: AuthorizationInput) {
+  const result = await withConnectionSyncLeases({
+    userId: input.connection.user_id,
+    bankConnectionIds: [input.connection.id],
+    run: async (acquiredIds) =>
+      acquiredIds.has(input.connection.id)
+        ? completeAuthorizedSession(input)
+        : ({ ok: false, status: "connection-busy" } as const)
+  });
+  return result.value;
+}
+
+async function completeAuthorizedSession({
+  connection,
+  code,
+  requestHeaders
+}: AuthorizationInput) {
   try {
     const session = await authorizeEnableBankingSession(code);
 
@@ -30,6 +46,7 @@ export async function authorizeAndCompleteSession({
       await failEnableBankingConnection({
         userId: connection.user_id,
         bankConnectionId: connection.id,
+        providerState: connection.provider_state,
         providerStatus: status,
         message:
           "Enable Banking authorized the session without returning any accounts.",
@@ -51,6 +68,7 @@ export async function authorizeAndCompleteSession({
       userId: connection.user_id,
       bankConnectionId: connection.id,
       session,
+      providerState: connection.provider_state,
       psuHeaders: psuHeadersByConnectionId.get(connection.id)
     });
 
@@ -59,6 +77,7 @@ export async function authorizeAndCompleteSession({
     await failEnableBankingConnection({
       userId: connection.user_id,
       bankConnectionId: connection.id,
+      providerState: connection.provider_state,
       providerStatus: getPublicErrorStatus(error),
       message: "Enable Banking session authorization failed.",
       metadata: getPublicErrorMetadata(error)

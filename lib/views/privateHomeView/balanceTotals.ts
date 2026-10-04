@@ -14,7 +14,7 @@ export function buildBalanceTotals(connection: BankConnectionSummary) {
   for (const account of connection.accounts) {
     const balance = account.latest_balance;
 
-    if (!balance) {
+    if (account.status !== "active" || !balance) {
       continue;
     }
 

@@ -11,6 +11,12 @@ const mocks = vi.hoisted(() => ({
   getPsuHeaders: vi.fn()
 }));
 
+vi.mock("@/lib/db/enableBankingSync/connectionLease", () => ({
+  withConnectionSyncLeases: vi.fn(async ({ bankConnectionIds, run }) => ({
+    value: await run(new Set(bankConnectionIds))
+  }))
+}));
+
 vi.mock("@/lib/enableBanking/client", () => ({
   authorizeEnableBankingSession: mocks.authorizeSession
 }));
@@ -58,6 +64,7 @@ describe("authorizeAndCompleteSession", () => {
     expect(mocks.failConnection).toHaveBeenCalledWith({
       userId: "user-1",
       bankConnectionId: "connection-1",
+      providerState: "state-1",
       providerStatus: "no-accounts-added",
       message:
         "Enable Banking authorized the session without returning any accounts.",
@@ -82,6 +89,7 @@ describe("authorizeAndCompleteSession", () => {
     expect(mocks.completeConnection).toHaveBeenCalledWith({
       userId: "user-1",
       bankConnectionId: "connection-1",
+      providerState: "state-1",
       session,
       psuHeaders: undefined
     });

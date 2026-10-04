@@ -12,9 +12,11 @@ export function isStaleLinkingConnection(
 }
 
 export function getLinkingStaleAt(
-  connection: Pick<BankConnectionSummary, "created_at">
+  connection: Pick<BankConnectionSummary, "created_at" | "linking_started_at">
 ): string | null {
-  const linkingStartedAt = new Date(connection.created_at).getTime();
+  const linkingStartedAt = new Date(
+    connection.linking_started_at ?? connection.created_at
+  ).getTime();
 
   return Number.isFinite(linkingStartedAt)
     ? new Date(linkingStartedAt + STALE_LINKING_AFTER_MS).toISOString()

@@ -3,6 +3,7 @@ import "server-only";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/serviceRole";
 
 import { getSuffix } from "../shared/getSuffix";
+import { getRecord } from "./records";
 import { insertConsentEvent } from "./consentEvents";
 
 export async function failEnableBankingConnection({
@@ -10,13 +11,15 @@ export async function failEnableBankingConnection({
   bankConnectionId,
   providerStatus,
   message,
-  metadata = {}
+  metadata = {},
+  providerState
 }: {
   userId: string;
   bankConnectionId: string;
   providerStatus: string;
   message: string;
   metadata?: Record<string, unknown>;
+  providerState?: string | null;
 }) {
   const supabase = createSupabaseServiceRoleClient();
 
@@ -26,11 +29,30 @@ export async function failEnableBankingConnection({
     provider_status: providerStatus
   });
 
-  const { error } = await supabase
+  const { data: connection, error: lookupError } = await supabase
     .from("bank_connections")
-    .update({ status: "error", provider_metadata: metadata })
+    .select("provider_metadata")
     .eq("id", bankConnectionId)
-    .eq("user_id", userId);
+    .eq("user_id", userId)
+    .single();
+  if (lookupError)
+    throw new Error(
+      `Could not load failed bank connection: ${lookupError.message}`
+    );
+  let update = supabase
+    .from("bank_connections")
+    .update({
+      status: "error",
+      provider_metadata: {
+        ...getRecord(connection.provider_metadata),
+        ...metadata
+      }
+    })
+    .eq("id", bankConnectionId)
+    .eq("user_id", userId)
+    .eq("status", "linking");
+  if (providerState) update = update.eq("provider_state", providerState);
+  const { data: changed, error } = await update.select("id").maybeSingle();
 
   if (error) {
     throw new Error(
@@ -38,6 +60,7 @@ export async function failEnableBankingConnection({
     );
   }
 
+  if (!changed) return;
   await insertConsentEvent({
     userId,
     bankConnectionId,

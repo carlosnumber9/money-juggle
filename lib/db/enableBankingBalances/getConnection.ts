@@ -26,6 +26,7 @@ export async function getConnectionForBalanceSync({
       accounts (
         id,
         provider_account_id,
+        status,
         currency
       )
     `
@@ -52,6 +53,8 @@ export async function getConnectionForBalanceSync({
     provider_session_id: data.provider_session_id,
     consent_expires_at: data.consent_expires_at,
     provider_rate_limited_until: data.provider_rate_limited_until,
-    accounts: data.accounts ?? []
+    accounts: (data.accounts ?? []).filter(
+      (account) => account.status === "active"
+    )
   };
 }
