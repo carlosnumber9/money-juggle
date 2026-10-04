@@ -547,9 +547,28 @@ The app should:
 ## Synchronization Errors
 
 A transaction account is complete only when pagination finishes normally.
-Truncated accounts count as partial, not succeeded, and route responses expose
-`partialFailure` even when usable rows were received. The dashboard displays a
-Spanish incomplete-update notice. Partial pages are persisted, but transaction
+Truncated accounts count as partial, not succeeded. Accounts deferred during a
+retry deadline or provider cooldown count separately as `deferredAccountCount`;
+they do not count as newly attempted, failed, or partial downloads. Route
+responses expose `hasErrors`, `incomplete`, `retryPending`, and prepared bank
+feedback containing only the institution name, resource, issue kind, and retry
+deadline. The legacy `partialFailure` field remains a compatibility aggregate;
+the dashboard no longer uses it to choose an error tone.
+
+The dashboard uses red only for actual failures, amber for incomplete received
+movements, and neutral informational text for deferred downloads and concurrent
+syncs. Messages identify the bank and distinguish balances, recent movements,
+and historical imports. Retry deadlines are displayed in Europe/Madrid time;
+they describe when a manual retry is allowed, not a scheduled automatic retry.
+Structured failure feedback survives HTTP 429 and 500 responses. Fully
+successful refreshes replace their earlier notices. A completed historical
+import resolves earlier movement notices for that bank without clearing balance
+failures or another bank's pending work; incremental success alone does not
+prove a previously partial historical import complete. Actual account fetch
+failures also populate the operational sync-run error code, while pagination
+warnings remain in warning metadata. No schema or RLS changes are needed.
+
+Partial pages are persisted, but transaction
 freshness advances only if every account completed without failures or warnings;
 a fully successful empty response still advances freshness.
 

@@ -52,6 +52,9 @@ const successful: TransactionSyncResult = {
   attemptedAccountCount: 1,
   succeededAccountCount: 1,
   partialAccountCount: 0,
+  deferredAccountCount: 0,
+  issues: [],
+  completedConnectionIds: ["connection"],
   failedAccountCount: 0,
   rateLimitedAccountCount: 0,
   cooldownConnectionCount: 0,
@@ -87,7 +90,16 @@ describe("transaction scheduling", () => {
       syncEnableBankingTransactions({ ...input, force: true })
     ).resolves.toMatchObject({
       attemptedAccountCount: 0,
-      partialAccountCount: 1,
+      partialAccountCount: 0,
+      deferredAccountCount: 1,
+      issues: [
+        {
+          bankConnectionId: "connection",
+          resource: "transactions",
+          kind: "deferred",
+          retryAt: "2026-10-04T16:15:00Z"
+        }
+      ],
       freshConnectionCount: 0
     });
     expect(mocks.sync).not.toHaveBeenCalled();
@@ -109,6 +121,21 @@ describe("transaction scheduling", () => {
   it("continues to skip fully completed recent data", async () => {
     await expect(syncEnableBankingTransactions(input)).resolves.toMatchObject({
       freshConnectionCount: 1
+    });
+    expect(mocks.sync).not.toHaveBeenCalled();
+  });
+  it("reports provider cooldown as deferred without a new attempt or partial download", async () => {
+    mocks.connections.mockResolvedValue([
+      { ...connection, provider_rate_limited_until: "2026-10-04T16:15:00Z" }
+    ]);
+    await expect(
+      syncEnableBankingTransactions({ ...input, force: true })
+    ).resolves.toMatchObject({
+      attemptedAccountCount: 0,
+      partialAccountCount: 0,
+      failedAccountCount: 0,
+      deferredAccountCount: 1,
+      issues: [{ kind: "deferred" }]
     });
     expect(mocks.sync).not.toHaveBeenCalled();
   });

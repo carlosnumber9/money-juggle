@@ -43,6 +43,9 @@ export async function syncEnableBankingTransactions({
     attemptedAccountCount: 0,
     succeededAccountCount: 0,
     partialAccountCount: 0,
+    deferredAccountCount: 0,
+    issues: [],
+    completedConnectionIds: [],
     failedAccountCount: 0,
     rateLimitedAccountCount: 0,
     cooldownConnectionCount: 0,
@@ -76,6 +79,13 @@ export async function syncEnableBankingTransactions({
 
     if (cooldownUntil) {
       result.cooldownConnectionCount += 1;
+      result.deferredAccountCount += connection.accounts.length;
+      result.issues.push({
+        bankConnectionId: connection.id,
+        resource: "transactions",
+        kind: "deferred",
+        retryAt: cooldownUntil
+      });
       result.cooldownUntil = getLatestTimestamp(
         result.cooldownUntil,
         cooldownUntil
@@ -84,7 +94,13 @@ export async function syncEnableBankingTransactions({
     }
 
     if (isTransactionRetryDeferred(connection.transaction_retry_after)) {
-      result.partialAccountCount += connection.accounts.length;
+      result.deferredAccountCount += connection.accounts.length;
+      result.issues.push({
+        bankConnectionId: connection.id,
+        resource: "transactions",
+        kind: "deferred",
+        retryAt: connection.transaction_retry_after ?? null
+      });
       continue;
     }
 
@@ -112,6 +128,12 @@ export async function syncEnableBankingTransactions({
     } catch (error) {
       result.attemptedAccountCount += connection.accounts.length;
       result.failedAccountCount += connection.accounts.length;
+      result.issues.push({
+        bankConnectionId: connection.id,
+        resource: "transactions",
+        kind: "error",
+        retryAt: null
+      });
       console.error("Enable Banking transaction sync failed", {
         bank_connection_id: connection.id,
         mode,
@@ -143,6 +165,9 @@ function mergeSyncResult(
   target.attemptedAccountCount += source.attemptedAccountCount;
   target.succeededAccountCount += source.succeededAccountCount;
   target.partialAccountCount += source.partialAccountCount;
+  target.deferredAccountCount += source.deferredAccountCount;
+  target.issues.push(...source.issues);
+  target.completedConnectionIds.push(...source.completedConnectionIds);
   target.failedAccountCount += source.failedAccountCount;
   target.rateLimitedAccountCount += source.rateLimitedAccountCount;
   target.cooldownConnectionCount += source.cooldownConnectionCount;

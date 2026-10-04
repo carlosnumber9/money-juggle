@@ -62,6 +62,14 @@ async function finishSuccessfulRun(input: FinishConnectionSyncInput) {
   await finishSyncRun({
     syncRunId: input.syncRunId,
     status,
+    errorCode:
+      input.failures.length > 0
+        ? "transaction-account-fetch-failed"
+        : undefined,
+    errorMessage:
+      input.failures.length > 0
+        ? "One or more transaction accounts could not be fetched."
+        : undefined,
     accountCount: input.connection.accounts.length,
     dateFrom: input.dateFrom,
     dateTo: input.dateTo,

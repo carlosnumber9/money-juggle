@@ -2,7 +2,8 @@ import "server-only";
 
 import type {
   BankConnectionSummary,
-  EnableBankingPsuHeaders
+  EnableBankingPsuHeaders,
+  ConnectionSyncIssue
 } from "@/definitions";
 
 import { getErrorMessage } from "../shared/getErrorMessage";
@@ -44,6 +45,8 @@ export async function syncStaleEnableBankingBalances({
   let rateLimitedConnectionCount = 0;
   let cooldownConnectionCount = 0;
   let cooldownUntil: string | null = null;
+  let partialConnectionCount = 0;
+  const issues: ConnectionSyncIssue[] = [];
 
   for (const bankConnectionId of staleConnectionIds) {
     try {
@@ -54,6 +57,12 @@ export async function syncStaleEnableBankingBalances({
       });
 
       if (connectionResult.status === "rate-limited") {
+        issues.push({
+          bankConnectionId,
+          resource: "balances",
+          kind: "deferred",
+          retryAt: connectionResult.cooldownUntil
+        });
         cooldownConnectionCount += 1;
         cooldownUntil = getLatestTimestamp(
           cooldownUntil,
@@ -68,8 +77,23 @@ export async function syncStaleEnableBankingBalances({
 
       synced = true;
       succeededConnectionCount += 1;
+      if (connectionResult.partialFailure) {
+        partialConnectionCount += 1;
+        issues.push({
+          bankConnectionId,
+          resource: "balances",
+          kind: "error",
+          retryAt: null
+        });
+      }
     } catch (error) {
       failedConnectionCount += 1;
+      issues.push({
+        bankConnectionId,
+        resource: "balances",
+        kind: "error",
+        retryAt: null
+      });
       if (error instanceof BalanceSyncUnavailableError && error.rateLimited) {
         rateLimitedConnectionCount += 1;
       }
@@ -87,7 +111,9 @@ export async function syncStaleEnableBankingBalances({
     failedConnectionCount,
     rateLimitedConnectionCount,
     cooldownConnectionCount,
-    cooldownUntil
+    cooldownUntil,
+    partialConnectionCount,
+    issues
   };
 }
 

@@ -22,6 +22,7 @@ export async function listConnectionsForTransactionSync(
       provider_metadata,
       provider_rate_limited_until,
       last_transaction_synced_at,
+      institutions ( name ),
       accounts (
         id,
         provider_account_id,
@@ -45,6 +46,10 @@ export async function listConnectionsForTransactionSync(
   return (data ?? []).map((connection) => ({
     id: connection.id,
     user_id: connection.user_id,
+    institution_name: (Array.isArray(connection.institutions)
+      ? connection.institutions[0]
+      : connection.institutions
+    )?.name,
     status: connection.status,
     provider_session_id: connection.provider_session_id,
     consent_expires_at: connection.consent_expires_at,

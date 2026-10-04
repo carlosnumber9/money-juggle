@@ -122,7 +122,7 @@ export async function syncEnableBankingConnectionBalances(input: {
   }
 
   await finishBalanceSync({ ...input, syncRunId, fetchedAt, rows, failures });
-  return { status: "completed" as const };
+  return { status: "completed" as const, partialFailure: failures.length > 0 };
 }
 
 function shouldSyncConnection(

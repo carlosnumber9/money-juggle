@@ -11,6 +11,8 @@ import { getInteractivePsuHeadersByConnection } from "@/lib/db/enableBankingSync
 import { getIncrementalProviderDateRange } from "@/lib/domain/transactionRanges";
 import { getCurrentSupabaseUser } from "@/lib/supabase/currentUser";
 
+import { getTransactionSyncResult } from "./result";
+
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
@@ -62,6 +64,7 @@ export async function POST(request: NextRequest) {
       attempted_account_count: result.attemptedAccountCount,
       succeeded_account_count: result.succeededAccountCount,
       partial_account_count: result.partialAccountCount,
+      deferred_account_count: result.deferredAccountCount,
       failed_account_count: result.failedAccountCount,
       rate_limited_account_count: result.rateLimitedAccountCount,
       cooldown_connection_count: result.cooldownConnectionCount,
@@ -70,35 +73,19 @@ export async function POST(request: NextRequest) {
       busy_connection_count: leaseResult.busyConnectionCount
     });
 
-    if (
-      result.attemptedAccountCount > 0 &&
-      result.succeededAccountCount === 0 &&
-      result.partialAccountCount === 0 &&
-      result.failedAccountCount > 0
-    ) {
-      if (result.rateLimitedAccountCount === result.failedAccountCount) {
-        return NextResponse.json(
-          { error: "aspsp-rate-limited" },
-          { status: 429 }
-        );
-      }
-
-      return NextResponse.json(
-        { error: "transaction-sync-failed" },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      synced: result.synced,
-      partialFailure:
-        result.failedAccountCount > 0 || result.partialAccountCount > 0,
-      rateLimited:
-        result.rateLimitedAccountCount > 0 ||
-        result.cooldownConnectionCount > 0,
-      cooldownUntil: result.cooldownUntil,
-      syncInProgress: leaseResult.busyConnectionCount > 0
-    });
+    const response = getTransactionSyncResult(result, connections);
+    return NextResponse.json(
+      {
+        ...response.body,
+        syncInProgress: leaseResult.busyConnectionCount > 0,
+        ...(response.status === 429
+          ? { error: "aspsp-rate-limited" }
+          : response.status === 500
+            ? { error: "transaction-sync-failed" }
+            : {})
+      },
+      { status: response.status }
+    );
   } catch (error) {
     console.error("Transaction sync failed", {
       message: error instanceof Error ? error.message : "Unknown error."

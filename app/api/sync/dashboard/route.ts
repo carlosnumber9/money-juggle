@@ -67,7 +67,11 @@ export async function POST(request: NextRequest) {
       }
     });
     const { balances, transactions } = leaseResult.value;
-    const result = getDashboardSyncResult({ balances, transactions });
+    const result = getDashboardSyncResult({
+      balances,
+      transactions,
+      connections
+    });
 
     console.info("Dashboard sync completed", {
       user_id_suffix: user.id.slice(-8),
@@ -76,6 +80,11 @@ export async function POST(request: NextRequest) {
       balance_failed_connection_count: balances.failedConnectionCount,
       transaction_succeeded_account_count: transactions.succeededAccountCount,
       transaction_partial_account_count: transactions.partialAccountCount,
+      transaction_deferred_account_count: transactions.deferredAccountCount,
+      balance_partial_connection_count: balances.partialConnectionCount,
+      has_errors: result.body.hasErrors,
+      incomplete: result.body.incomplete,
+      retry_pending: result.body.retryPending,
       transaction_failed_account_count: transactions.failedAccountCount,
       transaction_fresh_connection_count: transactions.freshConnectionCount,
       rate_limited: result.body.rateLimited,

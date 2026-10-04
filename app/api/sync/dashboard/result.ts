@@ -1,3 +1,6 @@
+import type { ConnectionSyncIssue } from "@/definitions";
+import { buildSyncFeedback } from "@/lib/views/syncFeedback";
+
 type BalanceSyncResult = {
   synced: boolean;
   succeededConnectionCount: number;
@@ -5,12 +8,16 @@ type BalanceSyncResult = {
   rateLimitedConnectionCount: number;
   cooldownConnectionCount: number;
   cooldownUntil: string | null;
+  issues?: ConnectionSyncIssue[];
 };
 
 type TransactionSyncResult = {
   synced: boolean;
   succeededAccountCount: number;
   partialAccountCount: number;
+  deferredAccountCount?: number;
+  completedConnectionIds?: string[];
+  issues?: ConnectionSyncIssue[];
   failedAccountCount: number;
   rateLimitedAccountCount: number;
   cooldownConnectionCount: number;
@@ -19,10 +26,12 @@ type TransactionSyncResult = {
 
 export function getDashboardSyncResult({
   balances,
-  transactions
+  transactions,
+  connections = []
 }: {
   balances: BalanceSyncResult;
   transactions: TransactionSyncResult;
+  connections?: Parameters<typeof buildSyncFeedback>[1];
 }) {
   const failedCount =
     balances.failedConnectionCount + transactions.failedAccountCount;
@@ -35,6 +44,32 @@ export function getDashboardSyncResult({
     transactions.cooldownConnectionCount
   );
   const rateLimited = newlyRateLimitedCount > 0 || cooldownConnectionCount > 0;
+  const feedback = buildSyncFeedback(
+    [...(balances.issues ?? []), ...(transactions.issues ?? [])],
+    connections
+  );
+  const hasErrors =
+    failedCount > 0 || feedback.some((issue) => issue.kind === "error");
+  const incomplete = transactions.partialAccountCount > 0;
+  const retryPending =
+    rateLimited || (transactions.deferredAccountCount ?? 0) > 0;
+  const completedTransactionBanks = [
+    ...new Set(
+      (transactions.completedConnectionIds ?? [])
+        .map((id) => {
+          const connection = connections.find(
+            (candidate) => candidate.id === id
+          );
+          return connection?.institution?.name ?? connection?.institution_name;
+        })
+        .filter((name): name is string => Boolean(name))
+    )
+  ].filter(
+    (name) =>
+      !feedback.some(
+        (issue) => issue.resource === "transactions" && issue.bankName === name
+      )
+  );
 
   return {
     status:
@@ -47,7 +82,12 @@ export function getDashboardSyncResult({
         : 200,
     body: {
       synced: balances.synced || transactions.synced,
-      partialFailure: failedCount > 0 || transactions.partialAccountCount > 0,
+      partialFailure: hasErrors || incomplete || retryPending,
+      hasErrors,
+      incomplete,
+      retryPending,
+      feedback,
+      completedTransactionBanks,
       rateLimited,
       cooldownUntil: getLatestTimestamp(
         balances.cooldownUntil,

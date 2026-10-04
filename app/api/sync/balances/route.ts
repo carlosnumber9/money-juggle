@@ -8,6 +8,8 @@ import { withConnectionSyncLeases } from "@/lib/db/enableBankingSync/connectionL
 import { getInteractivePsuHeadersByConnection } from "@/lib/db/enableBankingSync/interactivePsuHeaders";
 import { getCurrentSupabaseUser } from "@/lib/supabase/currentUser";
 
+import { getDashboardSyncResult } from "../dashboard/result";
+
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
@@ -61,37 +63,38 @@ export async function POST(request: NextRequest) {
       attempted_connection_count: result.attemptedConnectionCount,
       succeeded_connection_count: result.succeededConnectionCount,
       failed_connection_count: result.failedConnectionCount,
+      partial_connection_count: result.partialConnectionCount,
       rate_limited_connection_count: result.rateLimitedConnectionCount,
       cooldown_connection_count: result.cooldownConnectionCount,
       cooldown_until: result.cooldownUntil,
       busy_connection_count: leaseResult.busyConnectionCount
     });
 
-    if (
-      result.attemptedConnectionCount > 0 &&
-      result.succeededConnectionCount === 0 &&
-      result.failedConnectionCount > 0
-    ) {
-      if (result.rateLimitedConnectionCount === result.failedConnectionCount) {
-        return NextResponse.json(
-          { error: "aspsp-rate-limited" },
-          { status: 429 }
-        );
-      }
-
-      return NextResponse.json(
-        { error: "balance-sync-failed" },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      synced: result.synced,
-      partialFailure: result.failedConnectionCount > 0,
-      rateLimited: result.cooldownConnectionCount > 0,
-      cooldownUntil: result.cooldownUntil,
-      syncInProgress: leaseResult.busyConnectionCount > 0
+    const response = getDashboardSyncResult({
+      balances: result,
+      transactions: {
+        synced: false,
+        succeededAccountCount: 0,
+        failedAccountCount: 0,
+        partialAccountCount: 0,
+        rateLimitedAccountCount: 0,
+        cooldownConnectionCount: 0,
+        cooldownUntil: null
+      },
+      connections
     });
+    return NextResponse.json(
+      {
+        ...response.body,
+        syncInProgress: leaseResult.busyConnectionCount > 0,
+        ...(response.status === 429
+          ? { error: "aspsp-rate-limited" }
+          : response.status === 500
+            ? { error: "balance-sync-failed" }
+            : {})
+      },
+      { status: response.status }
+    );
   } catch (error) {
     console.error("Balance sync failed", {
       message: error instanceof Error ? error.message : "Unknown error."

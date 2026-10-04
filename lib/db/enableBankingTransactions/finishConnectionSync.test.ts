@@ -74,6 +74,9 @@ describe("persistRowsAndFinishRun", () => {
     expect(finishSyncRunMock).toHaveBeenCalledWith(
       expect.objectContaining({ status: "failed" })
     );
+    expect(finishSyncRunMock).toHaveBeenCalledWith(
+      expect.objectContaining({ errorCode: "transaction-account-fetch-failed" })
+    );
     expect(updateTransactionSyncOutcome).toHaveBeenCalledWith(
       expect.objectContaining({ incomplete: true })
     );

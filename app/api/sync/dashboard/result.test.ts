@@ -32,7 +32,15 @@ describe("getDashboardSyncResult", () => {
           partialAccountCount: 1
         }
       })
-    ).toMatchObject({ status: 200, body: { partialFailure: true } });
+    ).toMatchObject({
+      status: 200,
+      body: {
+        partialFailure: true,
+        hasErrors: false,
+        incomplete: true,
+        retryPending: false
+      }
+    });
   });
   it("keeps an empty truncated account visible as incomplete", () => {
     expect(
@@ -83,6 +91,11 @@ describe("getDashboardSyncResult", () => {
       body: {
         synced: true,
         partialFailure: false,
+        hasErrors: false,
+        incomplete: false,
+        retryPending: false,
+        feedback: [],
+        completedTransactionBanks: [],
         rateLimited: false,
         cooldownUntil: null
       }
@@ -137,7 +150,102 @@ describe("getDashboardSyncResult", () => {
       })
     ).toMatchObject({
       status: 200,
-      body: { rateLimited: true }
+      body: {
+        rateLimited: true,
+        hasErrors: false,
+        retryPending: true,
+        incomplete: false
+      }
     });
+  });
+  it("reports a scheduled transaction retry as information rather than a new partial fetch", () => {
+    const response = getDashboardSyncResult({
+      balances: succeededBalances,
+      transactions: {
+        ...succeededTransactions,
+        succeededAccountCount: 0,
+        deferredAccountCount: 2,
+        issues: [
+          {
+            bankConnectionId: "caixa",
+            resource: "transactions",
+            kind: "deferred",
+            retryAt: "2026-10-04T18:55:00Z"
+          }
+        ]
+      },
+      connections: [{ id: "caixa", institution: { name: "CaixaBank" } }]
+    });
+    expect(response).toMatchObject({
+      status: 200,
+      body: {
+        hasErrors: false,
+        incomplete: false,
+        retryPending: true,
+        feedback: [{ bankName: "CaixaBank", kind: "deferred" }]
+      }
+    });
+  });
+  it("keeps real errors visible alongside successful balances and partial transactions", () => {
+    const response = getDashboardSyncResult({
+      balances: succeededBalances,
+      transactions: {
+        ...succeededTransactions,
+        partialAccountCount: 1,
+        failedAccountCount: 1,
+        issues: [
+          {
+            bankConnectionId: "caixa",
+            resource: "transactions",
+            kind: "error",
+            retryAt: null
+          },
+          {
+            bankConnectionId: "tr",
+            resource: "transactions",
+            kind: "partial",
+            retryAt: null
+          }
+        ]
+      },
+      connections: [
+        { id: "caixa", institution: { name: "CaixaBank" } },
+        { id: "tr", institution: { name: "Trade Republic" } }
+      ]
+    });
+    expect(response).toMatchObject({
+      status: 200,
+      body: {
+        hasErrors: true,
+        incomplete: true,
+        feedback: [
+          { bankName: "CaixaBank", kind: "error" },
+          { bankName: "Trade Republic", kind: "partial" }
+        ]
+      }
+    });
+  });
+  it("does not resolve a bank while another connection at that institution remains incomplete", () => {
+    const response = getDashboardSyncResult({
+      balances: succeededBalances,
+      transactions: {
+        ...succeededTransactions,
+        completedConnectionIds: ["old"],
+        partialAccountCount: 1,
+        issues: [
+          {
+            bankConnectionId: "new",
+            resource: "transactions",
+            kind: "partial",
+            retryAt: null
+          }
+        ]
+      },
+      connections: [
+        { id: "old", institution: { name: "Trade Republic" } },
+        { id: "new", institution: { name: "Trade Republic" } }
+      ]
+    });
+    expect(response.body.completedTransactionBanks).toEqual([]);
   });
 });

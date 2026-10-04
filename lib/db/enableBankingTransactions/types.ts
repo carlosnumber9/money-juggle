@@ -1,6 +1,7 @@
 import type {
   EnableBankingTransactionResource,
-  MonthlyTransactionSummary
+  MonthlyTransactionSummary,
+  ConnectionSyncIssue
 } from "@/definitions";
 
 export type StoredAccountForTransactionSync = {
@@ -22,6 +23,7 @@ export type StoredConnectionForTransactionSync = {
   provider_rate_limited_until: string | null;
   last_transaction_synced_at: string | null;
   accounts: StoredAccountForTransactionSync[];
+  institution_name?: string;
 };
 
 export type TransactionRow = {
@@ -63,6 +65,9 @@ export type TransactionSyncResult = {
   attemptedAccountCount: number;
   succeededAccountCount: number;
   partialAccountCount: number;
+  deferredAccountCount: number;
+  issues: ConnectionSyncIssue[];
+  completedConnectionIds: string[];
   failedAccountCount: number;
   rateLimitedAccountCount: number;
   cooldownConnectionCount: number;

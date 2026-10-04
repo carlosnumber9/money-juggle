@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import type { DashboardSyncControlsProps } from "@/definitions";
+import type { DashboardSyncControlsProps, SyncResponse } from "@/definitions";
+import {
+  getSyncNotices,
+  NETWORK_SYNC_FAILURE,
+  resolveTransactionFeedback
+} from "./DashboardSyncControls/feedback";
+import { requestSync } from "./DashboardSyncControls/requests";
 
 import { useSyncActivity } from "./SyncActivityProvider";
 
@@ -19,8 +25,10 @@ export function DashboardSyncControls({
   const { beginSync } = useSyncActivity();
   const didAutoRefreshRef = useRef(false);
   const [activeOperation, setActiveOperation] = useState<ActiveOperation>(null);
-  const [shouldRetryRefresh, setShouldRetryRefresh] = useState(false);
-  const [shouldRetryBackfill, setShouldRetryBackfill] = useState(false);
+  const [refreshResult, setRefreshResult] = useState<SyncResponse | null>(null);
+  const [backfillResult, setBackfillResult] = useState<SyncResponse | null>(
+    null
+  );
 
   useEffect(() => {
     if (!enabled || didAutoRefreshRef.current) {
@@ -32,12 +40,9 @@ export function DashboardSyncControls({
     const finishSync = beginSync();
 
     setActiveOperation("refresh");
-    requestDashboardRefresh({
-      forceBalances: false,
-      signal: abortController.signal
-    })
+    requestSync("/api/sync/dashboard", abortController.signal)
       .then((result) => {
-        setShouldRetryRefresh(result.partialFailure);
+        setRefreshResult(result);
 
         router.refresh();
       })
@@ -47,7 +52,7 @@ export function DashboardSyncControls({
         }
 
         console.error("No se pudieron actualizar los datos.", error);
-        setShouldRetryRefresh(true);
+        setRefreshResult(NETWORK_SYNC_FAILURE);
         router.refresh();
       })
       .finally(() => {
@@ -69,17 +74,17 @@ export function DashboardSyncControls({
     }
 
     setActiveOperation("refresh");
-    setShouldRetryRefresh(false);
+    setRefreshResult(null);
     const finishSync = beginSync();
 
     try {
-      const result = await requestDashboardRefresh({ forceBalances: true });
+      const result = await requestSync("/api/sync/dashboard?force=true");
 
-      setShouldRetryRefresh(result.partialFailure);
+      setRefreshResult(result);
       router.refresh();
     } catch (error) {
       console.error("No se pudieron actualizar los datos.", error);
-      setShouldRetryRefresh(true);
+      setRefreshResult(NETWORK_SYNC_FAILURE);
       router.refresh();
     } finally {
       finishSync();
@@ -93,17 +98,23 @@ export function DashboardSyncControls({
     }
 
     setActiveOperation("backfill");
-    setShouldRetryBackfill(false);
+    setBackfillResult(null);
     const finishSync = beginSync();
 
     try {
-      const result = await requestTransactionBackfill();
+      const result = await requestSync("/api/sync/transactions/backfill");
 
-      setShouldRetryBackfill(Boolean(result.partialFailure));
+      setBackfillResult(result);
+      setRefreshResult((previous) =>
+        resolveTransactionFeedback(
+          previous,
+          result.completedTransactionBanks ?? []
+        )
+      );
       router.refresh();
     } catch (error) {
       console.error("No se pudo importar el historial de movimientos.", error);
-      setShouldRetryBackfill(true);
+      setBackfillResult(NETWORK_SYNC_FAILURE);
       router.refresh();
     } finally {
       finishSync();
@@ -116,18 +127,26 @@ export function DashboardSyncControls({
   }
 
   const isBusy = activeOperation !== null;
+  const notices = [
+    ...getSyncNotices(refreshResult, "refresh"),
+    ...(backfill.status === "available"
+      ? getSyncNotices(backfillResult, "backfill")
+      : [])
+  ];
+  const shouldRetryRefresh = refreshResult?.hasErrors;
+  const shouldRetryBackfill = backfillResult?.hasErrors;
 
   return (
     <div className="mt-6 flex flex-wrap justify-end gap-2">
-      {shouldRetryRefresh || shouldRetryBackfill ? (
+      {notices.map((notice, index) => (
         <p
-          role="status"
-          className="basis-full text-right text-sm text-destructive"
+          key={`${notice.message}:${index}`}
+          role={notice.tone === "error" ? "alert" : "status"}
+          className={`basis-full text-right text-sm ${notice.tone === "error" ? "text-destructive" : notice.tone === "warning" ? "text-amber-700 dark:text-amber-400" : "text-muted-foreground"}`}
         >
-          La actualización está incompleta. Los datos recibidos se han guardado;
-          revisa las conexiones y reintenta más tarde.
+          {notice.message}
         </p>
-      ) : null}
+      ))}
       {enabled ? (
         <Button
           type="button"
@@ -170,47 +189,6 @@ export function DashboardSyncControls({
       ) : null}
     </div>
   );
-}
-
-async function requestDashboardRefresh({
-  forceBalances,
-  signal
-}: {
-  forceBalances: boolean;
-  signal?: AbortSignal;
-}): Promise<{ synced: boolean; partialFailure: boolean }> {
-  const path = forceBalances
-    ? "/api/sync/dashboard?force=true"
-    : "/api/sync/dashboard";
-  const response = await fetch(path, { method: "POST", signal });
-  const result = (await response.json()) as {
-    synced?: boolean;
-    partialFailure?: boolean;
-    rateLimited?: boolean;
-  };
-
-  if (!response.ok && response.status !== 429) {
-    throw new Error("Could not refresh dashboard data.");
-  }
-
-  return {
-    synced: Boolean(result.synced),
-    partialFailure: Boolean(result.partialFailure)
-  };
-}
-
-async function requestTransactionBackfill(): Promise<{
-  partialFailure?: boolean;
-}> {
-  const response = await fetch("/api/sync/transactions/backfill", {
-    method: "POST"
-  });
-
-  if (!response.ok) {
-    throw new Error("Could not backfill transactions.");
-  }
-
-  return (await response.json()) as { partialFailure?: boolean };
 }
 
 function isAbortError(error: unknown): boolean {

@@ -1,6 +1,9 @@
 import "server-only";
 
-import type { EnableBankingPsuHeaders } from "@/definitions";
+import type {
+  EnableBankingPsuHeaders,
+  ConnectionSyncIssue
+} from "@/definitions";
 import { getEnableBankingAccountTransactions } from "@/lib/enableBanking/client";
 
 import { getErrorMessage } from "../shared/getErrorMessage";
@@ -11,10 +14,12 @@ import { persistRowsAndFinishRun } from "./finishConnectionSync";
 import { listConnectionsForTransactionSync } from "./listConnections";
 import { mapTransactionToRow } from "./mapTransactionToRow";
 import { createSyncRun } from "./syncRuns";
+import { getTransactionRetryUntil } from "./retry";
 import type {
   StoredConnectionForTransactionSync,
   TransactionRow,
-  TransactionSyncMode
+  TransactionSyncMode,
+  TransactionSyncResult
 } from "./types";
 
 const REPEATED_CONTINUATION_KEY_MESSAGE =
@@ -27,7 +32,7 @@ export async function syncConnectionTransactions(input: {
   dateTo: string;
   mode: TransactionSyncMode;
   psuHeaders?: EnableBankingPsuHeaders;
-}) {
+}): Promise<TransactionSyncResult> {
   const syncRunId = await createSyncRun({
     userId: input.userId,
     bankConnectionId: input.connection.id,
@@ -40,6 +45,8 @@ export async function syncConnectionTransactions(input: {
   const rows: TransactionRow[] = [];
   const failures = [];
   const warnings = [];
+  const issues: ConnectionSyncIssue[] = [];
+  let cooldownUntil: string | null = null;
   let attemptedAccountCount = 0;
   let succeededAccountCount = 0;
   let partialAccountCount = 0;
@@ -75,6 +82,19 @@ export async function syncConnectionTransactions(input: {
       }
 
       partialAccountCount += 1;
+      issues.push({
+        bankConnectionId: input.connection.id,
+        resource: "transactions",
+        kind: "partial",
+        retryAt: null
+      });
+      if (transactionResult.pageError)
+        issues.push({
+          bankConnectionId: input.connection.id,
+          resource: "transactions",
+          kind: "error",
+          retryAt: null
+        });
 
       const error =
         transactionResult.pageError ??
@@ -104,7 +124,7 @@ export async function syncConnectionTransactions(input: {
         break;
       if (warning.rate_limited) {
         rateLimitedAccountCount += 1;
-        await setConnectionRateLimitCooldown({
+        cooldownUntil = await setConnectionRateLimitCooldown({
           userId: input.userId,
           bankConnectionId: input.connection.id
         });
@@ -120,6 +140,12 @@ export async function syncConnectionTransactions(input: {
         provider_error: failure.provider_error
       });
       failures.push(failure);
+      issues.push({
+        bankConnectionId: input.connection.id,
+        resource: "transactions",
+        kind: "error",
+        retryAt: null
+      });
       if (
         await invalidateConnectionSession({
           userId: input.userId,
@@ -132,7 +158,7 @@ export async function syncConnectionTransactions(input: {
       }
       if (failure.rate_limited) {
         rateLimitedAccountCount += 1;
-        await setConnectionRateLimitCooldown({
+        cooldownUntil = await setConnectionRateLimitCooldown({
           userId: input.userId,
           bankConnectionId: input.connection.id
         });
@@ -155,10 +181,19 @@ export async function syncConnectionTransactions(input: {
     attemptedAccountCount,
     succeededAccountCount,
     partialAccountCount,
+    deferredAccountCount: 0,
+    completedConnectionIds:
+      succeededAccountCount === input.connection.accounts.length
+        ? [input.connection.id]
+        : [],
+    issues: issues.map((issue) => ({
+      ...issue,
+      retryAt: cooldownUntil ?? getTransactionRetryUntil(fetchedAt)
+    })),
     failedAccountCount: failures.length,
     rateLimitedAccountCount,
     cooldownConnectionCount: 0,
-    cooldownUntil: null,
+    cooldownUntil,
     freshConnectionCount: 0
   };
 }

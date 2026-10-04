@@ -58,6 +58,19 @@ function createInput() {
 }
 
 describe("syncConnectionTransactions", () => {
+  it("only resolves a connection after every account finishes normally", async () => {
+    getTransactionsMock.mockResolvedValue({
+      transactions: [],
+      paginationTruncated: false
+    });
+    await expect(
+      syncConnectionTransactions(createInput())
+    ).resolves.toMatchObject({
+      succeededAccountCount: 2,
+      issues: [],
+      completedConnectionIds: ["connection-id"]
+    });
+  });
   it("stops requesting remaining accounts after an invalid-session response", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     const error = new EnableBankingRequestError("Session expired", 401, {
@@ -175,6 +188,13 @@ describe("syncConnectionTransactions", () => {
       succeededAccountCount: 0,
       partialAccountCount: 1,
       failedAccountCount: 0,
+      issues: [
+        expect.objectContaining({
+          bankConnectionId: "connection-id",
+          kind: "partial",
+          resource: "transactions"
+        })
+      ],
       rateLimitedAccountCount: 0
     });
     expect(persistRowsAndFinishRunMock).toHaveBeenCalledWith(
