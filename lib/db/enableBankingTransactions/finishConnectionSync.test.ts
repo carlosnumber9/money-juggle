@@ -26,7 +26,7 @@ describe("persistRowsAndFinishRun", () => {
     updateConnectionSyncTimestampMock.mockReset();
   });
 
-  it("records tolerated pagination truncation without blocking freshness", async () => {
+  it("records pagination truncation without advancing freshness", async () => {
     const warning = {
       account_id: "account-id",
       message:
@@ -64,10 +64,6 @@ describe("persistRowsAndFinishRun", () => {
         }
       })
     );
-    expect(updateConnectionSyncTimestampMock).toHaveBeenCalledWith({
-      userId: "user-id",
-      bankConnectionId: "connection-id",
-      fetchedAt: "2026-08-30T09:00:00.000Z"
-    });
+    expect(updateConnectionSyncTimestampMock).not.toHaveBeenCalled();
   });
 });

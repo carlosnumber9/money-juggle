@@ -14,6 +14,7 @@ const succeededBalances = {
 const succeededTransactions = {
   synced: true,
   succeededAccountCount: 2,
+  partialAccountCount: 0,
   failedAccountCount: 0,
   rateLimitedAccountCount: 0,
   cooldownConnectionCount: 0,

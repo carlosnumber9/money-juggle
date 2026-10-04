@@ -80,7 +80,8 @@ describe("syncConnectionTransactions", () => {
     expect(result).toMatchObject({
       synced: true,
       attemptedAccountCount: 1,
-      succeededAccountCount: 1,
+      succeededAccountCount: 0,
+      partialAccountCount: 1,
       failedAccountCount: 0,
       rateLimitedAccountCount: 0
     });

@@ -502,6 +502,13 @@ The app should:
 
 ## Synchronization Errors
 
+A transaction account is complete only when pagination finishes normally.
+Truncated accounts count as partial, not succeeded, and route responses expose
+`partialFailure` even when usable rows were received. The dashboard displays a
+Spanish incomplete-update notice. Partial pages are persisted, but transaction
+freshness advances only if every account completed without failures or warnings;
+a fully successful empty response still advances freshness.
+
 Provider error codes take precedence over HTTP status. `EXPIRED_SESSION`,
 `CLOSED_SESSION`, and `REVOKED_SESSION` require bank reauthorization; they are
 not signing-key failures. Account fetch logs include only the sanitized message,

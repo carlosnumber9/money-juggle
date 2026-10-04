@@ -42,6 +42,7 @@ export async function syncConnectionTransactions(input: {
   const warnings = [];
   let attemptedAccountCount = 0;
   let succeededAccountCount = 0;
+  let partialAccountCount = 0;
   let rateLimitedAccountCount = 0;
 
   for (const account of input.connection.accounts) {
@@ -73,9 +74,7 @@ export async function syncConnectionTransactions(input: {
         continue;
       }
 
-      if (accountRows.length > 0) {
-        succeededAccountCount += 1;
-      }
+      partialAccountCount += 1;
 
       const error = new Error(REPEATED_CONTINUATION_KEY_MESSAGE);
 
@@ -129,6 +128,7 @@ export async function syncConnectionTransactions(input: {
     synced: rows.length > 0,
     attemptedAccountCount,
     succeededAccountCount,
+    partialAccountCount,
     failedAccountCount: failures.length,
     rateLimitedAccountCount,
     cooldownConnectionCount: 0,

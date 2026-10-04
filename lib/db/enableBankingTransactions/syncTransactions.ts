@@ -41,6 +41,7 @@ export async function syncEnableBankingTransactions({
     synced: false,
     attemptedAccountCount: 0,
     succeededAccountCount: 0,
+    partialAccountCount: 0,
     failedAccountCount: 0,
     rateLimitedAccountCount: 0,
     cooldownConnectionCount: 0,
@@ -134,6 +135,7 @@ function mergeSyncResult(
   target.synced = target.synced || source.synced;
   target.attemptedAccountCount += source.attemptedAccountCount;
   target.succeededAccountCount += source.succeededAccountCount;
+  target.partialAccountCount += source.partialAccountCount;
   target.failedAccountCount += source.failedAccountCount;
   target.rateLimitedAccountCount += source.rateLimitedAccountCount;
   target.cooldownConnectionCount += source.cooldownConnectionCount;

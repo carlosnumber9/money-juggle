@@ -60,6 +60,7 @@ export type TransactionSyncResult = {
   synced: boolean;
   attemptedAccountCount: number;
   succeededAccountCount: number;
+  partialAccountCount: number;
   failedAccountCount: number;
   rateLimitedAccountCount: number;
   cooldownConnectionCount: number;

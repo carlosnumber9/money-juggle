@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
       synced: result.synced,
       attempted_account_count: result.attemptedAccountCount,
       succeeded_account_count: result.succeededAccountCount,
+      partial_account_count: result.partialAccountCount,
       failed_account_count: result.failedAccountCount,
       rate_limited_account_count: result.rateLimitedAccountCount,
       cooldown_connection_count: result.cooldownConnectionCount,
@@ -71,6 +72,7 @@ export async function POST(request: NextRequest) {
     if (
       result.attemptedAccountCount > 0 &&
       result.succeededAccountCount === 0 &&
+      result.partialAccountCount === 0 &&
       result.failedAccountCount > 0
     ) {
       if (result.rateLimitedAccountCount === result.failedAccountCount) {
@@ -89,7 +91,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       synced: result.synced,
       skipped,
-      partialFailure: result.failedAccountCount > 0,
+      partialFailure:
+        result.failedAccountCount > 0 || result.partialAccountCount > 0,
       rateLimited: result.cooldownConnectionCount > 0,
       cooldownUntil: result.cooldownUntil,
       syncInProgress: leaseResult.busyConnectionCount > 0

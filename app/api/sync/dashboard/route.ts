@@ -75,6 +75,7 @@ export async function POST(request: NextRequest) {
       balance_succeeded_connection_count: balances.succeededConnectionCount,
       balance_failed_connection_count: balances.failedConnectionCount,
       transaction_succeeded_account_count: transactions.succeededAccountCount,
+      transaction_partial_account_count: transactions.partialAccountCount,
       transaction_failed_account_count: transactions.failedAccountCount,
       transaction_fresh_connection_count: transactions.freshConnectionCount,
       rate_limited: result.body.rateLimited,

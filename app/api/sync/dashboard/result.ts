@@ -10,6 +10,7 @@ type BalanceSyncResult = {
 type TransactionSyncResult = {
   synced: boolean;
   succeededAccountCount: number;
+  partialAccountCount: number;
   failedAccountCount: number;
   rateLimitedAccountCount: number;
   cooldownConnectionCount: number;
@@ -37,14 +38,16 @@ export function getDashboardSyncResult({
 
   return {
     status:
-      failedCount > 0 && succeededCount === 0
+      failedCount > 0 &&
+      succeededCount === 0 &&
+      transactions.partialAccountCount === 0
         ? newlyRateLimitedCount === failedCount
           ? 429
           : 500
         : 200,
     body: {
       synced: balances.synced || transactions.synced,
-      partialFailure: failedCount > 0 && succeededCount > 0,
+      partialFailure: failedCount > 0 || transactions.partialAccountCount > 0,
       rateLimited,
       cooldownUntil: getLatestTimestamp(
         balances.cooldownUntil,

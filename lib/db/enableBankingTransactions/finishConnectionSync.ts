@@ -72,7 +72,7 @@ async function finishSuccessfulRun(input: FinishConnectionSyncInput) {
     }
   });
 
-  if (input.rows.length > 0 || input.failures.length === 0) {
+  if (input.failures.length === 0 && input.warnings.length === 0) {
     await updateConnectionSyncTimestamp({
       userId: input.userId,
       bankConnectionId: input.connection.id,

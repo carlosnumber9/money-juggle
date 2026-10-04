@@ -119,6 +119,15 @@ export function DashboardSyncControls({
 
   return (
     <div className="mt-6 flex flex-wrap justify-end gap-2">
+      {shouldRetryRefresh || shouldRetryBackfill ? (
+        <p
+          role="status"
+          className="basis-full text-right text-sm text-destructive"
+        >
+          La actualización está incompleta. Los datos recibidos se han guardado;
+          revisa las conexiones y reintenta más tarde.
+        </p>
+      ) : null}
       {enabled ? (
         <Button
           type="button"
@@ -186,7 +195,7 @@ async function requestDashboardRefresh({
 
   return {
     synced: Boolean(result.synced),
-    partialFailure: Boolean(result.partialFailure && !result.rateLimited)
+    partialFailure: Boolean(result.partialFailure)
   };
 }
 
