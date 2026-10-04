@@ -13,6 +13,7 @@ The executable schema is defined by the local migration chain:
 - `supabase/migrations/20260804120000_add_personal_care_and_rename_vehicle_insurance.sql`
 - `supabase/migrations/20260809120000_add_transaction_reporting_date.sql`
 - `supabase/migrations/20260810120000_add_transaction_reconciliations.sql`
+- `supabase/migrations/20261004211500_add_fines_category.sql`
 
 The model should preserve user ownership even though the app starts as a personal project.
 

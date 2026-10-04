@@ -894,6 +894,7 @@ Decision:
   financial group. Keep the trip or event context in optional labels instead of
   assigning the whole settlement to one underlying expense category.
 - Add `hair_beauty` (`Peluquería y belleza`) under health and wellness.
+- Add `fines` (`Multas`) under the financial group for monetary penalties.
 - Keep the existing `vehicle_insurance` slug and use `Seguro de automóvil` as
   its display name so existing assignments remain valid without a duplicate
   category.
