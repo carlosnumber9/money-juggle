@@ -5,10 +5,12 @@ import { createSupabaseServiceRoleClient } from "@/lib/supabase/serviceRole";
 export async function updateConnectionSyncTimestamp({
   userId,
   bankConnectionId,
+  providerSessionId,
   fetchedAt
 }: {
   userId: string;
   bankConnectionId: string;
+  providerSessionId: string | null;
   fetchedAt: string;
 }) {
   const supabase = createSupabaseServiceRoleClient();
@@ -19,7 +21,9 @@ export async function updateConnectionSyncTimestamp({
       last_transaction_synced_at: fetchedAt
     })
     .eq("id", bankConnectionId)
-    .eq("user_id", userId);
+    .eq("user_id", userId)
+    .eq("status", "linked")
+    .eq("provider_session_id", providerSessionId ?? "");
 
   if (error) {
     throw new Error(

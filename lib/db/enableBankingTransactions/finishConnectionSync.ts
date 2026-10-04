@@ -86,6 +86,7 @@ async function finishSuccessfulRun(input: FinishConnectionSyncInput) {
     await updateConnectionSyncTimestamp({
       userId: input.userId,
       bankConnectionId: input.connection.id,
+      providerSessionId: input.connection.provider_session_id,
       fetchedAt: input.fetchedAt
     });
   }

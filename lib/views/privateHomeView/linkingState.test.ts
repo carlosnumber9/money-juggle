@@ -4,6 +4,14 @@ import { describe, expect, it } from "vitest";
 import { getLinkingStaleAt, isStaleLinkingConnection } from "./linkingState";
 
 describe("linking state", () => {
+  it("uses a renewed attempt clock without rewriting the original creation date", () => {
+    expect(
+      getLinkingStaleAt({
+        created_at: "2026-07-01T00:00:00Z",
+        linking_started_at: "2026-10-04T16:00:00Z"
+      })
+    ).toBe("2026-10-04T16:15:00.000Z");
+  });
   const connection = {
     created_at: "2026-08-12T10:00:00.000Z",
     updated_at: "2026-08-12T10:14:00.000Z"

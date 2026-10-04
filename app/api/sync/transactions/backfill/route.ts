@@ -93,7 +93,9 @@ export async function POST(request: NextRequest) {
       skipped,
       partialFailure:
         result.failedAccountCount > 0 || result.partialAccountCount > 0,
-      rateLimited: result.cooldownConnectionCount > 0,
+      rateLimited:
+        result.rateLimitedAccountCount > 0 ||
+        result.cooldownConnectionCount > 0,
       cooldownUntil: result.cooldownUntil,
       syncInProgress: leaseResult.busyConnectionCount > 0
     });

@@ -1,10 +1,51 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { BankConnectionSummary } from "@/definitions";
 
 import { buildBankCards } from "./buildBankCards";
 
 describe("buildBankCards", () => {
+  afterEach(() => vi.useRealTimers());
+  it.each(["expired", "revoked", "linked"])(
+    "offers reconnection for %s consent while preserving prepared account data",
+    (status) => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-10-04T16:00:00Z"));
+      const cards = buildBankCards({
+        connectionsResult: {
+          ok: true,
+          value: [
+            {
+              id: "existing-connection",
+              status,
+              consent_expires_at: "2026-10-04T15:00:00Z",
+              created_at: "2026-07-01T00:00:00Z",
+              updated_at: "2026-10-04T15:00:00Z",
+              institution: { name: "ING", country: "ES", logo_url: null },
+              accounts: [
+                {
+                  id: "existing-account",
+                  name: "Cuenta",
+                  currency: "EUR",
+                  iban_last4: "1234",
+                  account_type: null,
+                  status: "active",
+                  latest_balance: null
+                }
+              ]
+            }
+          ]
+        }
+      });
+      expect(cards.find((card) => card.slug === "ing")).toMatchObject({
+        state: "reconnection-required",
+        bankConnectionId: "existing-connection",
+        aspspName: "ING",
+        country: "ES",
+        accounts: [expect.objectContaining({ id: "existing-account" })]
+      });
+    }
+  );
   it("makes the beta Trade Republic AIS integration connectable", () => {
     const cards = buildBankCards({
       connectionsResult: { ok: true, value: [] },

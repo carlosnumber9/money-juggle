@@ -76,18 +76,40 @@ export async function syncConnectionTransactions(input: {
 
       partialAccountCount += 1;
 
-      const error = new Error(
-        transactionResult.paginationTruncationReason === "page-limit"
-          ? "Enable Banking transaction pagination reached the request limit."
-          : REPEATED_CONTINUATION_KEY_MESSAGE
-      );
+      const error =
+        transactionResult.pageError ??
+        new Error(
+          transactionResult.paginationTruncationReason === "page-limit"
+            ? "Enable Banking transaction pagination reached the request limit."
+            : REPEATED_CONTINUATION_KEY_MESSAGE
+        );
 
+      const warning = getAccountFailure(account, error);
       console.warn("Enable Banking transaction pagination truncated", {
         bank_connection_id: input.connection.id,
         account_id: account.id,
-        message: error.message
+        message: warning.message,
+        http_status: warning.http_status,
+        provider_error: warning.provider_error
       });
-      warnings.push(getAccountFailure(account, error));
+      warnings.push(warning);
+      if (
+        await invalidateConnectionSession({
+          userId: input.userId,
+          bankConnectionId: input.connection.id,
+          providerSessionId: input.connection.provider_session_id,
+          providerError: warning.provider_error
+        })
+      )
+        break;
+      if (warning.rate_limited) {
+        rateLimitedAccountCount += 1;
+        await setConnectionRateLimitCooldown({
+          userId: input.userId,
+          bankConnectionId: input.connection.id
+        });
+        break;
+      }
     } catch (error) {
       const failure = getAccountFailure(account, error);
       console.error("Enable Banking transaction account fetch failed", {

@@ -17,7 +17,9 @@ vi.mock("@/lib/db/enableBankingSync/connectionLease", () => ({
   }))
 }));
 
-vi.mock("@/lib/enableBanking/client", () => ({
+vi.mock("@/lib/enableBanking/client", async () => ({
+  ...(await import("@/lib/enableBanking/client/requestError")),
+  ...(await import("@/lib/enableBanking/client/providerErrors")),
   authorizeEnableBankingSession: mocks.authorizeSession
 }));
 
@@ -30,6 +32,8 @@ vi.mock("@/lib/db/enableBankingSync/interactivePsuHeaders", () => ({
   getInteractivePsuHeadersByConnection: mocks.getPsuHeaders
 }));
 
+import { withConnectionSyncLeases } from "@/lib/db/enableBankingSync/connectionLease";
+import { BankAccountMatchError } from "@/lib/db/enableBankingConnections/accountMatching";
 import { authorizeAndCompleteSession } from "./authorizeSession";
 
 describe("authorizeAndCompleteSession", () => {
@@ -74,6 +78,42 @@ describe("authorizeAndCompleteSession", () => {
     expect(mocks.completeConnection).not.toHaveBeenCalled();
   });
 
+  it("does not exchange a code while another callback owns the lease", async () => {
+    vi.mocked(withConnectionSyncLeases).mockResolvedValueOnce({
+      value: { ok: false, status: "connection-busy" },
+      acquiredConnectionCount: 0,
+      busyConnectionCount: 1
+    });
+    await expect(
+      authorizeAndCompleteSession({
+        connection,
+        code: "code-1",
+        requestHeaders: new Headers()
+      })
+    ).resolves.toMatchObject({ ok: false, status: "connection-busy" });
+    expect(mocks.authorizeSession).not.toHaveBeenCalled();
+    expect(mocks.failConnection).not.toHaveBeenCalled();
+  });
+  it("exposes a safe account-matching failure without discarding the callback state", async () => {
+    mocks.authorizeSession.mockResolvedValue(
+      createSession([{ uid: "account-1" }])
+    );
+    mocks.completeConnection.mockRejectedValueOnce(new BankAccountMatchError());
+    await expect(
+      authorizeAndCompleteSession({
+        connection,
+        code: "code-1",
+        requestHeaders: new Headers()
+      })
+    ).resolves.toMatchObject({ ok: false, status: "account-match-required" });
+    expect(mocks.failConnection).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: "user-1",
+        providerState: "state-1",
+        providerStatus: "account-match-required"
+      })
+    );
+  });
   it("stores a session when at least one account is available", async () => {
     const session = createSession([{ uid: "account-1", currency: "EUR" }]);
     mocks.authorizeSession.mockResolvedValue(session);

@@ -22,6 +22,56 @@ const succeededTransactions = {
 };
 
 describe("getDashboardSyncResult", () => {
+  it("reports truncation even when every balance was fetched successfully", () => {
+    expect(
+      getDashboardSyncResult({
+        balances: succeededBalances,
+        transactions: {
+          ...succeededTransactions,
+          succeededAccountCount: 0,
+          partialAccountCount: 1
+        }
+      })
+    ).toMatchObject({ status: 200, body: { partialFailure: true } });
+  });
+  it("keeps an empty truncated account visible as incomplete", () => {
+    expect(
+      getDashboardSyncResult({
+        balances: {
+          ...succeededBalances,
+          synced: false,
+          succeededConnectionCount: 0
+        },
+        transactions: {
+          ...succeededTransactions,
+          synced: false,
+          succeededAccountCount: 0,
+          partialAccountCount: 1
+        }
+      })
+    ).toMatchObject({
+      status: 200,
+      body: { synced: false, partialFailure: true }
+    });
+  });
+  it("returns a failure when every attempted resource failed", () => {
+    expect(
+      getDashboardSyncResult({
+        balances: {
+          ...succeededBalances,
+          synced: false,
+          succeededConnectionCount: 0,
+          failedConnectionCount: 1
+        },
+        transactions: {
+          ...succeededTransactions,
+          synced: false,
+          succeededAccountCount: 0,
+          failedAccountCount: 2
+        }
+      })
+    ).toMatchObject({ status: 500, body: { partialFailure: true } });
+  });
   it("combines successful balance and transaction work", () => {
     expect(
       getDashboardSyncResult({

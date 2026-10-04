@@ -256,7 +256,9 @@ cached Supabase rows while the refresh runs.
 
 Transaction retrieval keeps the original date range, strategy, and PSU headers
 on every continuation request. Every received page is retained, including one
-returning a repeated key. Strong transaction identifiers deduplicate repeated
+returning a repeated key or pages received before a later request fails. Later
+request failures retain their sanitized provider code, respect rate limits, and
+invalidate consent when the provider reports an invalid session. Strong transaction identifiers deduplicate repeated
 movements while preserving updated provider fields; unidentified movements are
 left for normal transaction normalization and persistence.
 
@@ -283,7 +285,9 @@ any account-level failures after completion.
 
 The owner-only `POST /api/sync/transactions/backfill` route requests the current
 calendar year through the current day. It skips bank connections that already
-have a successful transaction backfill run. Failed and partial connection runs
+have a successful transaction backfill run for the current authorization.
+Reconnection records its authorization timestamp so an earlier session cannot
+suppress importing accounts newly included in the renewed consent. Failed and partial connection runs
 remain eligible for an idempotent retry. The route is server-only, requires an
 authenticated allowlisted user, and does not expose provider responses or
 credentials to the browser.

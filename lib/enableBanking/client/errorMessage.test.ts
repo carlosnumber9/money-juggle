@@ -4,6 +4,28 @@ import { describe, expect, it } from "vitest";
 import { getSafeErrorMessage } from "./errorMessage";
 
 describe("getSafeErrorMessage", () => {
+  it.each([
+    [
+      "EXPIRED_SESSION",
+      "El acceso al banco ha caducado. Vuelve a autorizar la conexión."
+    ],
+    [
+      "CLOSED_SESSION",
+      "La sesión bancaria está cerrada. Vuelve a autorizar la conexión."
+    ],
+    [
+      "REVOKED_SESSION",
+      "El acceso al banco se ha revocado. Vuelve a autorizar la conexión."
+    ]
+  ])(
+    "uses the bank session code rather than the HTTP 401 fallback for %s",
+    (error, message) => {
+      expect(
+        getSafeErrorMessage(401, { error, message: "Provider failure" })
+      ).toBe(message);
+    }
+  );
+
   it.each<[EnableBankingErrorResponse["error"], string]>([
     [
       "REDIRECT_URI_NOT_ALLOWED",

@@ -102,7 +102,8 @@ async function markConnectionLinked(
         authorized_access: input.session.access,
         linked_account_count: input.session.accounts.length,
         transaction_sync_incomplete: false,
-        transaction_retry_after: null
+        transaction_retry_after: null,
+        session_authorized_at: new Date().toISOString()
       }
     })
     .eq("id", input.bankConnectionId)

@@ -100,11 +100,21 @@ export async function getEnableBankingAccountTransactions(input: {
       searchParams.set("continuation_key", continuationKey);
     }
 
-    const response =
-      await requestEnableBanking<EnableBankingTransactionsResponse>(
+    let response: EnableBankingTransactionsResponse;
+    try {
+      response = await requestEnableBanking<EnableBankingTransactionsResponse>(
         `/accounts/${encodeURIComponent(input.accountId)}/transactions?${searchParams}`,
         { psuHeaders: input.psuHeaders }
       );
+    } catch (error) {
+      if (requestCount === 0) throw error;
+      return {
+        transactions,
+        paginationTruncated: true,
+        paginationTruncationReason: "request-failed",
+        pageError: error
+      };
+    }
 
     const nextContinuationKey = getContinuationKey(response);
     requestCount += 1;
