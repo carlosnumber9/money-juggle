@@ -215,6 +215,7 @@ Current local migrations:
 - `20260809120000_add_transaction_reporting_date.sql`
 - `20260810120000_add_transaction_reconciliations.sql`
 - `20261004211500_add_fines_category.sql`
+- `20261005013000_add_reconciliation_state_rpc.sql`
 
 Use `npm run db:migrations` to confirm which local migrations are applied to the
 linked remote Supabase project before pushing new schema changes.
@@ -229,6 +230,13 @@ history and can make later `db:push` runs fail with sync errors.
 
 Schema deployment should stay manual for now. Automated `db:push` from CI can be
 considered later when production deployment is more formal.
+
+After applying the reconciliation-state RPC migration, run
+`npx supabase db query --linked --file supabase/tests/transaction_reconciliation_states.sql`
+to verify full-group balances, exact decimal drift, duplicate inputs, and owner
+isolation. This SQL check creates synthetic fixtures in one transaction and
+rolls them all back. It does not modify existing user transactions. The unit
+tests mock HTTP and verify POST bodies, response pagination, and failures.
 
 ## Local Development Practices
 

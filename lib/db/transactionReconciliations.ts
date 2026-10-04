@@ -26,6 +26,14 @@ import type { StoredMonthlyTransactionRow } from "./enableBankingTransactions/ty
 
 const CANDIDATE_PAGE_SIZE = 50;
 const MATCHING_DAY_DISTANCE = 3;
+const RECONCILIATION_STATE_PAGE_SIZE = 500;
+
+type StoredReconciliationState = {
+  transaction_id: string;
+  reconciliation_id: string;
+  difference_treatment: TransactionReconciliationDifferenceTreatment;
+  requires_review: boolean;
+};
 
 type StoredAdjustmentGroup = {
   id: string;
@@ -124,95 +132,37 @@ export async function listTransactionReconciliationStates({
   }
 
   const supabase = await createSupabaseServerClient();
-  const { data: memberships, error: membershipError } = await supabase
-    .from("transaction_reconciliation_items")
-    .select("transaction_id, reconciliation_id")
-    .eq("user_id", userId)
-    .in("transaction_id", transactionIds);
+  const states = new Map<string, TransactionReconciliationMembership>();
+  const uniqueTransactionIds = [...new Set(transactionIds)];
+  let offset = 0;
 
-  if (membershipError) {
-    throw new Error(
-      `Could not list transaction reconciliations: ${membershipError.message}`
-    );
-  }
+  while (true) {
+    const { data, error } = await supabase
+      .rpc("get_transaction_reconciliation_states", {
+        p_user_id: userId,
+        p_transaction_ids: uniqueTransactionIds
+      })
+      .order("transaction_id", { ascending: true })
+      .range(offset, offset + RECONCILIATION_STATE_PAGE_SIZE - 1);
 
-  const reconciliationIds = [
-    ...new Set((memberships ?? []).map((item) => item.reconciliation_id))
-  ];
-
-  if (reconciliationIds.length === 0) {
-    return new Map();
-  }
-
-  const [
-    { data: groups, error: groupError },
-    { data: items, error: itemError }
-  ] = await Promise.all([
-    supabase
-      .from("transaction_reconciliations")
-      .select("id, difference_treatment")
-      .eq("user_id", userId)
-      .in("id", reconciliationIds),
-    supabase
-      .from("transaction_reconciliation_items")
-      .select("reconciliation_id, transactions (amount)")
-      .eq("user_id", userId)
-      .in("reconciliation_id", reconciliationIds)
-  ]);
-
-  if (groupError || itemError) {
-    throw new Error(
-      `Could not load reconciliation state: ${groupError?.message ?? itemError?.message}`
-    );
-  }
-
-  const balanceByReconciliation = new Map<string, string[]>();
-
-  for (const item of items ?? []) {
-    const transaction = Array.isArray(item.transactions)
-      ? item.transactions[0]
-      : item.transactions;
-
-    if (!transaction) {
-      continue;
+    if (error) {
+      throw new Error(`Could not load reconciliation state: ${error.message}`);
     }
 
-    balanceByReconciliation.set(item.reconciliation_id, [
-      ...(balanceByReconciliation.get(item.reconciliation_id) ?? []),
-      String(transaction.amount)
-    ]);
+    const rows = (data ?? []) as StoredReconciliationState[];
+    for (const row of rows) {
+      states.set(row.transaction_id, {
+        id: row.reconciliation_id,
+        differenceTreatment: row.difference_treatment,
+        requiresReview: row.requires_review
+      });
+    }
+
+    if (rows.length < RECONCILIATION_STATE_PAGE_SIZE) {
+      return states;
+    }
+    offset += RECONCILIATION_STATE_PAGE_SIZE;
   }
-
-  const groupById = new Map(
-    (groups ?? []).map((group) => [group.id, group.difference_treatment])
-  );
-
-  return new Map(
-    (memberships ?? []).flatMap((membership) => {
-      const differenceTreatment = groupById.get(
-        membership.reconciliation_id
-      ) as TransactionReconciliationDifferenceTreatment | undefined;
-
-      if (!differenceTreatment) {
-        return [];
-      }
-
-      const balance = sumDecimals(
-        balanceByReconciliation.get(membership.reconciliation_id) ?? []
-      );
-
-      return [
-        [
-          membership.transaction_id,
-          {
-            id: membership.reconciliation_id,
-            differenceTreatment,
-            requiresReview: differenceTreatment === "none" && balance !== "0"
-          }
-        ] as const
-      ];
-    })
-  );
 }
 
 export async function listTransactionReconciliationAdjustments({

@@ -14,6 +14,7 @@ The executable schema is defined by the local migration chain:
 - `supabase/migrations/20260809120000_add_transaction_reporting_date.sql`
 - `supabase/migrations/20260810120000_add_transaction_reconciliations.sql`
 - `supabase/migrations/20261004211500_add_fines_category.sql`
+- `supabase/migrations/20261005013000_add_reconciliation_state_rpc.sql`
 
 The model should preserve user ownership even though the app starts as a personal project.
 
@@ -59,6 +60,14 @@ transaction amount, and the reconciliation balance then changes with it. A
 group originally saved at zero becomes review-required if its live balance
 drifts. Reportable differences change contribution automatically; neutralized
 differences remain excluded.
+
+`get_transaction_reconciliation_states` reads membership and review state through
+a POST RPC, carrying transaction IDs in the JSON body instead of a large GET
+filter. It uses `SECURITY INVOKER`, existing RLS, and an explicit owner check
+against `auth.uid()`. Only authenticated users may execute it. PostgreSQL sums
+all members of each requested group, including transactions outside the report
+period, with exact numeric arithmetic. The application reads ordered pages of
+500 states so the API row limit cannot silently omit reconciled transactions.
 
 Included tables:
 
