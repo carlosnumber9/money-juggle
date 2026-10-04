@@ -81,6 +81,13 @@ export async function syncEnableBankingConnectionBalances(input: {
         error
       });
       failures.push(failure);
+      console.error("Enable Banking balance account fetch failed", {
+        bank_connection_id: input.bankConnectionId,
+        account_id: account.id,
+        message: failure.message,
+        http_status: failure.http_status,
+        provider_error: failure.provider_error
+      });
 
       if (failure.rate_limited) {
         await setConnectionRateLimitCooldown(input);

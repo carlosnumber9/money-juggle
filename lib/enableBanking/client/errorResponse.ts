@@ -31,16 +31,17 @@ function normalizeEnableBankingError(
   }
 
   const record = value as Record<string, unknown>;
+  const error = typeof record.error === "string" ? record.error : undefined;
   const message = typeof record.message === "string" ? record.message : "";
 
-  if (!message) {
+  if (!message && !error) {
     return undefined;
   }
 
   return {
-    message,
+    message: message || "Enable Banking request failed.",
     code: typeof record.code === "number" ? record.code : undefined,
-    error: typeof record.error === "string" ? record.error : undefined,
+    error,
     detail: record.detail
   };
 }

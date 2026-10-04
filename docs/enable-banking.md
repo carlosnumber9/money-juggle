@@ -477,6 +477,12 @@ The app should:
 
 ## Synchronization Errors
 
+Provider error codes take precedence over HTTP status. `EXPIRED_SESSION`,
+`CLOSED_SESSION`, and `REVOKED_SESSION` require bank reauthorization; they are
+not signing-key failures. Account fetch logs include only the sanitized message,
+HTTP status, and provider code, never raw provider error payloads. A generic
+401 or 403 does not establish that the signing key is incorrect.
+
 Sync errors should be recorded in `sync_runs`.
 
 Useful fields:

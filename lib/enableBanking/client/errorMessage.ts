@@ -5,6 +5,17 @@ export function getSafeErrorMessage(
   providerError: EnableBankingErrorResponse | undefined
 ): string {
   switch (providerError?.error) {
+    case "EXPIRED_SESSION":
+      return "El acceso al banco ha caducado. Vuelve a autorizar la conexión.";
+    case "CLOSED_SESSION":
+      return "La sesión bancaria está cerrada. Vuelve a autorizar la conexión.";
+    case "REVOKED_SESSION":
+      return "El acceso al banco se ha revocado. Vuelve a autorizar la conexión.";
+    case "UNAUTHORIZED_ACCESS":
+    case "AUTHORIZATION_NOT_PROVIDED":
+      return "Enable Banking no pudo autenticar la solicitud del servidor.";
+    case "UNAUTHORIZED_IP":
+      return "Enable Banking no permite solicitudes desde esta dirección del servidor.";
     case "REDIRECT_URI_NOT_ALLOWED":
       return "La URL de retorno no está autorizada en Enable Banking.";
     case "NO_ACCOUNTS_ADDED":
@@ -34,11 +45,11 @@ export function getSafeErrorMessage(
 
 function getFallbackErrorMessage(status: number): string {
   if (status === 401 || status === 403) {
-    return "Enable Banking rejected the signed request. Check the application id and private key.";
+    return "Enable Banking rechazó el acceso. Revisa el código del proveedor para conocer la causa.";
   }
 
   if (status === 404) {
-    return "Enable Banking did not find the application for the provided key id.";
+    return "Enable Banking no encontró el recurso solicitado.";
   }
 
   if (status === 408 || status === 429 || status >= 500) {

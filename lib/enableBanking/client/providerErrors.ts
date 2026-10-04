@@ -7,6 +7,10 @@ export function getEnableBankingErrorStatus(error: unknown): string {
   }
 
   switch (error.providerError?.error) {
+    case "EXPIRED_SESSION":
+    case "CLOSED_SESSION":
+    case "REVOKED_SESSION":
+      return "reconnection-required";
     case "REDIRECT_URI_NOT_ALLOWED":
       return "redirect-uri-not-allowed";
     case "NO_ACCOUNTS_ADDED":

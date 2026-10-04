@@ -28,16 +28,13 @@ describe("getSafeErrorMessage", () => {
   it.each([
     [
       401,
-      "Enable Banking rejected the signed request. Check the application id and private key."
+      "Enable Banking rechazó el acceso. Revisa el código del proveedor para conocer la causa."
     ],
     [
       403,
-      "Enable Banking rejected the signed request. Check the application id and private key."
+      "Enable Banking rechazó el acceso. Revisa el código del proveedor para conocer la causa."
     ],
-    [
-      404,
-      "Enable Banking did not find the application for the provided key id."
-    ],
+    [404, "Enable Banking no encontró el recurso solicitado."],
     [
       429,
       "Enable Banking is temporarily unavailable or rate limited the request."

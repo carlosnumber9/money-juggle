@@ -85,12 +85,14 @@ export async function syncConnectionTransactions(input: {
       });
       warnings.push(getAccountFailure(account, error));
     } catch (error) {
+      const failure = getAccountFailure(account, error);
       console.error("Enable Banking transaction account fetch failed", {
         bank_connection_id: input.connection.id,
         account_id: account.id,
-        message: getErrorMessage(error)
+        message: getErrorMessage(error),
+        http_status: failure.http_status,
+        provider_error: failure.provider_error
       });
-      const failure = getAccountFailure(account, error);
       failures.push(failure);
       if (failure.rate_limited) {
         rateLimitedAccountCount += 1;
