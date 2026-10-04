@@ -16,6 +16,10 @@ import type {
 } from "@/definitions";
 
 import { requestEnableBanking } from "./request";
+import { appendTransactionPage } from "./transactionPages";
+
+export const MAX_TRANSACTION_PAGE_REQUESTS = 100;
+export const MAX_REPEATED_CONTINUATION_RETRIES = 2;
 
 export async function getEnableBankingApplication() {
   return requestEnableBanking<EnableBankingApplication>("/application");
@@ -83,6 +87,11 @@ export async function getEnableBankingAccountTransactions(input: {
   const seenContinuationKeys = new Set<string>();
   let continuationKey: string | null = null;
   let paginationTruncated = false;
+  let paginationTruncationReason:
+    "repeated-continuation-key" | "page-limit" | undefined;
+  let repeatedKeyCount = 0;
+  let requestCount = 0;
+  const transactionIndices = new Map<string, number>();
 
   do {
     const searchParams = new URLSearchParams(baseSearchParams);
@@ -98,23 +107,40 @@ export async function getEnableBankingAccountTransactions(input: {
       );
 
     const nextContinuationKey = getContinuationKey(response);
+    requestCount += 1;
+    appendTransactionPage(
+      transactions,
+      transactionIndices,
+      Array.isArray(response) ? response : response.transactions
+    );
 
     if (nextContinuationKey && seenContinuationKeys.has(nextContinuationKey)) {
-      paginationTruncated = true;
-      break;
+      repeatedKeyCount += 1;
+      if (repeatedKeyCount > MAX_REPEATED_CONTINUATION_RETRIES) {
+        paginationTruncated = true;
+        paginationTruncationReason = "repeated-continuation-key";
+        break;
+      }
     }
 
-    transactions.push(
-      ...(Array.isArray(response) ? response : response.transactions)
-    );
     continuationKey = nextContinuationKey;
+
+    if (continuationKey && requestCount >= MAX_TRANSACTION_PAGE_REQUESTS) {
+      paginationTruncated = true;
+      paginationTruncationReason = "page-limit";
+      break;
+    }
 
     if (continuationKey) {
       seenContinuationKeys.add(continuationKey);
     }
   } while (continuationKey);
 
-  return { transactions, paginationTruncated };
+  return {
+    transactions,
+    paginationTruncated,
+    ...(paginationTruncationReason ? { paginationTruncationReason } : {})
+  };
 }
 
 function getContinuationKey(

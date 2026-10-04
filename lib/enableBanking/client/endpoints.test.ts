@@ -52,22 +52,23 @@ describe("getEnableBankingAccountTransactions", () => {
     );
   });
 
-  it("retains completed pages and discards a page with a repeated key", async () => {
+  it("retains unique movements and stops after bounded repeated-key retries", async () => {
     requestEnableBankingMock
       .mockResolvedValueOnce({
         transactions: [{ transaction_id: "transaction-1" }],
         continuation_key: "continuation-1"
       })
-      .mockResolvedValueOnce({
+      .mockResolvedValue({
         transactions: [{ transaction_id: "transaction-1" }],
         continuation_key: "continuation-1"
       });
 
     await expect(fetchTransactions()).resolves.toEqual({
       transactions: [{ transaction_id: "transaction-1" }],
-      paginationTruncated: true
+      paginationTruncated: true,
+      paginationTruncationReason: "repeated-continuation-key"
     });
-    expect(requestEnableBankingMock).toHaveBeenCalledTimes(2);
+    expect(requestEnableBankingMock).toHaveBeenCalledTimes(4);
   });
 });
 

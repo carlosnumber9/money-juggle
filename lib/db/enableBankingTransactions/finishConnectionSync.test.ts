@@ -7,6 +7,9 @@ vi.mock("./persistTransactionRows", () => ({
 vi.mock("./syncRuns", () => ({
   finishSyncRun: vi.fn()
 }));
+vi.mock("./updateSyncOutcome", () => ({
+  updateTransactionSyncOutcome: vi.fn()
+}));
 vi.mock("./updateSyncTimestamp", () => ({
   updateConnectionSyncTimestamp: vi.fn()
 }));

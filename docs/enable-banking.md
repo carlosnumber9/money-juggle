@@ -254,16 +254,20 @@ updated without reloading the full history. The route normalizes rows into the
 app's `transactions` table and keeps the private views responsive by showing
 cached Supabase rows while the refresh runs.
 
-Transaction retrieval follows Enable Banking continuation keys until every
-page for the requested period has been processed. Every follow-up request keeps
-the original date parameters and adds only the provider continuation key. If
-the provider repeats a continuation key, the app stops pagination instead of
-allowing an unbounded request loop. It retains only the pages completed before
-the repeated key, records the account sync as partial with an operational
-warning, and advances transaction freshness after the tolerated provider
-response. Pagination warnings remain visible in sync observability but do not
-count as account failures or put the dashboard refresh control into its retry
-state. This keeps cached data available without hiding provider truncation.
+Transaction retrieval keeps the original date range, strategy, and PSU headers
+on every continuation request. Every received page is retained, including one
+returning a repeated key. Strong transaction identifiers deduplicate repeated
+movements while preserving updated provider fields; unidentified movements are
+left for normal transaction normalization and persistence.
+
+The client permits at most two retries after a repeated continuation key, with
+an overall ceiling of 100 page requests per account. Exhaustion records a
+partial result with its truncation reason. Incomplete syncs retain received
+movements, do not advance transaction freshness, and set an owner- and
+session-scoped 15-minute transaction retry deadline in provider metadata.
+Both automatic and manual requests respect this deadline and report an
+incomplete result while waiting. Balance requests remain independent. Successful
+transaction sync clears the deadline. No recurring client retry loop is added.
 
 Normalized transaction rows are deduplicated by their owner-scoped stable
 identity and persisted in bounded batches. Each batch preserves the original

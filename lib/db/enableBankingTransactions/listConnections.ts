@@ -4,6 +4,7 @@ import { ENABLE_BANKING_PROVIDER } from "@/definitions";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/serviceRole";
 
 import type { StoredConnectionForTransactionSync } from "./types";
+import { getRecord } from "../enableBankingConnections/records";
 
 export async function listConnectionsForTransactionSync(
   userId: string
@@ -18,6 +19,7 @@ export async function listConnectionsForTransactionSync(
       status,
       provider_session_id,
       consent_expires_at,
+      provider_metadata,
       provider_rate_limited_until,
       last_transaction_synced_at,
       accounts (
@@ -46,6 +48,15 @@ export async function listConnectionsForTransactionSync(
     status: connection.status,
     provider_session_id: connection.provider_session_id,
     consent_expires_at: connection.consent_expires_at,
+    transaction_retry_after:
+      typeof getRecord(connection.provider_metadata).transaction_retry_after ===
+      "string"
+        ? (getRecord(connection.provider_metadata)
+            .transaction_retry_after as string)
+        : null,
+    transaction_sync_incomplete:
+      getRecord(connection.provider_metadata).transaction_sync_incomplete ===
+      true,
     provider_rate_limited_until: connection.provider_rate_limited_until,
     last_transaction_synced_at: connection.last_transaction_synced_at,
     accounts: (connection.accounts ?? []).filter(

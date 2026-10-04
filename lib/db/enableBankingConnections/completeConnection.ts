@@ -100,7 +100,9 @@ async function markConnectionLinked(
         aspsp: { ...storedAspsp, ...input.session.aspsp },
         psu_type: input.session.psu_type,
         authorized_access: input.session.access,
-        linked_account_count: input.session.accounts.length
+        linked_account_count: input.session.accounts.length,
+        transaction_sync_incomplete: false,
+        transaction_retry_after: null
       }
     })
     .eq("id", input.bankConnectionId)

@@ -4,6 +4,7 @@ import { getErrorMessage } from "../shared/getErrorMessage";
 import { persistTransactionRows } from "./persistTransactionRows";
 import { finishSyncRun } from "./syncRuns";
 import { updateConnectionSyncTimestamp } from "./updateSyncTimestamp";
+import { updateTransactionSyncOutcome } from "./updateSyncOutcome";
 import type {
   StoredConnectionForTransactionSync,
   TransactionRow,
@@ -72,7 +73,16 @@ async function finishSuccessfulRun(input: FinishConnectionSyncInput) {
     }
   });
 
-  if (input.failures.length === 0 && input.warnings.length === 0) {
+  const incomplete = input.failures.length > 0 || input.warnings.length > 0;
+  await updateTransactionSyncOutcome({
+    userId: input.userId,
+    bankConnectionId: input.connection.id,
+    providerSessionId: input.connection.provider_session_id,
+    fetchedAt: input.fetchedAt,
+    incomplete
+  });
+
+  if (!incomplete) {
     await updateConnectionSyncTimestamp({
       userId: input.userId,
       bankConnectionId: input.connection.id,

@@ -1,5 +1,6 @@
 import "server-only";
 import { expireConnectionConsent } from "../enableBankingSync/invalidSession";
+import { isTransactionRetryDeferred } from "./retry";
 
 import type { EnableBankingPsuHeaders } from "@/definitions";
 import { getErrorMessage } from "../shared/getErrorMessage";
@@ -82,9 +83,15 @@ export async function syncEnableBankingTransactions({
       continue;
     }
 
+    if (isTransactionRetryDeferred(connection.transaction_retry_after)) {
+      result.partialAccountCount += connection.accounts.length;
+      continue;
+    }
+
     if (
       mode === "incremental" &&
       !force &&
+      !connection.transaction_sync_incomplete &&
       !shouldRefreshConnectionTransactions({ connection, maxAgeMs })
     ) {
       result.freshConnectionCount += 1;

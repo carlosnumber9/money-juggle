@@ -48,6 +48,7 @@ export type EnableBankingTransactionsResponse =
 export type EnableBankingTransactionsResult = {
   transactions: EnableBankingTransactionResource[];
   paginationTruncated: boolean;
+  paginationTruncationReason?: "repeated-continuation-key" | "page-limit";
 };
 
 export type EnableBankingTransactionsFetchStrategy = "default" | "longest";

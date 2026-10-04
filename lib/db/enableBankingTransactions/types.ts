@@ -17,6 +17,8 @@ export type StoredConnectionForTransactionSync = {
   status: string;
   provider_session_id: string | null;
   consent_expires_at?: string | null;
+  transaction_retry_after?: string | null;
+  transaction_sync_incomplete?: boolean;
   provider_rate_limited_until: string | null;
   last_transaction_synced_at: string | null;
   accounts: StoredAccountForTransactionSync[];

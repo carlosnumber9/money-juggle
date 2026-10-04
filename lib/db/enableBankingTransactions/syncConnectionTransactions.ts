@@ -76,7 +76,11 @@ export async function syncConnectionTransactions(input: {
 
       partialAccountCount += 1;
 
-      const error = new Error(REPEATED_CONTINUATION_KEY_MESSAGE);
+      const error = new Error(
+        transactionResult.paginationTruncationReason === "page-limit"
+          ? "Enable Banking transaction pagination reached the request limit."
+          : REPEATED_CONTINUATION_KEY_MESSAGE
+      );
 
       console.warn("Enable Banking transaction pagination truncated", {
         bank_connection_id: input.connection.id,
