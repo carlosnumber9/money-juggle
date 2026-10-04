@@ -33,6 +33,7 @@ async function completeAuthorizedSession({
   code,
   requestHeaders
 }: AuthorizationInput) {
+  let phase = "session-authorization";
   try {
     const session = await authorizeEnableBankingSession(code);
 
@@ -56,6 +57,7 @@ async function completeAuthorizedSession({
       return { ok: false, status, metadata } as const;
     }
 
+    phase = "psu-headers";
     const psuHeadersByConnectionId = await getInteractivePsuHeadersByConnection(
       {
         userId: connection.user_id,
@@ -64,6 +66,7 @@ async function completeAuthorizedSession({
       }
     );
 
+    phase = "connection-completion";
     await completeEnableBankingConnection({
       userId: connection.user_id,
       bankConnectionId: connection.id,
@@ -79,8 +82,11 @@ async function completeAuthorizedSession({
       bankConnectionId: connection.id,
       providerState: connection.provider_state,
       providerStatus: getPublicErrorStatus(error),
-      message: "Enable Banking session authorization failed.",
-      metadata: getPublicErrorMetadata(error)
+      message:
+        phase === "session-authorization"
+          ? "Enable Banking session authorization failed."
+          : "Enable Banking session was authorized but connection completion failed.",
+      metadata: { phase, ...getPublicErrorMetadata(error) }
     });
 
     return {

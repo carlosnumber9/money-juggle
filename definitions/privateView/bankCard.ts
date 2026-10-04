@@ -8,6 +8,7 @@ export type BankInstitutionCard = {
   aspspName?: string;
   country?: string;
   bankConnectionId?: string;
+  accountReviewUrl?: string;
   linkingStaleAt?: string;
   state:
     | "loading"

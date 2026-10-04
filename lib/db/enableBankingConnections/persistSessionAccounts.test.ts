@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createSupabaseQueryMock } from "../shared/supabaseQueryMock.testSupport";
-const mocks = vi.hoisted(() => ({ from: vi.fn() }));
+const mocks = vi.hoisted(() => ({ from: vi.fn(), recover: vi.fn() }));
+vi.mock("./recoverAccountIdentifications", () => ({
+  recoverAccountIdentifications: mocks.recover
+}));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/supabase/serviceRole", () => ({
   createSupabaseServiceRoleClient: () => ({ from: mocks.from })
@@ -33,6 +36,56 @@ const input = {
 
 describe("reconnection account persistence", () => {
   beforeEach(() => vi.clearAllMocks());
+  it("recovers legacy identities and preserves account IDs when there is no IBAN fingerprint", async () => {
+    mocks.recover.mockResolvedValue({
+      "historical-account": ["provider-hash"]
+    });
+    const lookup = createSupabaseQueryMock([
+      { ...previous, iban_fingerprint: null }
+    ]);
+    const write = createSupabaseQueryMock();
+    mocks.from.mockReturnValueOnce(lookup).mockReturnValueOnce(write);
+    await persistSessionAccounts({
+      ...input,
+      previousSessionId: "expired-session",
+      aspsp: { name: "CaixaBank", country: "ES" }
+    });
+    expect(write.upsert).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({
+          id: "historical-account",
+          provider_account_id: "new-provider"
+        })
+      ],
+      expect.anything()
+    );
+    expect(mocks.recover).toHaveBeenCalledWith(
+      expect.objectContaining({ sessionId: "expired-session" })
+    );
+  });
+  it("preserves history through explicit confirmation if legacy identity recovery fails", async () => {
+    const write = createSupabaseQueryMock();
+    mocks.from
+      .mockReturnValueOnce(
+        createSupabaseQueryMock([{ ...previous, iban_fingerprint: null }])
+      )
+      .mockReturnValueOnce(write);
+    await persistSessionAccounts({
+      ...input,
+      confirmedMatches: ["historical-account"],
+      identifiers: [{ iban_fingerprint: "iban-hash", iban_last4: "1234" }]
+    });
+    expect(write.upsert).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({
+          id: "historical-account",
+          iban_last4: "1234",
+          iban_fingerprint: "iban-hash"
+        })
+      ],
+      expect.anything()
+    );
+  });
   it("keeps the account primary key and leaves financial records untouched", async () => {
     const lookup = createSupabaseQueryMock([previous]);
     const write = createSupabaseQueryMock();

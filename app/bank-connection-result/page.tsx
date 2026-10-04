@@ -11,11 +11,20 @@ export const metadata: Metadata = {
 export default async function BankConnectionResultPage({
   searchParams
 }: {
-  searchParams: Promise<{ status?: string | string[] }>;
+  searchParams: Promise<{ status?: string | string[]; connection?: string }>;
 }) {
-  const { status } = await searchParams;
+  const { status, connection } = await searchParams;
+  const reviewUrl =
+    status === "account-match-required" &&
+    typeof connection === "string" &&
+    /^[0-9a-f-]{36}$/i.test(connection)
+      ? `/bank-connections/${connection}/review`
+      : undefined;
 
   return (
-    <BankConnectionResultContent result={getBankConnectionResult(status)} />
+    <BankConnectionResultContent
+      result={getBankConnectionResult(status)}
+      reviewUrl={reviewUrl}
+    />
   );
 }

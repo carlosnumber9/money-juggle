@@ -26,7 +26,9 @@ export async function failEnableBankingConnection({
   console.info("Marking Enable Banking connection as failed", {
     bank_connection_id_suffix: getSuffix(bankConnectionId),
     user_id_suffix: getSuffix(userId),
-    provider_status: providerStatus
+    provider_status: providerStatus,
+    phase: metadata.phase ?? null,
+    reason: metadata.reason ?? null
   });
 
   const { data: connection, error: lookupError } = await supabase

@@ -18,6 +18,7 @@ vi.mock("@/lib/db/enableBankingBalances", () => ({
   syncEnableBankingConnectionBalances: mocks.balances
 }));
 import { completeEnableBankingConnection } from "./completeConnection";
+import { BankAccountMatchError } from "./accountMatching";
 
 const aspsp = { name: "ING", country: "ES" };
 const stored = {
@@ -69,6 +70,81 @@ describe("reconnection completion", () => {
     );
     expect(mocks.consent).toHaveBeenCalledWith(
       expect.objectContaining({ eventType: "reconnected" })
+    );
+  });
+  it("retains a sanitized authorized session when legacy account matching needs review", async () => {
+    const write = createSupabaseQueryMock({ id: "connection" });
+    mocks.from
+      .mockReturnValueOnce(createSupabaseQueryMock(stored))
+      .mockReturnValueOnce(write);
+    mocks.persist.mockRejectedValueOnce(
+      new BankAccountMatchError("missing-identity")
+    );
+    await expect(completeEnableBankingConnection(input)).rejects.toThrow(
+      BankAccountMatchError
+    );
+    expect(write.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider_metadata: expect.objectContaining({
+          pending_reconnection: expect.objectContaining({
+            session: expect.objectContaining({ session_id: "new-session" })
+          })
+        })
+      })
+    );
+    expect(write.eq).toHaveBeenCalledWith("status", "linking");
+    expect(write.eq).toHaveBeenCalledWith("provider_state", "state");
+    expect(mocks.consent).not.toHaveBeenCalled();
+  });
+  it("rejects owner confirmation for a replaced attempt before any account write", async () => {
+    mocks.from.mockReturnValue(
+      createSupabaseQueryMock({ ...stored, status: "error" })
+    );
+    await expect(
+      completeEnableBankingConnection({
+        ...input,
+        confirmation: { reviewId: "expired", matches: ["old-account"] }
+      })
+    ).rejects.toThrow("expired or changed");
+    expect(mocks.persist).not.toHaveBeenCalled();
+  });
+  it("clears pending data after owner-confirmed completion", async () => {
+    const identifiers = [{ iban_fingerprint: null, iban_last4: "1234" }];
+    const write = createSupabaseQueryMock({ id: "connection" });
+    mocks.from
+      .mockReturnValueOnce(
+        createSupabaseQueryMock({
+          ...stored,
+          status: "error",
+          provider_metadata: {
+            ...stored.provider_metadata,
+            pending_reconnection: {
+              reviewId: "review",
+              expiresAt: "2099-01-01T00:00:00Z",
+              session: input.session,
+              identifiers
+            }
+          }
+        })
+      )
+      .mockReturnValueOnce(write);
+    await completeEnableBankingConnection({
+      ...input,
+      confirmation: { reviewId: "review", matches: ["old-account"] }
+    });
+    expect(mocks.persist).toHaveBeenCalledWith(
+      expect.objectContaining({
+        confirmedMatches: ["old-account"],
+        identifiers
+      })
+    );
+    expect(write.eq).toHaveBeenCalledWith("status", "error");
+    expect(write.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider_metadata: expect.objectContaining({
+          pending_reconnection: null
+        })
+      })
     );
   });
   it("does not mutate accounts for an outdated callback", async () => {

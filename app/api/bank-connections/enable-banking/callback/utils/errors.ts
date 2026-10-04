@@ -20,6 +20,9 @@ export function getPublicErrorStatus(error: unknown): string {
 }
 
 export function getPublicErrorMetadata(error: unknown) {
+  if (error instanceof BankAccountMatchError) {
+    return { phase: "account-matching", reason: error.reason };
+  }
   if (error instanceof EnableBankingRequestError) {
     return getEnableBankingErrorMetadata(error);
   }

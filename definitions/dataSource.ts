@@ -34,6 +34,7 @@ export type BankConnectionSummary = {
   status: string;
   consent_expires_at: string | null;
   linking_started_at?: string | null;
+  account_review_available?: boolean;
   created_at: string;
   updated_at: string;
   institution: {
@@ -127,6 +128,10 @@ export type BankingDataSource = {
   getProviderApplication(): Promise<ProviderApplication>;
   listAvailableInstitutions(): Promise<InstitutionAvailability[]>;
   listBankConnections(userId: string): Promise<BankConnectionSummary[]>;
+  getBankAccountReview(
+    userId: string,
+    bankConnectionId: string
+  ): Promise<BankAccountReview | null>;
   listCompletedTransactionBackfillConnectionIds(
     userId: string
   ): Promise<string[]>;
@@ -142,6 +147,23 @@ export type BankingDataSource = {
     userId: string
   ): Promise<TransactionCategoryGroupSummary[]>;
   listTransactionLabels(userId: string): Promise<TransactionLabelSummary[]>;
+};
+
+export type BankAccountReview = {
+  reviewId: string;
+  institutionName: string;
+  expiresAt: string;
+  returnedAccounts: Array<{
+    name: string;
+    currency: string;
+    ibanLast4: string | null;
+  }>;
+  storedAccounts: Array<{
+    id: string;
+    name: string;
+    currency: string;
+    ibanLast4: string | null;
+  }>;
 };
 
 export const INITIAL_BANK_NAMES = [

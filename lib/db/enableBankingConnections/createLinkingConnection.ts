@@ -37,6 +37,7 @@ export async function createLinkingEnableBankingConnection(
     provider_metadata: {
       ...getRecord(input.reconnectConnection?.provider_metadata),
       ...getProviderMetadata(input),
+      pending_reconnection: null,
       linking_started_at: new Date().toISOString()
     }
   };

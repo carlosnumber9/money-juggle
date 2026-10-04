@@ -4,6 +4,7 @@ import type {
   EnableBankingApplication,
   EnableBankingAspsp,
   EnableBankingAuthorizeSessionResponse,
+  EnableBankingSessionResponse,
   EnableBankingBalancesResponse,
   EnableBankingBalanceResource,
   EnableBankingStartAuthorizationInput,
@@ -57,6 +58,12 @@ export async function authorizeEnableBankingSession(
   code: string
 ): Promise<EnableBankingAuthorizeSessionResponse> {
   return requestEnableBanking("/sessions", { method: "POST", body: { code } });
+}
+
+export async function getEnableBankingSession(sessionId: string) {
+  return requestEnableBanking<EnableBankingSessionResponse>(
+    `/sessions/${encodeURIComponent(sessionId)}`
+  );
 }
 
 export async function getEnableBankingAccountBalances(

@@ -9,6 +9,7 @@ import {
 } from "@/definitions";
 import { isEmailAllowed } from "@/lib/auth/allowlist";
 import { listUserEnableBankingConnections } from "@/lib/db/enableBankingConnections";
+import { loadBankAccountReview } from "@/lib/db/enableBankingConnections/accountReview";
 import {
   listCompletedTransactionBackfillConnectionIds,
   listMonthlyTransactions
@@ -71,6 +72,29 @@ export const bankingDataSource: BankingDataSource = {
   },
   async listBankConnections(userId: string) {
     return listUserEnableBankingConnections(userId);
+  },
+  async getBankAccountReview(userId, bankConnectionId) {
+    const review = await loadBankAccountReview(userId, bankConnectionId);
+    if (!review) return null;
+    return {
+      reviewId: review.pending.reviewId,
+      institutionName: review.pending.session.aspsp.name,
+      expiresAt: review.pending.expiresAt,
+      returnedAccounts: review.pending.session.accounts.map(
+        (account, index) => ({
+          name:
+            account.name ?? account.product ?? `Cuenta autorizada ${index + 1}`,
+          currency: account.currency ?? "EUR",
+          ibanLast4: review.pending.identifiers[index].iban_last4
+        })
+      ),
+      storedAccounts: (review.connection.accounts ?? []).map((account) => ({
+        id: account.id,
+        name: account.name,
+        currency: account.currency,
+        ibanLast4: account.iban_last4
+      }))
+    };
   },
   async listCompletedTransactionBackfillConnectionIds(userId) {
     return [...(await listCompletedTransactionBackfillConnectionIds(userId))];

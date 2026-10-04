@@ -40,6 +40,9 @@ export function buildErroredBankCard(
     aspspName: connection.institution?.name ?? bank.name,
     country: connection.institution?.country ?? undefined,
     state: "error",
+    accountReviewUrl: connection.account_review_available
+      ? `/bank-connections/${connection.id}/review`
+      : undefined,
     tooltip: `La conexión con ${bank.name} terminó con error.`
   };
 }

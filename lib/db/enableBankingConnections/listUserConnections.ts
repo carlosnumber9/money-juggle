@@ -7,6 +7,7 @@ import { createSupabaseServiceRoleClient } from "@/lib/supabase/serviceRole";
 
 import { listLatestBalancesByAccountId } from "./latestBalances";
 import { getRecord } from "./records";
+import { readPendingReconnection } from "./pendingSession";
 
 export async function listUserEnableBankingConnections(
   userId: string,
@@ -48,6 +49,13 @@ export async function listUserEnableBankingConnections(
   return (connections ?? []).map((connection) => ({
     id: connection.id,
     status: connection.status,
+    account_review_available:
+      connection.status === "error" &&
+      Boolean(
+        readPendingReconnection(
+          getRecord(connection.provider_metadata).pending_reconnection
+        )
+      ),
     consent_expires_at: connection.consent_expires_at,
     linking_started_at:
       typeof getRecord(connection.provider_metadata).linking_started_at ===

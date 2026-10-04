@@ -12,19 +12,26 @@ import { getSuffix } from "../shared/getSuffix";
 import { persistSessionAccounts } from "./persistSessionAccounts";
 import { getRecord } from "./records";
 import { insertConsentEvent } from "./consentEvents";
+import { BankAccountMatchError } from "./accountMatching";
+import {
+  preparePendingReconnection,
+  readPendingReconnection
+} from "./pendingSession";
 
 export async function completeEnableBankingConnection({
   userId,
   bankConnectionId,
   session,
   psuHeaders,
-  providerState
+  providerState,
+  confirmation
 }: {
   userId: string;
   bankConnectionId: string;
   session: EnableBankingAuthorizeSessionResponse;
   psuHeaders?: EnableBankingPsuHeaders;
   providerState: string | null;
+  confirmation?: { reviewId: string; matches: Array<string | null> };
 }) {
   const consentExpiresAt = session.access.valid_until;
 
@@ -37,13 +44,24 @@ export async function completeEnableBankingConnection({
     .single();
   if (error)
     throw new Error(`Could not load bank connection: ${error.message}`);
+  const providerMetadata = getRecord(storedConnection.provider_metadata);
+  const pending = readPendingReconnection(
+    providerMetadata.pending_reconnection
+  );
+  const expectedStatus = confirmation ? "error" : "linking";
   if (
-    storedConnection.status !== "linking" ||
+    storedConnection.status !== expectedStatus ||
     storedConnection.provider_state !== providerState
   ) {
     throw new Error("Bank authorization state has changed.");
   }
-  const providerMetadata = getRecord(storedConnection.provider_metadata);
+  if (
+    confirmation &&
+    (!pending ||
+      pending.reviewId !== confirmation.reviewId ||
+      pending.session.session_id !== session.session_id)
+  )
+    throw new Error("Bank account review has expired or changed.");
   const expectedAspsp = getRecord(providerMetadata.aspsp);
   if (
     expectedAspsp.name !== session.aspsp.name ||
@@ -53,17 +71,49 @@ export async function completeEnableBankingConnection({
       "Authorized institution does not match the bank connection."
     );
   }
-  const accountIdentifications = await persistSessionAccounts({
-    userId,
-    bankConnectionId,
-    accounts: session.accounts,
-    providerMetadata
-  });
+  let accountIdentifications: Record<string, string[]>;
+  try {
+    accountIdentifications = await persistSessionAccounts({
+      userId,
+      bankConnectionId,
+      accounts: session.accounts,
+      providerMetadata,
+      previousSessionId: storedConnection.provider_session_id,
+      aspsp: session.aspsp,
+      confirmedMatches: confirmation?.matches,
+      identifiers: confirmation ? pending!.identifiers : undefined
+    });
+  } catch (error) {
+    if (error instanceof BankAccountMatchError && !confirmation) {
+      const { error: pendingError } = await supabase
+        .from("bank_connections")
+        .update({
+          provider_metadata: {
+            ...providerMetadata,
+            pending_reconnection: preparePendingReconnection({
+              userId,
+              bankConnectionId,
+              session
+            })
+          }
+        })
+        .eq("id", bankConnectionId)
+        .eq("user_id", userId)
+        .eq("status", "linking")
+        .eq("provider_state", providerState ?? "")
+        .select("id")
+        .single();
+      if (pendingError)
+        throw new Error("Could not preserve bank account review.");
+    }
+    throw error;
+  }
   await markConnectionLinked(
-    { userId, bankConnectionId, session, providerState },
+    { userId, bankConnectionId, session, providerState, expectedStatus },
     {
       ...providerMetadata,
-      account_identifications: accountIdentifications
+      account_identifications: accountIdentifications,
+      pending_reconnection: null
     }
   );
   await insertConsentEvent({
@@ -75,7 +125,8 @@ export async function completeEnableBankingConnection({
     metadata: {
       session_id: session.session_id,
       account_count: session.accounts.length,
-      consent_expires_at: consentExpiresAt
+      consent_expires_at: consentExpiresAt,
+      account_matching: confirmation ? "owner-confirmed" : "automatic"
     }
   });
   await syncInitialBalances({ userId, bankConnectionId, psuHeaders });
@@ -108,7 +159,7 @@ async function markConnectionLinked(
     })
     .eq("id", input.bankConnectionId)
     .eq("user_id", input.userId)
-    .eq("status", "linking")
+    .eq("status", input.expectedStatus)
     .eq("provider_state", input.providerState ?? "")
     .select("id")
     .single();
@@ -124,6 +175,7 @@ type CompleteConnectionInput = {
   session: EnableBankingAuthorizeSessionResponse;
   psuHeaders?: EnableBankingPsuHeaders;
   providerState: string | null;
+  expectedStatus: string;
 };
 
 async function syncInitialBalances(

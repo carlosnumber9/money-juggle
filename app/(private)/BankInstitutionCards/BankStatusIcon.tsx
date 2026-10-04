@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip } from "@/components/ui/tooltip";
@@ -44,6 +45,16 @@ export function BankStatusIcon({ card }: { card: BankInstitutionCard }) {
     return () => window.clearTimeout(timeout);
   }, [card]);
 
+  if (liveCard.accountReviewUrl) {
+    return (
+      <Link
+        href={liveCard.accountReviewUrl}
+        className="absolute top-3 right-3 z-20 text-sm text-primary underline"
+      >
+        Revisar cuentas
+      </Link>
+    );
+  }
   if (canStartConnection(liveCard)) {
     return (
       <ConnectionForm

@@ -208,7 +208,8 @@ Some bank app-to-app flows can still return the HTTPS callback to the owner's
 default browser because a Home Screen web app cannot claim native Universal
 Links. The callback therefore ends on the public
 `/bank-connection-result` page, which reveals no account data and attempts to
-close a script-opened authorization window. If the callback lands in a regular
+close a script-opened authorization window only after success. Errors remain
+visible with an explicit close action and a link back to the dashboard. If the callback lands in a regular
 browser tab, it tells the owner to return through the Money Juggle Home Screen
 icon. While a card is `linking`, the private web app refreshes its server view
 when it becomes visible, receives focus, or is restored from page history, so a
@@ -485,7 +486,7 @@ starting authorization, then reuses the connection with a fresh callback state
 and start timestamp. The original connection creation date and consent events
 remain intact.
 
-Callbacks match returned accounts using provider identification hashes, the
+Callbacks match returned accounts using the primary provider identification hash, the
 server-generated IBAN fingerprint, or unchanged provider account IDs. They
 validate the complete matching plan before writing accounts. Ambiguous or
 unidentifiable historical accounts stop completion with `account-match-required`;
@@ -494,6 +495,41 @@ unchanged, preserving balances, transactions, categories, and labels. Accounts
 omitted from the new consent become inactive and are excluded from sync and
 current balance totals, while their historical transactions remain accessible.
 Provider identification hashes are retained in server-only connection metadata.
+Secondary hashes are not treated as unique identity evidence because the
+provider documents them as suitable for fuzzy matching.
+
+Legacy accounts may have neither a fingerprint nor a stored identification hash.
+Before matching them, the server reads `GET /sessions/{previous_session_id}` and
+recovers primary hashes from `accounts_data` by the exact historical provider
+account UID. It accepts only the expected institution and never relies on
+response order, account names, or last-four digits. A missing or inaccessible
+old session falls back to owner review rather than discarding the history.
+
+If matching still fails, connection metadata retains a sanitized pending session
+and a random review ID for a 15-minute review window, capped by consent expiry.
+Full IBANs, alternative account numbers, and raw detail strings are excluded;
+only server-generated fingerprints and last-four digits are kept alongside the
+server-only session ID and hashes. The connection remains `error` and excluded
+from synchronization. Callback logs distinguish `session-authorization`,
+`psu-headers`, `connection-completion`, and `account-matching`, with safe reason
+codes for missing, ambiguous, duplicate, or conflicting identities.
+
+The authenticated `/bank-connections/{id}/review` page lets the allowlisted owner
+explicitly select a historical account or declare a genuinely new account for
+each returned account. The callback result and dashboard both link to this page.
+The form uses native required selects and a checkbox for progressive enhancement
+before hydration; this is a scoped UI exception to the normal shadcn selection
+components. Prepared view data exposes only display fields, internal account
+IDs, and the opaque review ID, never provider session IDs, hashes, or full IBANs.
+Submission acquires the connection lease, verifies ownership, provider, pending
+review ID, deadline, consent validity and current provider session authorization,
+then validates every selection before account writes. Foreign accounts,
+duplicate selections, stale attempts, and overrides of known strong identities
+are rejected. Explicit confirmation is required because omitted historical
+accounts will become inactive. The completion event records whether matching
+was automatic or owner-confirmed. Success or a fresh authorization clears the
+pending review; expired review data cannot be used to complete a connection.
+
 Reconnection clears transaction freshness and rate-limit cooldown, and records a
 `reconnected` consent event. No schema or RLS changes are required.
 

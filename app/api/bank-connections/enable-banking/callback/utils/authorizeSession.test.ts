@@ -110,7 +110,10 @@ describe("authorizeAndCompleteSession", () => {
       expect.objectContaining({
         userId: "user-1",
         providerState: "state-1",
-        providerStatus: "account-match-required"
+        providerStatus: "account-match-required",
+        message:
+          "Enable Banking session was authorized but connection completion failed.",
+        metadata: { phase: "account-matching", reason: "missing-identity" }
       })
     );
   });

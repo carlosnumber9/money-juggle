@@ -46,7 +46,13 @@ export async function handleCallbackRequest(request: NextRequest) {
       requestHeaders: request.headers
     });
 
-    return redirectWithStatus(requestUrl, result.ok ? "linked" : result.status);
+    return redirectWithStatus(
+      requestUrl,
+      result.ok ? "linked" : result.status,
+      !result.ok && result.status === "account-match-required"
+        ? connection.id
+        : undefined
+    );
   } catch (error) {
     console.error(
       "Enable Banking callback failed",

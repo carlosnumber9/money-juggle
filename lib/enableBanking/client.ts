@@ -6,6 +6,7 @@ export {
   getEnableBankingAccountTransactions,
   getEnableBankingApplication,
   getEnableBankingAspsps,
+  getEnableBankingSession,
   startEnableBankingAuthorization
 } from "./client/endpoints";
 export {

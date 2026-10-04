@@ -31,3 +31,13 @@ export type EnableBankingAuthorizeSessionResponse = {
   psu_type: string;
   access: EnableBankingAccess;
 };
+
+export type EnableBankingSessionResponse = {
+  aspsp: { name: string; country: string };
+  status: string;
+  accounts_data?: Array<{
+    uid: string;
+    identification_hash: string;
+    identification_hashes?: string[];
+  }>;
+};

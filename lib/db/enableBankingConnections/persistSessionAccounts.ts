@@ -6,42 +6,58 @@ import { createSupabaseServiceRoleClient } from "@/lib/supabase/serviceRole";
 import { mapEnableBankingAccountToRow } from "./accountRow";
 import { matchSessionAccounts } from "./accountMatching";
 import { getRecord } from "./records";
+import { recoverAccountIdentifications } from "./recoverAccountIdentifications";
+import type { AccountIdentifiers } from "./pendingSession";
 
 export async function persistSessionAccounts(input: {
   userId: string;
   bankConnectionId: string;
   accounts: EnableBankingAccountResource[];
   providerMetadata: Record<string, unknown>;
+  previousSessionId?: string | null;
+  aspsp?: { name: string; country: string };
+  confirmedMatches?: Array<string | null>;
+  identifiers?: AccountIdentifiers[];
 }): Promise<Record<string, string[]>> {
   if (input.accounts.length === 0)
     throw new Error("No authorized accounts were returned.");
   const supabase = createSupabaseServiceRoleClient();
   const { data: stored, error: lookupError } = await supabase
     .from("accounts")
-    .select("id,provider_account_id,iban_fingerprint")
+    .select("id,provider_account_id,iban_fingerprint,iban_last4")
     .eq("user_id", input.userId)
     .eq("bank_connection_id", input.bankConnectionId);
   if (lookupError)
     throw new Error(
       `Could not load account identities: ${lookupError.message}`
     );
-  const storedHashes = getRecord(
-    input.providerMetadata.account_identifications
+  let storedHashes = getRecord(input.providerMetadata.account_identifications);
+  if (input.aspsp)
+    storedHashes = await recoverAccountIdentifications({
+      sessionId: input.previousSessionId,
+      aspsp: input.aspsp,
+      accounts: stored ?? [],
+      identities: storedHashes
+    });
+  const mappedRows = input.accounts.map((account, index) => ({
+    ...mapEnableBankingAccountToRow({ ...input, account }),
+    ...input.identifiers?.[index]
+  }));
+  const hashes = input.accounts.map((account) =>
+    account.identification_hash
+      ? [
+          ...new Set(
+            [
+              account.identification_hash,
+              ...(account.identification_hashes ?? [])
+            ].filter(
+              (value): value is string =>
+                typeof value === "string" && value.length > 0
+            )
+          )
+        ]
+      : []
   );
-  const mappedRows = input.accounts.map((account) =>
-    mapEnableBankingAccountToRow({ ...input, account })
-  );
-  const hashes = input.accounts.map((account) => [
-    ...new Set(
-      [
-        account.identification_hash,
-        ...(account.identification_hashes ?? [])
-      ].filter(
-        (value): value is string =>
-          typeof value === "string" && value.length > 0
-      )
-    )
-  ]);
   const matches = matchSessionAccounts(
     (stored ?? []).map((account) => ({
       ...account,
@@ -50,12 +66,18 @@ export async function persistSessionAccounts(input: {
     mappedRows.map((row, index) => ({
       ...row,
       identificationHashes: hashes[index]
-    }))
+    })),
+    input.confirmedMatches
   );
   const rows = mappedRows.map((row, index) => ({
     ...row,
     id: matches[index] ?? randomUUID()
   }));
+  rows.forEach((row) => {
+    const previous = (stored ?? []).find((account) => account.id === row.id);
+    row.iban_fingerprint ??= previous?.iban_fingerprint ?? null;
+    row.iban_last4 ??= previous?.iban_last4 ?? null;
+  });
   const { error } = await supabase
     .from("accounts")
     .upsert(rows, { onConflict: "id", defaultToNull: false });
@@ -82,7 +104,7 @@ export async function persistSessionAccounts(input: {
   );
   rows.forEach((row, index) => {
     identities[row.id] = [
-      ...new Set([...readHashes(storedHashes[row.id]), ...hashes[index]])
+      ...new Set([...hashes[index], ...readHashes(storedHashes[row.id])])
     ];
   });
   return identities;
