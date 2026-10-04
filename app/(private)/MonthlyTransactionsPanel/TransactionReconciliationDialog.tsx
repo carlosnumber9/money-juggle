@@ -482,9 +482,9 @@ export function TransactionReconciliationDialog({
               {selected.map((transaction) => (
                 <li
                   key={transaction.id}
-                  className="flex items-start justify-between gap-3 text-sm"
+                  className="flex min-w-0 flex-col gap-1 text-sm sm:flex-row sm:items-start sm:justify-between sm:gap-3"
                 >
-                  <span className="line-clamp-2 min-w-0">
+                  <span className="min-w-0 break-words">
                     {getCandidateConcept(transaction)}
                   </span>
                   <span className="shrink-0 font-medium tabular-nums">
@@ -536,7 +536,7 @@ export function TransactionReconciliationDialog({
           </div>
 
           <footer className="border-t border-border bg-popover p-4 md:p-5">
-            <div className="flex items-end justify-between gap-4">
+            <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
                   Balance
@@ -605,7 +605,7 @@ function ReconciliationSurface({
       <DialogContent
         aria-labelledby="transaction-reconciliation-title"
         showCloseButton={false}
-        className="flex max-h-[calc(100dvh-2rem)] w-[min(58rem,calc(100%-2rem))] max-w-none flex-col gap-0 overflow-hidden p-0"
+        className="flex max-h-[calc(100dvh-2rem)] w-[min(76rem,calc(100%-2rem))] max-w-none flex-col gap-0 overflow-hidden p-0 sm:max-w-none"
       >
         {children}
       </DialogContent>
@@ -628,7 +628,7 @@ function CandidateRow({
   const labels = candidate.labels.map((label) => label.name).join(", ");
 
   return (
-    <label className="flex cursor-pointer gap-3 border-b border-border/70 px-5 py-4 hover:bg-muted/40">
+    <label className="flex cursor-pointer gap-3 border-b border-border/70 px-4 py-4 hover:bg-muted/40 md:px-5">
       <Checkbox
         checked={checked}
         disabled={locked}
@@ -639,13 +639,13 @@ function CandidateRow({
         {candidate.institutionName.trim().charAt(0).toUpperCase() || "?"}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="flex items-start justify-between gap-3">
-          <span className="line-clamp-2 font-medium">{concept}</span>
+        <span className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+          <span className="min-w-0 font-medium break-words">{concept}</span>
           <span className="shrink-0 font-semibold tabular-nums">
             {formatCurrency(candidate.amount, candidate.currency)}
           </span>
         </span>
-        <span className="mt-1 block text-xs text-muted-foreground">
+        <span className="mt-1 block text-xs break-words text-muted-foreground">
           {candidate.reportingDate ?? "Sin fecha"} · {candidate.institutionName}{" "}
           · {candidate.accountName}
           {candidate.accountIbanLast4
@@ -659,7 +659,7 @@ function CandidateRow({
             </span>
           ) : null}
           {labels ? (
-            <span className="max-w-56 truncate bg-muted px-2 py-1 text-xs text-muted-foreground">
+            <span className="min-w-0 bg-muted px-2 py-1 text-xs break-words text-muted-foreground">
               {labels}
             </span>
           ) : null}

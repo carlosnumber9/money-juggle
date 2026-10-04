@@ -1612,6 +1612,9 @@ Implemented outcome:
 - The desktop flow uses a centered shadcn dialog. Narrow screens use a
   borderless bottom sheet that leaves the app visible above it and supports
   swipe-down dismissal.
+- The editor grows up to 76rem and the review dialog up to 64rem, both within
+  the viewport margins. Narrow screens stack movement concepts and amounts,
+  allow labels to wrap, and use a single column for review details.
 - The owner can review, edit, or permanently delete a reconciliation. Deleting
   it restores the original movements to reports unless another neutrality rule
   applies.

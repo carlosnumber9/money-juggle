@@ -138,7 +138,7 @@ export function TransactionReconciliationDetailDialog({
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         showCloseButton={false}
-        className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-xl"
+        className="max-h-[calc(100dvh-2rem)] w-[min(64rem,calc(100%-2rem))] max-w-none overflow-y-auto p-4 sm:max-w-none sm:p-6"
       >
         <button
           type="button"
@@ -178,7 +178,7 @@ export function TransactionReconciliationDetailDialog({
               </div>
             ) : null}
 
-            <dl className="grid grid-cols-2 gap-5">
+            <dl className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               <DetailItem label="Tipo" value={KIND_LABELS[detail.kind]} />
               <DetailItem
                 label="Balance actual"
@@ -209,7 +209,7 @@ export function TransactionReconciliationDetailDialog({
                 />
               ) : null}
               {detail.note ? (
-                <div className="col-span-2">
+                <div className="col-span-full">
                   <DetailItem label="Nota" value={detail.note} />
                 </div>
               ) : null}
@@ -223,13 +223,13 @@ export function TransactionReconciliationDetailDialog({
                 {detail.members.map((member) => (
                   <li
                     key={member.id}
-                    className="flex justify-between gap-4 py-3 text-sm"
+                    className="flex min-w-0 flex-col gap-2 py-3 text-sm sm:flex-row sm:justify-between sm:gap-4"
                   >
                     <span className="min-w-0">
-                      <span className="line-clamp-2 font-medium">
+                      <span className="font-medium break-words">
                         {getMemberConcept(member)}
                       </span>
-                      <span className="mt-1 block text-xs text-muted-foreground">
+                      <span className="mt-1 block text-xs break-words text-muted-foreground">
                         {member.reportingDate ?? "Sin fecha"} ·{" "}
                         {member.institutionName}
                       </span>
@@ -278,11 +278,11 @@ export function TransactionReconciliationDetailDialog({
 
 function DetailItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="grid gap-1">
+    <div className="grid min-w-0 gap-1">
       <dt className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
         {label}
       </dt>
-      <dd className="text-sm leading-relaxed">{value}</dd>
+      <dd className="text-sm leading-relaxed break-words">{value}</dd>
     </div>
   );
 }
