@@ -1781,3 +1781,47 @@ Possible future revisit trigger:
 
 - If the report needs to distinguish savings contributions, withdrawals, and
   cumulative savings balance as separate series.
+
+## ADR-047: Export A Monthly Aggregate Workbook From Saved Data
+
+Status:
+
+- Accepted and implemented.
+
+Context:
+
+- The owner wants a monthly financial summary for an Obsidian vault without
+  importing individual transactions.
+- Existing dashboard cards and charts intentionally use different reporting
+  rules and cannot supply the complete workbook totals directly.
+- The initial five-sheet brief was refined to three compact sheets and existing
+  data, without new financial capture workflows.
+
+Decision:
+
+- Export `Resumen`, `Categorías`, and `Cuentas` from authenticated, owner-scoped,
+  paginated Supabase reads using RLS. Do not refresh banks during export.
+- Net known categories economically, respect configured reconciliation residuals,
+  exclude internal/savings/investment/cash flows, and keep uncategorized net
+  balances separate from income and expenses. Do not change dashboard calculations.
+- Keep economic dates separate from booked bank dates. Show historical balances
+  with their real dates and explicitly disclose unverified coverage.
+- Generate XLSX server-side in memory with MIT-licensed `write-excel-file`.
+  Use numeric money cells, real date cells, stable Spanish headers, and literal
+  owner-controlled text. Do not export raw transaction or provider identifiers.
+- Default to the previous month and `Finanzas-YYYY-MM.xlsx`. Allow a provisional
+  current month. Do not add report storage, migrations, or vault integration.
+
+Consequences:
+
+- Export calculations are independently testable while reusing decimal,
+  transfer-detection, and reconciliation rules.
+- Missing recurrence, reserves, loans, and portfolio data remain explicit
+  limitations, rather than inferred facts.
+- The workbook may differ from current dashboard totals. Its detailed contract
+  is documented in `docs/monthly-excel-export.md`.
+
+Possible future revisit trigger:
+
+- If the owner needs verified period coverage, report snapshots, portfolio data,
+  recurring commitments, or aligned dashboard calculations.

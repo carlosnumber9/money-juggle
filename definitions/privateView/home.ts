@@ -29,6 +29,7 @@ export type PrivateHomeView =
       providerStatus: ProviderStatusView;
       bankCards: BankInstitutionCard[];
       dashboardSyncEnabled: boolean;
+      monthlyExportPeriod: { defaultMonth: string; currentMonth: string };
       transactionBackfill: TransactionBackfillView;
       selectedMonth: MonthlyPeriodView;
       monthlyCashflow: MonthlyCashflowSummary;

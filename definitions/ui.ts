@@ -7,6 +7,7 @@ export type TooltipProps = {
   triggerType?: "button" | "submit";
   triggerClassName?: string;
   triggerDisabled?: boolean;
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
 };
 
 export type CardProps = React.ComponentProps<"div"> & {

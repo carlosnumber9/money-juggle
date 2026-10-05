@@ -14,12 +14,14 @@ import {
 import { requestSync } from "./DashboardSyncControls/requests";
 
 import { useSyncActivity } from "./SyncActivityProvider";
+import { MonthlyExportButton } from "./MonthlyExport/MonthlyExportButton";
 
 type ActiveOperation = "refresh" | "backfill" | null;
 
 export function DashboardSyncControls({
   enabled,
-  backfill
+  backfill,
+  exportPeriod
 }: DashboardSyncControlsProps) {
   const router = useRouter();
   const { beginSync } = useSyncActivity();
@@ -122,10 +124,6 @@ export function DashboardSyncControls({
     }
   }
 
-  if (!enabled && backfill.status === "hidden") {
-    return null;
-  }
-
   const isBusy = activeOperation !== null;
   const notices = [
     ...getSyncNotices(refreshResult, "refresh"),
@@ -147,6 +145,11 @@ export function DashboardSyncControls({
           {notice.message}
         </p>
       ))}
+      <MonthlyExportButton
+        defaultMonth={exportPeriod.defaultMonth}
+        currentMonth={exportPeriod.currentMonth}
+        disabled={isBusy}
+      />
       {enabled ? (
         <Button
           type="button"

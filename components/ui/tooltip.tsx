@@ -11,7 +11,8 @@ function Tooltip({
   triggerLabel,
   triggerType = "button",
   triggerClassName,
-  triggerDisabled = false
+  triggerDisabled = false,
+  onClick
 }: TooltipProps) {
   return (
     <TooltipPrimitive.Provider delay={150} closeDelay={100}>
@@ -20,6 +21,7 @@ function Tooltip({
           type={triggerType}
           aria-label={triggerLabel}
           disabled={triggerDisabled}
+          onClick={onClick}
           closeOnClick={false}
           className={cn(
             "inline-flex size-10 items-center justify-center rounded-md border border-border bg-background text-foreground transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-70",

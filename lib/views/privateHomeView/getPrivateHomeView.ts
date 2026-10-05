@@ -2,6 +2,7 @@ import "server-only";
 
 import type { PrivateHomeView, ProviderStatusView } from "@/definitions";
 import { bankingDataSource } from "@/lib/data/bankingDataSource";
+import { getDefaultExportMonth } from "@/lib/reports/monthlyExport/period";
 import {
   getCurrentYearTransactionRange,
   getSelectedTransactionMonth
@@ -93,6 +94,10 @@ export async function getPrivateHomeView(
       connectionsResult,
       providerStatus
     }),
+    monthlyExportPeriod: {
+      defaultMonth: getDefaultExportMonth(),
+      currentMonth: getSelectedTransactionMonth().value
+    },
     transactionBackfill: buildTransactionBackfillView({
       connectionsResult,
       completedConnectionIdsResult: completedBackfillConnectionIdsResult,

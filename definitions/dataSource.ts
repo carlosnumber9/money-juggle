@@ -124,6 +124,10 @@ export type MonthlyTransactionRange = {
 };
 
 export type BankingDataSource = {
+  getMonthlyReportData(
+    userId: string,
+    range: MonthlyTransactionRange
+  ): Promise<import("./monthlyReport").MonthlyReportData>;
   getCurrentUser(): Promise<AppUser | null>;
   getProviderApplication(): Promise<ProviderApplication>;
   listAvailableInstitutions(): Promise<InstitutionAvailability[]>;

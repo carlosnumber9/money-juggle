@@ -48,6 +48,7 @@ export default async function Home({ searchParams }: PrivateHomePageProps) {
           <DashboardSyncControls
             enabled={view.dashboardSyncEnabled}
             backfill={view.transactionBackfill}
+            exportPeriod={view.monthlyExportPeriod}
           />
         </TabsContent>
         <TabsContent value="transactions" keepMounted>

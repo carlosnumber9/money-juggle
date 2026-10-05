@@ -26,6 +26,7 @@ export type BankConnectionsPanelProps = {
 export type DashboardSyncControlsProps = {
   enabled: boolean;
   backfill: TransactionBackfillView;
+  exportPeriod: { defaultMonth: string; currentMonth: string };
 };
 
 export type MonthlyCashflowCardsProps = {

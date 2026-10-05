@@ -22,8 +22,12 @@ import {
   getEnableBankingAspsps
 } from "@/lib/enableBanking/client";
 import { getCurrentSupabaseUser } from "@/lib/supabase/currentUser";
+import { getMonthlyReportData } from "@/lib/db/monthlyReportData";
 
 export const bankingDataSource: BankingDataSource = {
+  async getMonthlyReportData(userId, range) {
+    return getMonthlyReportData(userId, range);
+  },
   async getCurrentUser() {
     const user = await getCurrentSupabaseUser();
 
