@@ -981,6 +981,8 @@ Decision:
 - Calculate the chart from cached transaction rows for the current year.
 - Keep income and expense values as view-model output, with expenses shown as
   positive spending amounts.
+- Net categorized movements within each reporting month as specified in
+  ADR-048 instead of totaling each movement independently by sign.
 - Show `Progreso anual` as the chart title and use the subtitle for total
   income and total spending in the selected currency.
 - Keep permanent point markers hidden; only interactive points should appear on
@@ -1354,7 +1356,8 @@ Decision:
 - Include a category in the radar only when its final net spending is strictly
   greater than zero.
 - Calculate the radar summary total and transaction count from those included
-  net-spending categories so the description matches the plotted data.
+  net-spending categories. ADR-048 removes the visible subtotal while retaining
+  the prepared summary fields.
 
 Consequences:
 
@@ -1825,6 +1828,63 @@ Possible future revisit trigger:
 
 - If the owner needs verified period coverage, report snapshots, portfolio data,
   recurring commitments, or aligned dashboard calculations.
+
+## ADR-048: Net Monthly Evolution By Category And Remove The Radar Subtotal
+
+Status:
+
+- Accepted and implemented.
+
+Context:
+
+- The annual evolution chart previously counted a category charge as spending
+  and its refund as income, overstating both lines. A restaurant charge of
+  EUR 200 and a refund of EUR 20 in the same month should contribute EUR 180
+  to expenses and no income.
+- The category radar intentionally excludes some categories and uncategorized
+  movements. Its subtotal can be mistaken for the month's complete spending.
+
+Decision:
+
+- Group categorized reportable movements by `reporting_date` month and category
+  ID across accounts, within the existing selected reporting currency.
+- Sum signed amounts using the existing exact decimal arithmetic. A negative
+  category balance contributes its absolute value to expenses, a positive
+  balance contributes to income, and zero contributes to neither line.
+- Keep categories and reporting months separate. Income in one category does
+  not offset another category's expense; a refund in a later month does not
+  revise an earlier month's spending.
+- Preserve independent income and expense treatment for uncategorized
+  movements because their shared financial context is unknown.
+- Keep the annual chart's complete category scope, including categories
+  excluded by the radar. Preserve financial-neutrality rules, reportable
+  reconciliation differences, currency selection, and savings handling.
+  Positive savings transfers remain excluded from income before netting;
+  eligible negative savings movements retain their existing expense treatment.
+- Reuse `buildReportingMovementSet`, decimal helpers, and savings rules. Extract
+  the radar's signed category aggregation into `buildCategoryTotals` and share
+  it with monthly evolution while keeping each chart's eligibility rules.
+- Calculate the annual subtitle by summing the resulting monthly income and
+  expense values. Keep transaction counts based on eligible non-zero movements.
+- Remove the category radar's spending subtitle. Keep its title, month
+  navigation, plotted net values, and error feedback; render no empty subtitle
+  element when a chart has no description.
+
+Consequences:
+
+- Same-month category refunds and income reversals reduce the corresponding
+  net totals without also appearing independently in the opposite line.
+- Annual evolution and the category radar continue to have different scopes.
+  Monthly dashboard cards, labeled reports, and Excel exports retain their
+  existing calculation rules.
+- No persistence, authentication, ownership, RLS, or provider changes are needed.
+- Verification uses unit tests and static checks. The local app was not started
+  because browser-based local testing was not requested.
+
+Possible future revisit trigger:
+
+- If the owner wants refunds allocated to the original expense period or
+  consistent calculation rules across all reports and dashboard cards.
 
 ## Transaction Navigation and Browser Cache
 
