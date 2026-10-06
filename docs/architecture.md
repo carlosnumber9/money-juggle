@@ -86,6 +86,31 @@ alone reads annual movements and adjustments. Inactive panels are not mounted,
 so a hidden Dashboard cannot start its automatic synchronization. Tab changes
 update the URL while retaining the selected month.
 
+`HomeTabs` selects the requested tab immediately, before server navigation
+finishes. A client navigation store blocks competing tab selections while the
+React transition is pending. Other tab buttons are disabled for both pointer
+and keyboard input; the selected tab remains visually active. Completed
+navigation reconciles the selection with the server, including browser history
+changes and interrupted transitions.
+
+The tab panel and its shared `LoadingOverlay` remain mounted across section
+changes. Outgoing content unmounts as soon as a tab is selected, and only the
+completed section's content mounts when its response is ready. The overlay
+retains the previous content height with a 320 px minimum and reuses the
+transaction list's Liquid Orb, 500 ms fades, and reduced-motion/GPU fallbacks.
+Cached responses do not incur an artificial loading delay. Monthly transaction
+loading continues to use the same overlay through `TransactionListLoading`.
+
+The Base UI tab list owns one persistent underline indicator. Its position uses
+`transform: translateX(...)`, and its transform and width animate for 200 ms.
+Reduced motion disables the transition. This explicit transform is required
+because Tailwind 4 translation utilities set the separate CSS `translate`
+property, which a `transform`-only transition does not animate.
+
+Navigation state and overlay timing are verified with unit tests. Local app
+startup was not requested, so section transitions and shader appearance still
+need visual verification when browser-based testing is authorized.
+
 The current private home view is prepared under `lib/views/privateHomeView/`.
 It loads provider status, bank card state, selected-month transactions,
 transaction category groups, and active transaction labels before the route

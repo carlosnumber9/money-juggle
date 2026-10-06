@@ -35,7 +35,10 @@ function TabsList({
       {children}
       <TabsPrimitive.Indicator
         data-slot="tabs-indicator"
-        className="absolute bottom-0 left-0 h-0.5 w-[calc(var(--active-tab-width)-1.5rem)] translate-x-[calc(var(--active-tab-left)+0.75rem)] rounded-full bg-primary transition-[transform,width] duration-200 ease-out"
+        className="pointer-events-none absolute bottom-0 left-0 h-0.5 w-[calc(var(--active-tab-width)-1.5rem)] rounded-full bg-primary transition-[transform,width] duration-200 ease-out motion-reduce:transition-none"
+        style={{
+          transform: "translateX(calc(var(--active-tab-left) + 0.75rem))"
+        }}
       />
     </TabsPrimitive.List>
   );

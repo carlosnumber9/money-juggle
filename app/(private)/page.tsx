@@ -6,7 +6,6 @@ import { EnableBankingStatus } from "@/app/(private)/EnableBankingStatus";
 import { MonthlyCashflowCards } from "@/app/(private)/MonthlyCashflowCards";
 import { MonthlyEvolutionPanel } from "@/app/(private)/MonthlyEvolutionPanel";
 import { TransactionsMonthPanel } from "./TransactionsMonthPanel";
-import { TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HomeTabs } from "./HomeTabs";
 import type { PrivateHomePageProps } from "@/definitions";
 import { getPrivateHomeView } from "@/lib/views/privateHomeView";
@@ -27,20 +26,17 @@ export default async function Home({ searchParams }: PrivateHomePageProps) {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-6 py-14">
-      <HomeTabs selectedTab={selectedTab}>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <HomeTabs
+        selectedTab={selectedTab}
+        heading={
           <div className="flex min-w-0 items-center gap-2">
             <EnableBankingStatus status={view.providerStatus} />
             <h1 className="min-w-0 text-3xl leading-tight">Tus cuentas</h1>
           </div>
-          <TabsList aria-label="Secciones de tus cuentas">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="transactions">Transacciones</TabsTrigger>
-            <TabsTrigger value="evolution">Evolución</TabsTrigger>
-          </TabsList>
-        </div>
+        }
+      >
         {view.tab === "dashboard" && (
-          <TabsContent value="dashboard" className="mt-0">
+          <>
             <MonthlyCashflowCards
               summary={view.monthlyCashflow}
               selectedMonth={view.selectedMonth}
@@ -52,27 +48,21 @@ export default async function Home({ searchParams }: PrivateHomePageProps) {
               backfill={view.transactionBackfill}
               exportPeriod={view.monthlyExportPeriod}
             />
-          </TabsContent>
+          </>
         )}
         {view.tab === "transactions" && (
-          <TabsContent value="transactions">
-            <TransactionsMonthPanel initialData={view.monthlyTransactions} />
-          </TabsContent>
+          <TransactionsMonthPanel initialData={view.monthlyTransactions} />
         )}
         {view.tab === "evolution" && (
-          <TabsContent value="evolution">
-            <MonthlyEvolutionPanel
-              evolution={view.monthlyEvolution.summary}
-              categoryExpenses={view.monthlyEvolution.categoryExpenses}
-              labelExpenses={view.monthlyEvolution.labelExpenses}
-              selectedMonth={view.selectedMonth}
-              error={view.monthlyEvolution.error}
-              categoryExpensesError={
-                view.monthlyEvolution.categoryExpensesError
-              }
-              labelExpensesError={view.monthlyEvolution.labelExpensesError}
-            />
-          </TabsContent>
+          <MonthlyEvolutionPanel
+            evolution={view.monthlyEvolution.summary}
+            categoryExpenses={view.monthlyEvolution.categoryExpenses}
+            labelExpenses={view.monthlyEvolution.labelExpenses}
+            selectedMonth={view.selectedMonth}
+            error={view.monthlyEvolution.error}
+            categoryExpensesError={view.monthlyEvolution.categoryExpensesError}
+            labelExpensesError={view.monthlyEvolution.labelExpensesError}
+          />
         )}
       </HomeTabs>
     </main>
