@@ -3,8 +3,12 @@ import type {
   MonthlyTransactionSummary,
   TransactionReconciliationAdjustment
 } from "@/definitions";
-import { buildReportingMovementSet } from "@/lib/domain/reportingMovements";
+import {
+  buildReportingMovementSet,
+  type ReportingMovement
+} from "@/lib/domain/reportingMovements";
 
+import { buildCategoryTotals } from "./categoryTotals";
 import { formatDecimal, parseDecimal } from "./decimal";
 
 const EXCLUDED_CATEGORY_SLUGS = new Set([
@@ -27,15 +31,7 @@ export function buildMonthlyCategoryExpensesSummary({
 }): MonthlyCategoryExpensesSummary {
   const reporting = buildReportingMovementSet({ transactions, adjustments });
   const currency = getPrimaryCurrency(reporting.movements) ?? "EUR";
-  const totalsByCategory = new Map<
-    string,
-    {
-      categoryName: string;
-      categoryGroupName: string;
-      expenses: bigint;
-      transactionCount: number;
-    }
-  >();
+  const categorizedMovements: ReportingMovement[] = [];
   let uncategorizedExpenseCount = 0;
   const excludedInternalTransferCount = reporting.excludedTransactions.filter(
     ({ transaction, reason }) =>
@@ -67,30 +63,18 @@ export function buildMonthlyCategoryExpensesSummary({
       continue;
     }
 
-    const expenses = -amount;
-    const current = totalsByCategory.get(transaction.category.id) ?? {
-      categoryName: transaction.category.name,
-      categoryGroupName: transaction.category.group.name,
-      expenses: 0n,
-      transactionCount: 0
-    };
-
-    totalsByCategory.set(transaction.category.id, {
-      ...current,
-      expenses: current.expenses + expenses,
-      transactionCount: current.transactionCount + 1
-    });
+    categorizedMovements.push(transaction);
   }
 
-  const reportableCategoryTotals = Array.from(
-    totalsByCategory.entries()
-  ).filter(([, total]) => total.expenses > 0n);
+  const reportableCategoryTotals = buildCategoryTotals(
+    categorizedMovements
+  ).filter((total) => total.amount < 0n);
   const totalExpenses = reportableCategoryTotals.reduce(
-    (sum, [, total]) => sum + total.expenses,
+    (sum, total) => sum - total.amount,
     0n
   );
   const transactionCount = reportableCategoryTotals.reduce(
-    (count, [, total]) => count + total.transactionCount,
+    (count, total) => count + total.transactionCount,
     0
   );
 
@@ -98,24 +82,24 @@ export function buildMonthlyCategoryExpensesSummary({
     monthLabel: formatMonthLabel(periodStart),
     currency,
     points: reportableCategoryTotals
-      .sort(([, leftTotal], [, rightTotal]) => {
+      .sort((leftTotal, rightTotal) => {
         const expenseDifference =
-          rightTotal.expenses > leftTotal.expenses
+          rightTotal.amount < leftTotal.amount
             ? 1
-            : rightTotal.expenses < leftTotal.expenses
+            : rightTotal.amount > leftTotal.amount
               ? -1
               : 0;
 
         return (
           expenseDifference ||
-          leftTotal.categoryName.localeCompare(rightTotal.categoryName)
+          leftTotal.category.name.localeCompare(rightTotal.category.name)
         );
       })
-      .map(([categoryId, total]) => ({
-        categoryId,
-        categoryName: total.categoryName,
-        categoryGroupName: total.categoryGroupName,
-        expenses: Number(formatDecimal(total.expenses)),
+      .map((total) => ({
+        categoryId: total.category.id,
+        categoryName: total.category.name,
+        categoryGroupName: total.category.group.name,
+        expenses: Number(formatDecimal(-total.amount)),
         transactionCount: total.transactionCount
       })),
     totalExpenses: Number(formatDecimal(totalExpenses)),

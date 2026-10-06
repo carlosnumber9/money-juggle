@@ -4,9 +4,13 @@ import type {
   TransactionReconciliationAdjustment
 } from "@/definitions";
 import { isExcludedFromIncomeReports } from "@/lib/domain/incomeReporting";
-import { buildReportingMovementSet } from "@/lib/domain/reportingMovements";
+import {
+  buildReportingMovementSet,
+  type ReportingMovement
+} from "@/lib/domain/reportingMovements";
 import { isSavingsTransferCategory } from "@/lib/domain/savingsTransfers";
 
+import { buildCategoryTotals } from "./categoryTotals";
 import { formatDecimal, parseDecimal } from "./decimal";
 
 const MONTH_LABELS = [
@@ -55,6 +59,9 @@ export function buildMonthlyEvolutionSummary({
     expenses: 0n,
     savings: 0n
   }));
+  const categorizedMovementsByMonth = MONTH_LABELS.map(
+    (): ReportingMovement[] => []
+  );
   let transactionCount = 0;
   let excludedInternalTransferCount = 0;
 
@@ -77,12 +84,27 @@ export function buildMonthlyEvolutionSummary({
 
     transactionCount += 1;
 
+    if (transaction.category) {
+      categorizedMovementsByMonth[monthIndex].push(transaction);
+      continue;
+    }
+
     if (amount > 0n) {
       totals[monthIndex].income += amount;
       continue;
     }
 
     totals[monthIndex].expenses += -amount;
+  }
+
+  for (const [monthIndex, movements] of categorizedMovementsByMonth.entries()) {
+    for (const total of buildCategoryTotals(movements)) {
+      if (total.amount > 0n) {
+        totals[monthIndex].income += total.amount;
+      } else {
+        totals[monthIndex].expenses -= total.amount;
+      }
+    }
   }
 
   for (const transaction of savingsMovements) {
