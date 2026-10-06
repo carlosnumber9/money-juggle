@@ -27,6 +27,14 @@ export function MonthNavigation({
 
     nextSearchParams.set("month", month);
     nextSearchParams.set("tab", tab);
+    if (tab === "transactions") {
+      window.history.pushState(
+        null,
+        "",
+        `${pathname}?${nextSearchParams.toString()}`
+      );
+      return;
+    }
     startTransition(() => {
       router.push(`${pathname}?${nextSearchParams.toString()}`, {
         scroll: false

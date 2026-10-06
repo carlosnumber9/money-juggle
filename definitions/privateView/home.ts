@@ -24,6 +24,11 @@ export type MonthlyTransactionsView = {
   error: string | null;
 };
 
+export type TransactionMonthData = MonthlyTransactionsView & {
+  selectedMonth: MonthlyPeriodView;
+  loadedAt: number;
+};
+
 export type MonthlyEvolutionView = {
   summary: MonthlyEvolutionSummary;
   error: string | null;
@@ -45,7 +50,7 @@ export type PrivateHomeView =
   | { kind: "forbidden" }
   | (ReadyHomeView & {
       tab: "transactions";
-      monthlyTransactions: MonthlyTransactionsView;
+      monthlyTransactions: TransactionMonthData;
     })
   | (ReadyHomeView & {
       tab: "dashboard";

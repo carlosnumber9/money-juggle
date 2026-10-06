@@ -5,7 +5,7 @@ import { DashboardSyncControls } from "@/app/(private)/DashboardSyncControls";
 import { EnableBankingStatus } from "@/app/(private)/EnableBankingStatus";
 import { MonthlyCashflowCards } from "@/app/(private)/MonthlyCashflowCards";
 import { MonthlyEvolutionPanel } from "@/app/(private)/MonthlyEvolutionPanel";
-import { MonthlyTransactionsPanel } from "@/app/(private)/MonthlyTransactionsPanel";
+import { TransactionsMonthPanel } from "./TransactionsMonthPanel";
 import { TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HomeTabs } from "./HomeTabs";
 import type { PrivateHomePageProps } from "@/definitions";
@@ -56,14 +56,7 @@ export default async function Home({ searchParams }: PrivateHomePageProps) {
         )}
         {view.tab === "transactions" && (
           <TabsContent value="transactions">
-            <MonthlyTransactionsPanel
-              key={view.selectedMonth.value}
-              transactions={view.monthlyTransactions.rows}
-              categoryGroups={view.monthlyTransactions.categoryGroups}
-              labels={view.monthlyTransactions.labels}
-              selectedMonth={view.selectedMonth}
-              error={view.monthlyTransactions.error}
-            />
+            <TransactionsMonthPanel initialData={view.monthlyTransactions} />
           </TabsContent>
         )}
         {view.tab === "evolution" && (

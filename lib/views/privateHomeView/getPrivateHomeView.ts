@@ -8,6 +8,8 @@ import {
   getSelectedTransactionMonth
 } from "@/lib/domain/transactionRanges";
 
+import { getTransactionMonthView } from "../transactionMonthView";
+
 import { buildBankCards } from "./buildBankCards";
 import { loadConnections } from "./loadConnections";
 import {
@@ -15,9 +17,7 @@ import {
   loadInstitutions,
   loadMonthlyTransactions,
   loadProviderStatus,
-  loadTransactionCategoryGroups,
-  loadTransactionReconciliationAdjustments,
-  loadTransactionLabels
+  loadTransactionReconciliationAdjustments
 } from "./loaders";
 import { buildAnnualLabelExpensesSummary } from "./annualLabelExpenses";
 import { buildMonthlyCashflowSummary } from "./monthlyCashflow";
@@ -45,40 +45,19 @@ export async function getPrivateHomeView(
     user: { id: user.id, email: user.email },
     selectedMonth
   };
+  if (tab === "transactions") {
+    const [monthlyTransactions, providerStatus] = await Promise.all([
+      getTransactionMonthView(user.id, requestedMonth, dataSource),
+      providerPromise
+    ]);
+    return { ...common, tab, providerStatus, monthlyTransactions };
+  }
+
   const transactionsPromise = loadMonthlyTransactions(
     dataSource,
     user.id,
     selectedMonth.range
   );
-
-  if (tab === "transactions") {
-    const [transactions, categories, labels, providerStatus] =
-      await Promise.all([
-        transactionsPromise,
-        loadTransactionCategoryGroups(dataSource, user.id),
-        loadTransactionLabels(dataSource, user.id),
-        providerPromise
-      ]);
-    return {
-      ...common,
-      tab,
-      providerStatus,
-      monthlyTransactions: {
-        range: selectedMonth.range,
-        rows: transactions.ok ? transactions.value : [],
-        categoryGroups: categories.ok ? categories.value : [],
-        labels: labels.ok ? labels.value : [],
-        error: !transactions.ok
-          ? transactions.reason
-          : !categories.ok
-            ? categories.reason
-            : !labels.ok
-              ? labels.reason
-              : null
-      }
-    };
-  }
-
   const adjustmentsPromise = loadTransactionReconciliationAdjustments(
     dataSource,
     user.id,

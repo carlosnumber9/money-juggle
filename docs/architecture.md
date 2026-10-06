@@ -113,8 +113,13 @@ The private UI is split into three tabs:
   shadcn/Recharts.
 
 The selected month is shared by transaction rows, cashflow cards, and the
-category expense radar. Moving between periods updates the URL and queries only
-cached Supabase rows; it does not trigger historical Enable Banking requests.
+category expense radar. Transactions updates the month through the native History API and reads only
+`GET /api/transactions/month`. The initial page and endpoint share the same
+server-side monthly view. The endpoint validates session and allowlist, derives
+ownership from the session, and reads Supabase through RLS. Its responses are
+private and not HTTP-cached. It never calls Enable Banking. Evolution continues
+to use server navigation. Moving between periods does not trigger historical
+Enable Banking requests.
 The annual evolution line, labeled-expense radial, and annual savings line do
 not change with the selected month.
 

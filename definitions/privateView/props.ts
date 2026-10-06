@@ -36,6 +36,7 @@ export type MonthlyCashflowCardsProps = {
 };
 
 export type MonthlyTransactionsPanelProps = {
+  loading?: boolean;
   transactions: import("../dataSource").MonthlyTransactionSummary[];
   categoryGroups: import("../dataSource").TransactionCategoryGroupSummary[];
   labels: import("../dataSource").TransactionLabelSummary[];

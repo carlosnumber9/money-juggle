@@ -36,7 +36,8 @@ export function MonthlyTransactionsPanel({
   categoryGroups,
   labels,
   selectedMonth,
-  error
+  error,
+  loading = false
 }: MonthlyTransactionsPanelProps) {
   const [displayTransactions, setDisplayTransactions] = useState(transactions);
   const [availableLabels, setAvailableLabels] = useState(labels);
@@ -210,7 +211,13 @@ export function MonthlyTransactionsPanel({
         onClearCategoryFilters={handleClearCategoryFilters}
       />
 
-      {filteredTransactions.length > 0 ? (
+      {loading ? (
+        <div
+          className="min-h-80 rounded-lg bg-card"
+          aria-busy="true"
+          aria-label="Cargando movimientos"
+        />
+      ) : filteredTransactions.length > 0 ? (
         <TransactionsTable
           transactions={filteredTransactions}
           categoryGroups={categoryGroups}
