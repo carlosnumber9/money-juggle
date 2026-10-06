@@ -1,6 +1,5 @@
 import type {
   AnnualLabelExpensesSummary,
-  MonthlyCategoryExpensesSummary,
   MonthlyEvolutionSummary
 } from "@/definitions";
 
@@ -35,12 +34,6 @@ export function formatAnnualLabelExpensesDescription(
   }
 
   return `${formatCurrency(summary.totalExpenses, summary.currency)} en gastos etiquetados`;
-}
-
-export function formatMonthlyCategoryExpensesDescription(
-  summary: MonthlyCategoryExpensesSummary
-): string {
-  return formatCurrency(summary.totalExpenses, summary.currency);
 }
 
 export function formatCurrency(value: number, currency: string): string {

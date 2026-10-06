@@ -12,7 +12,7 @@ export function ChartContainer({
   children
 }: {
   title: React.ReactNode;
-  description: React.ReactNode;
+  description?: React.ReactNode;
   className?: string;
   headerClassName?: string;
   headerActions?: React.ReactNode;
@@ -24,7 +24,9 @@ export function ChartContainer({
         <div className={cn("mb-6 flex flex-col gap-1", headerClassName)}>
           <h2 className="text-lg font-semibold tracking-normal">{title}</h2>
           {headerActions}
-          <p className="text-sm text-muted-foreground">{description}</p>
+          {description != null && (
+            <p className="text-sm text-muted-foreground">{description}</p>
+          )}
         </div>
         {children}
       </CardContent>

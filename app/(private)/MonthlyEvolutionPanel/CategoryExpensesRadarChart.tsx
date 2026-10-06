@@ -19,10 +19,7 @@ import type {
 
 import { categoryExpensesChartConfig } from "./categoryExpensesChart";
 import { ChartContainer } from "./ChartContainer";
-import {
-  formatCurrency,
-  formatMonthlyCategoryExpensesDescription
-} from "./formatters";
+import { formatCurrency } from "./formatters";
 
 export function CategoryExpensesRadarChart({
   summary,
@@ -55,14 +52,7 @@ export function CategoryExpensesRadarChart({
   return (
     <ChartContainer
       title="Gastos por categoría"
-      description={
-        <span
-          className={isPending ? "invisible" : undefined}
-          aria-hidden={isPending}
-        >
-          {error ?? formatMonthlyCategoryExpensesDescription(summary)}
-        </span>
-      }
+      description={isPending ? undefined : error}
       headerActions={
         <MonthNavigation
           selectedMonth={displayedMonth}
