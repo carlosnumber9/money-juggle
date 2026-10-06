@@ -8,6 +8,10 @@ import { Button } from "@/components/ui/button";
 import { MonthlyTransactionsPanel } from "./MonthlyTransactionsPanel";
 import { requestTransactionMonth } from "./MonthlyTransactionsPanel/monthRequest";
 
+const EMPTY_ROWS: TransactionMonthData["rows"] = [];
+const EMPTY_CATEGORIES: TransactionMonthData["categoryGroups"] = [];
+const EMPTY_LABELS: TransactionMonthData["labels"] = [];
+
 export function TransactionsMonthPanel({
   initialData
 }: {
@@ -26,7 +30,11 @@ export function TransactionsMonthPanel({
   const hasNavigatedRef = useRef(false);
   const [retry, setRetry] = useState(0);
   useEffect(() => {
-    if (month.value === initialRef.current.selectedMonth.value && retry === 0)
+    if (
+      !hasNavigatedRef.current &&
+      month.value === initialRef.current.selectedMonth.value &&
+      retry === 0
+    )
       return;
     hasNavigatedRef.current = true;
     const controller = new AbortController();
@@ -52,10 +60,11 @@ export function TransactionsMonthPanel({
   return (
     <>
       <MonthlyTransactionsPanel
-        key={month.value + ":" + snapshot.data.loadedAt + ":" + retry}
-        transactions={dataReady ? snapshot.data.rows : []}
-        categoryGroups={dataReady ? snapshot.data.categoryGroups : []}
-        labels={dataReady ? snapshot.data.labels : []}
+        transactions={dataReady ? snapshot.data.rows : EMPTY_ROWS}
+        categoryGroups={
+          dataReady ? snapshot.data.categoryGroups : EMPTY_CATEGORIES
+        }
+        labels={dataReady ? snapshot.data.labels : EMPTY_LABELS}
         selectedMonth={month}
         error={snapshot.month === month.value ? snapshot.error : null}
         loading={snapshot.month !== month.value}

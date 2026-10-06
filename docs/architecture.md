@@ -281,3 +281,22 @@ lib/domain/cobee.ts
 ```
 
 Domain modules should describe financial concepts without depending directly on React components or raw external API responses.
+
+## Transaction Month Loading
+
+The transaction list has a persistent, data-driven loading overlay. Only a
+request for the selected month may reveal its rows; old-month rows remain
+hidden. The supplied Liquid Orb style 9 is rendered at 160 CSS pixels with
+500 ms opacity transitions, no visible text, and a 320 px minimum list height.
+The overlay reverses an interrupted fade and exits on failure as well as success.
+
+This canvas is a deliberate custom UI exception because the existing spinner
+cannot render the requested shader. The renderer keeps the source's emissive
+Siri band, idle/thinking colors and timing; unrelated presets, glass, audio and
+particle pipelines are omitted. It renders at 30 fps with DPR capped at 2 and
+uses a CSS fallback during initialization or GPU failure. Reduced motion uses
+that static fallback without fades. GPU work stops when the overlay disappears
+or the document is hidden, and all resources are released on unmount.
+
+Local browser startup was not requested. Shader fidelity and fade appearance
+must be verified visually when browser-based testing is authorized.

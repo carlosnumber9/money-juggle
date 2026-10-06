@@ -93,3 +93,27 @@
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-size: contain;
 }
+
+.liquid-orb-fallback {
+  background:
+    radial-gradient(ellipse 44% 9% at 40% 48%, #ff7bd5 10%, transparent 90%),
+    radial-gradient(ellipse 42% 12% at 55% 52%, #82f4ff 10%, transparent 90%),
+    radial-gradient(ellipse 40% 8% at 50% 47%, #ffd86b 10%, transparent 90%),
+    radial-gradient(ellipse 44% 12% at 48% 54%, #8e6cff 10%, transparent 90%);
+  animation: liquid-orb-breathe 1.8s ease-in-out infinite alternate;
+}
+@keyframes liquid-orb-breathe {
+  from {
+    transform: scaleY(0.8);
+    opacity: 0.75;
+  }
+  to {
+    transform: scaleY(1.2);
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .liquid-orb-fallback {
+    animation: none;
+  }
+}

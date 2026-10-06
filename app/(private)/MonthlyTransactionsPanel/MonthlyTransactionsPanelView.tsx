@@ -8,6 +8,8 @@ import type {
   TransactionLabelSummary
 } from "@/definitions";
 
+import { TransactionListLoading } from "./TransactionListLoading";
+
 import { EmptyTransactionsState } from "./EmptyTransactionsState";
 import { MonthlyTransactionsHeader } from "./MonthlyTransactionsHeader";
 import { TransactionDetailDialog } from "./TransactionDetailDialog";
@@ -39,6 +41,7 @@ export function MonthlyTransactionsPanel({
   error,
   loading = false
 }: MonthlyTransactionsPanelProps) {
+  const [sourceTransactions, setSourceTransactions] = useState(transactions);
   const [displayTransactions, setDisplayTransactions] = useState(transactions);
   const [availableLabels, setAvailableLabels] = useState(labels);
   const [selectedTransactionId, setSelectedTransactionId] = useState<
@@ -80,6 +83,18 @@ export function MonthlyTransactionsPanel({
       ),
     [categoryFilterTransactions, categoryGroups]
   );
+
+  // Reset the review state when the requested month supplies a new dataset.
+  // Updating during render prevents one paint of the previous month's rows.
+  if (sourceTransactions !== transactions) {
+    setSourceTransactions(transactions);
+    setDisplayTransactions(transactions);
+    setAvailableLabels(labels);
+    setSelectedTransactionId(null);
+    setReconciliationSourceId(null);
+    setSelectedReconciliationId(null);
+    setTransactionFilters(DEFAULT_TRANSACTION_FILTERS);
+  }
 
   function handleFilterToggle(filterId: TransactionFilterId) {
     setTransactionFilters((currentFilters) =>
@@ -211,28 +226,24 @@ export function MonthlyTransactionsPanel({
         onClearCategoryFilters={handleClearCategoryFilters}
       />
 
-      {loading ? (
-        <div
-          className="min-h-80 rounded-lg bg-card"
-          aria-busy="true"
-          aria-label="Cargando movimientos"
-        />
-      ) : filteredTransactions.length > 0 ? (
-        <TransactionsTable
-          transactions={filteredTransactions}
-          categoryGroups={categoryGroups}
-          onTransactionCategoryChange={handleTransactionCategoryChange}
-          onTransactionSelect={(transaction) =>
-            setSelectedTransactionId(transaction.id)
-          }
-          onReconciliationSelect={setSelectedReconciliationId}
-        />
-      ) : (
-        <EmptyTransactionsState
-          hasActiveFilters={hasActiveTransactionFilters(transactionFilters)}
-          monthLabel={selectedMonth.label}
-        />
-      )}
+      <TransactionListLoading loading={loading}>
+        {filteredTransactions.length > 0 ? (
+          <TransactionsTable
+            transactions={filteredTransactions}
+            categoryGroups={categoryGroups}
+            onTransactionCategoryChange={handleTransactionCategoryChange}
+            onTransactionSelect={(transaction) =>
+              setSelectedTransactionId(transaction.id)
+            }
+            onReconciliationSelect={setSelectedReconciliationId}
+          />
+        ) : error ? null : (
+          <EmptyTransactionsState
+            hasActiveFilters={hasActiveTransactionFilters(transactionFilters)}
+            monthLabel={selectedMonth.label}
+          />
+        )}
+      </TransactionListLoading>
 
       <TransactionDetailDialog
         transaction={selectedTransaction}
