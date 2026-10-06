@@ -29,171 +29,169 @@ import {
 } from "./transactionBackfill";
 
 export async function getPrivateHomeView(
-  requestedMonth?: string
+  requestedMonth?: string,
+  tab: import("@/definitions").HomeTab = "dashboard"
 ): Promise<PrivateHomeView> {
   const dataSource = bankingDataSource;
   const user = await dataSource.getCurrentUser();
-
-  if (!user) {
-    return { kind: "unauthenticated" };
-  }
-
-  if (!user.isAllowed) {
-    return { kind: "forbidden" };
-  }
+  if (!user) return { kind: "unauthenticated" };
+  if (!user.isAllowed) return { kind: "forbidden" };
 
   const selectedMonth = getSelectedTransactionMonth(requestedMonth);
-  const transactionRange = selectedMonth.range;
-  const yearlyTransactionRange = getCurrentYearTransactionRange();
-  const reportYear = Number(yearlyTransactionRange.from.slice(0, 4));
-  const [
-    connectionsResult,
-    providerResult,
-    completedBackfillConnectionIdsResult,
-    transactionsResult,
-    yearlyTransactionsResult,
-    categoryGroupsResult,
-    labelsResult,
-    monthlyAdjustmentsResult,
-    yearlyAdjustmentsResult
-  ] = await Promise.all([
-    loadConnections(dataSource, user.id),
-    loadProviderStatus(dataSource),
-    loadCompletedTransactionBackfillConnectionIds(dataSource, user.id),
-    loadMonthlyTransactions(dataSource, user.id, transactionRange),
-    loadMonthlyTransactions(dataSource, user.id, yearlyTransactionRange),
-    loadTransactionCategoryGroups(dataSource, user.id),
-    loadTransactionLabels(dataSource, user.id),
-    loadTransactionReconciliationAdjustments(
-      dataSource,
-      user.id,
-      transactionRange
-    ),
-    loadTransactionReconciliationAdjustments(
-      dataSource,
-      user.id,
-      yearlyTransactionRange
-    )
-  ]);
-  const providerStatus = getProviderStatus(providerResult);
-  const institutionsResult =
-    providerStatus.status === "success"
-      ? await loadInstitutions(dataSource)
-      : undefined;
+  const providerPromise =
+    loadProviderStatus(dataSource).then(getProviderStatus);
+  const common = {
+    kind: "ready" as const,
+    user: { id: user.id, email: user.email },
+    selectedMonth
+  };
+  const transactionsPromise = loadMonthlyTransactions(
+    dataSource,
+    user.id,
+    selectedMonth.range
+  );
 
+  if (tab === "transactions") {
+    const [transactions, categories, labels, providerStatus] =
+      await Promise.all([
+        transactionsPromise,
+        loadTransactionCategoryGroups(dataSource, user.id),
+        loadTransactionLabels(dataSource, user.id),
+        providerPromise
+      ]);
+    return {
+      ...common,
+      tab,
+      providerStatus,
+      monthlyTransactions: {
+        range: selectedMonth.range,
+        rows: transactions.ok ? transactions.value : [],
+        categoryGroups: categories.ok ? categories.value : [],
+        labels: labels.ok ? labels.value : [],
+        error: !transactions.ok
+          ? transactions.reason
+          : !categories.ok
+            ? categories.reason
+            : !labels.ok
+              ? labels.reason
+              : null
+      }
+    };
+  }
+
+  const adjustmentsPromise = loadTransactionReconciliationAdjustments(
+    dataSource,
+    user.id,
+    selectedMonth.range
+  );
+  if (tab === "dashboard") {
+    const [
+      transactions,
+      adjustments,
+      connectionsResult,
+      completedConnectionIdsResult,
+      providerStatus
+    ] = await Promise.all([
+      transactionsPromise,
+      adjustmentsPromise,
+      loadConnections(dataSource, user.id),
+      loadCompletedTransactionBackfillConnectionIds(dataSource, user.id),
+      providerPromise
+    ]);
+    const institutionsResult =
+      providerStatus.status === "success"
+        ? await loadInstitutions(dataSource)
+        : undefined;
+    return {
+      ...common,
+      tab,
+      providerStatus,
+      bankCards: buildBankCards({
+        connectionsResult,
+        institutionsResult,
+        providerStatus
+      }),
+      dashboardSyncEnabled: getDashboardSyncEnabled({
+        connectionsResult,
+        providerStatus
+      }),
+      transactionBackfill: buildTransactionBackfillView({
+        connectionsResult,
+        completedConnectionIdsResult,
+        providerStatus
+      }),
+      monthlyExportPeriod: {
+        defaultMonth: getDefaultExportMonth(),
+        currentMonth: getSelectedTransactionMonth().value
+      },
+      monthlyCashflow: buildMonthlyCashflowSummary({
+        transactions: transactions.ok ? transactions.value : [],
+        adjustments: adjustments.ok ? adjustments.value : []
+      }),
+      monthlyCashflowError: transactions.ok
+        ? adjustments.ok
+          ? null
+          : adjustments.reason
+        : transactions.reason
+    };
+  }
+
+  const yearlyRange = getCurrentYearTransactionRange();
+  const year = Number(yearlyRange.from.slice(0, 4));
+  const [
+    transactions,
+    adjustments,
+    yearlyTransactions,
+    yearlyAdjustments,
+    providerStatus
+  ] = await Promise.all([
+    transactionsPromise,
+    adjustmentsPromise,
+    loadMonthlyTransactions(dataSource, user.id, yearlyRange),
+    loadTransactionReconciliationAdjustments(dataSource, user.id, yearlyRange),
+    providerPromise
+  ]);
   return {
-    kind: "ready",
-    user: { email: user.email },
+    ...common,
+    tab,
     providerStatus,
-    bankCards: buildBankCards({
-      connectionsResult,
-      institutionsResult,
-      providerStatus
-    }),
-    dashboardSyncEnabled: getDashboardSyncEnabled({
-      connectionsResult,
-      providerStatus
-    }),
-    monthlyExportPeriod: {
-      defaultMonth: getDefaultExportMonth(),
-      currentMonth: getSelectedTransactionMonth().value
-    },
-    transactionBackfill: buildTransactionBackfillView({
-      connectionsResult,
-      completedConnectionIdsResult: completedBackfillConnectionIdsResult,
-      providerStatus
-    }),
-    selectedMonth: {
-      value: selectedMonth.value,
-      label: selectedMonth.label,
-      previousMonth: selectedMonth.previousMonth,
-      nextMonth: selectedMonth.nextMonth
-    },
-    monthlyCashflow: buildMonthlyCashflowSummary({
-      transactions: transactionsResult.ok ? transactionsResult.value : [],
-      adjustments: monthlyAdjustmentsResult.ok
-        ? monthlyAdjustmentsResult.value
-        : []
-    }),
     monthlyEvolution: {
       summary: buildMonthlyEvolutionSummary({
-        transactions: yearlyTransactionsResult.ok
-          ? yearlyTransactionsResult.value
-          : [],
-        adjustments: yearlyAdjustmentsResult.ok
-          ? yearlyAdjustmentsResult.value
-          : [],
-        year: reportYear
+        transactions: yearlyTransactions.ok ? yearlyTransactions.value : [],
+        adjustments: yearlyAdjustments.ok ? yearlyAdjustments.value : [],
+        year
       }),
-      error: yearlyTransactionsResult.ok
-        ? null
-        : yearlyTransactionsResult.reason,
+      error: yearlyTransactions.ok
+        ? yearlyAdjustments.ok
+          ? null
+          : yearlyAdjustments.reason
+        : yearlyTransactions.reason,
       categoryExpenses: buildMonthlyCategoryExpensesSummary({
-        transactions: transactionsResult.ok ? transactionsResult.value : [],
-        adjustments: monthlyAdjustmentsResult.ok
-          ? monthlyAdjustmentsResult.value
-          : [],
-        periodStart: transactionRange.from
+        transactions: transactions.ok ? transactions.value : [],
+        adjustments: adjustments.ok ? adjustments.value : [],
+        periodStart: selectedMonth.range.from
       }),
-      categoryExpensesError: transactionsResult.ok
-        ? null
-        : transactionsResult.reason,
+      categoryExpensesError: transactions.ok
+        ? adjustments.ok
+          ? null
+          : adjustments.reason
+        : transactions.reason,
       labelExpenses: buildAnnualLabelExpensesSummary({
-        transactions: yearlyTransactionsResult.ok
-          ? yearlyTransactionsResult.value
-          : [],
-        adjustments: yearlyAdjustmentsResult.ok
-          ? yearlyAdjustmentsResult.value
-          : [],
-        year: reportYear
+        transactions: yearlyTransactions.ok ? yearlyTransactions.value : [],
+        adjustments: yearlyAdjustments.ok ? yearlyAdjustments.value : [],
+        year
       }),
-      labelExpensesError: yearlyTransactionsResult.ok
-        ? null
-        : yearlyTransactionsResult.reason
-    },
-    monthlyTransactions: {
-      range: transactionRange,
-      rows: transactionsResult.ok ? transactionsResult.value : [],
-      categoryGroups: categoryGroupsResult.ok ? categoryGroupsResult.value : [],
-      labels: labelsResult.ok ? labelsResult.value : [],
-      error: getMonthlyTransactionsError(
-        transactionsResult,
-        categoryGroupsResult,
-        labelsResult
-      )
+      labelExpensesError: yearlyTransactions.ok
+        ? yearlyAdjustments.ok
+          ? null
+          : yearlyAdjustments.reason
+        : yearlyTransactions.reason
     }
   };
 }
 
-function getMonthlyTransactionsError(
-  transactionsResult: Awaited<ReturnType<typeof loadMonthlyTransactions>>,
-  categoryGroupsResult: Awaited<
-    ReturnType<typeof loadTransactionCategoryGroups>
-  >,
-  labelsResult: Awaited<ReturnType<typeof loadTransactionLabels>>
-): string | null {
-  if (!transactionsResult.ok) {
-    return transactionsResult.reason;
-  }
-
-  if (!categoryGroupsResult.ok) {
-    return categoryGroupsResult.reason;
-  }
-
-  if (!labelsResult.ok) {
-    return labelsResult.reason;
-  }
-
-  return null;
-}
-
 function getProviderStatus(
-  providerResult: Awaited<ReturnType<typeof loadProviderStatus>>
+  result: Awaited<ReturnType<typeof loadProviderStatus>>
 ): ProviderStatusView {
-  return providerResult.ok
-    ? providerResult.value
-    : {
-        status: "error",
-        reason: providerResult.reason
-      };
+  return result.ok ? result.value : { status: "error", reason: result.reason };
 }

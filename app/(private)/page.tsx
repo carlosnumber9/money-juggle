@@ -6,7 +6,8 @@ import { EnableBankingStatus } from "@/app/(private)/EnableBankingStatus";
 import { MonthlyCashflowCards } from "@/app/(private)/MonthlyCashflowCards";
 import { MonthlyEvolutionPanel } from "@/app/(private)/MonthlyEvolutionPanel";
 import { MonthlyTransactionsPanel } from "@/app/(private)/MonthlyTransactionsPanel";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { HomeTabs } from "./HomeTabs";
 import type { PrivateHomePageProps } from "@/definitions";
 import { getPrivateHomeView } from "@/lib/views/privateHomeView";
 
@@ -14,7 +15,7 @@ export default async function Home({ searchParams }: PrivateHomePageProps) {
   const { month, tab } = await searchParams;
   const requestedMonth = typeof month === "string" ? month : undefined;
   const selectedTab = getSelectedTab(tab);
-  const view = await getPrivateHomeView(requestedMonth);
+  const view = await getPrivateHomeView(requestedMonth, selectedTab);
 
   if (view.kind === "unauthenticated") {
     redirect("/login");
@@ -26,7 +27,7 @@ export default async function Home({ searchParams }: PrivateHomePageProps) {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-6 py-14">
-      <Tabs key={selectedTab} defaultValue={selectedTab}>
+      <HomeTabs selectedTab={selectedTab}>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-2">
             <EnableBankingStatus status={view.providerStatus} />
@@ -38,41 +39,49 @@ export default async function Home({ searchParams }: PrivateHomePageProps) {
             <TabsTrigger value="evolution">Evolución</TabsTrigger>
           </TabsList>
         </div>
-        <TabsContent value="dashboard" keepMounted className="mt-0">
-          <MonthlyCashflowCards
-            summary={view.monthlyCashflow}
-            selectedMonth={view.selectedMonth}
-            error={view.monthlyTransactions.error}
-          />
-          <BankConnectionsPanel cards={view.bankCards} />
-          <DashboardSyncControls
-            enabled={view.dashboardSyncEnabled}
-            backfill={view.transactionBackfill}
-            exportPeriod={view.monthlyExportPeriod}
-          />
-        </TabsContent>
-        <TabsContent value="transactions" keepMounted>
-          <MonthlyTransactionsPanel
-            key={view.selectedMonth.value}
-            transactions={view.monthlyTransactions.rows}
-            categoryGroups={view.monthlyTransactions.categoryGroups}
-            labels={view.monthlyTransactions.labels}
-            selectedMonth={view.selectedMonth}
-            error={view.monthlyTransactions.error}
-          />
-        </TabsContent>
-        <TabsContent value="evolution" keepMounted>
-          <MonthlyEvolutionPanel
-            evolution={view.monthlyEvolution.summary}
-            categoryExpenses={view.monthlyEvolution.categoryExpenses}
-            labelExpenses={view.monthlyEvolution.labelExpenses}
-            selectedMonth={view.selectedMonth}
-            error={view.monthlyEvolution.error}
-            categoryExpensesError={view.monthlyEvolution.categoryExpensesError}
-            labelExpensesError={view.monthlyEvolution.labelExpensesError}
-          />
-        </TabsContent>
-      </Tabs>
+        {view.tab === "dashboard" && (
+          <TabsContent value="dashboard" className="mt-0">
+            <MonthlyCashflowCards
+              summary={view.monthlyCashflow}
+              selectedMonth={view.selectedMonth}
+              error={view.monthlyCashflowError}
+            />
+            <BankConnectionsPanel cards={view.bankCards} />
+            <DashboardSyncControls
+              enabled={view.dashboardSyncEnabled}
+              backfill={view.transactionBackfill}
+              exportPeriod={view.monthlyExportPeriod}
+            />
+          </TabsContent>
+        )}
+        {view.tab === "transactions" && (
+          <TabsContent value="transactions">
+            <MonthlyTransactionsPanel
+              key={view.selectedMonth.value}
+              transactions={view.monthlyTransactions.rows}
+              categoryGroups={view.monthlyTransactions.categoryGroups}
+              labels={view.monthlyTransactions.labels}
+              selectedMonth={view.selectedMonth}
+              error={view.monthlyTransactions.error}
+            />
+          </TabsContent>
+        )}
+        {view.tab === "evolution" && (
+          <TabsContent value="evolution">
+            <MonthlyEvolutionPanel
+              evolution={view.monthlyEvolution.summary}
+              categoryExpenses={view.monthlyEvolution.categoryExpenses}
+              labelExpenses={view.monthlyEvolution.labelExpenses}
+              selectedMonth={view.selectedMonth}
+              error={view.monthlyEvolution.error}
+              categoryExpensesError={
+                view.monthlyEvolution.categoryExpensesError
+              }
+              labelExpensesError={view.monthlyEvolution.labelExpensesError}
+            />
+          </TabsContent>
+        )}
+      </HomeTabs>
     </main>
   );
 }

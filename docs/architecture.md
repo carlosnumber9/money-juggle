@@ -80,6 +80,12 @@ Data collection should go through the application-facing contract under
 and Enable Banking. This keeps provider and persistence details out of UI code
 without maintaining alternate runtime behavior.
 
+The private home view loads only the active tab. Transactions reads its month
+and review catalogs; Dashboard reads bank state and monthly cashflow; Evolution
+alone reads annual movements and adjustments. Inactive panels are not mounted,
+so a hidden Dashboard cannot start its automatic synchronization. Tab changes
+update the URL while retaining the selected month.
+
 The current private home view is prepared under `lib/views/privateHomeView/`.
 It loads provider status, bank card state, selected-month transactions,
 transaction category groups, and active transaction labels before the route
