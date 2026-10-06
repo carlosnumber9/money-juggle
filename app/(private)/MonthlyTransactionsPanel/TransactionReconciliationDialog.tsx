@@ -41,6 +41,8 @@ import {
 } from "@/lib/domain/labels";
 import { cn } from "@/lib/utils";
 
+import { useMonthInvalidation } from "./useMonthInvalidation";
+
 import { formatCurrency } from "./formatters";
 import {
   calculateReconciliationBalance,
@@ -103,6 +105,7 @@ export function TransactionReconciliationDialog({
     throw new Error("A reconciliation editor requires at least one movement.");
   }
   const isMobile = useMediaQuery("(max-width: 767px)");
+  const monthCache = useMonthInvalidation();
   const [kind, setKind] = useState<TransactionReconciliationKind>(
     initialDetail?.kind ?? "debt"
   );
@@ -173,6 +176,7 @@ export function TransactionReconciliationDialog({
           return;
         }
 
+        monthCache.checkResult(result);
         if (!result?.ok) {
           setError(result?.reason ?? "No se pudieron cargar los movimientos.");
           setIsLoading(false);
@@ -186,7 +190,7 @@ export function TransactionReconciliationDialog({
     }, 250);
 
     return () => window.clearTimeout(timeout);
-  }, [initialDetail?.id, initialMembers, query, source]);
+  }, [initialDetail?.id, initialMembers, query, source, monthCache]);
 
   const loadMoreCandidates = useCallback(async () => {
     if (!cursor || isLoading) {
@@ -206,6 +210,7 @@ export function TransactionReconciliationDialog({
       return;
     }
 
+    monthCache.checkResult(result);
     if (!result?.ok) {
       setError(result?.reason ?? "No se pudieron cargar los movimientos.");
       setIsLoading(false);
@@ -215,7 +220,14 @@ export function TransactionReconciliationDialog({
     setCandidates((current) => mergeCandidateRows(current, result.value.rows));
     setCursor(result.value.nextCursor);
     setIsLoading(false);
-  }, [cursor, initialDetail?.id, isLoading, query, source.currency]);
+  }, [
+    cursor,
+    initialDetail?.id,
+    isLoading,
+    query,
+    source.currency,
+    monthCache
+  ]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -297,6 +309,7 @@ export function TransactionReconciliationDialog({
               labelIds: selectedLabelIds,
               newLabelNames
             } as const);
+    await monthCache.cancel();
     const result = await saveReconciliationAction({
       reconciliationId: initialDetail?.id ?? null,
       sourceTransactionId: isEditing ? null : source.id,
@@ -307,9 +320,11 @@ export function TransactionReconciliationDialog({
       difference
     }).catch(() => null);
 
+    monthCache.checkResult(result);
     if (!result?.ok) {
       setError(result?.reason ?? "No se pudo guardar la compensación.");
       setIsSaving(false);
+      await monthCache.invalidate();
       return;
     }
 
@@ -323,6 +338,7 @@ export function TransactionReconciliationDialog({
     });
     setIsSaving(false);
     onClose();
+    await monthCache.invalidate();
   }
 
   function addNewLabel() {

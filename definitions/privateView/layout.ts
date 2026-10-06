@@ -8,6 +8,7 @@ export type PrivateLayoutView =
   | {
       kind: "authenticated";
       user: {
+        id: string;
         email: string | null;
       };
     };

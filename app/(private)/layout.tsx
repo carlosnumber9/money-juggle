@@ -4,6 +4,8 @@ import type { PrivateLayoutProps } from "@/definitions";
 import { Button } from "@/components/ui/button";
 import { getPrivateLayoutView } from "@/lib/views/privateLayoutView";
 
+import { PrivateQueryProvider, PrivateSignOut } from "./PrivateQueryProvider";
+
 import { SyncActivityProvider } from "./SyncActivityProvider";
 import { SyncingAppLogo } from "./SyncingAppLogo";
 
@@ -19,16 +21,18 @@ export default async function PrivateLayout({ children }: PrivateLayoutProps) {
   }
 
   return (
-    <SyncActivityProvider>
-      <header className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-4 px-6 pt-6">
-        <SyncingAppLogo />
-        <form action="/auth/sign-out" method="post">
-          <Button type="submit" variant="outline" size="sm">
-            Cerrar sesión
-          </Button>
-        </form>
-      </header>
-      {children}
-    </SyncActivityProvider>
+    <PrivateQueryProvider key={view.user.id} userId={view.user.id}>
+      <SyncActivityProvider>
+        <header className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-4 px-6 pt-6">
+          <SyncingAppLogo />
+          <PrivateSignOut>
+            <Button type="submit" variant="outline" size="sm">
+              Cerrar sesión
+            </Button>
+          </PrivateSignOut>
+        </header>
+        {children}
+      </SyncActivityProvider>
+    </PrivateQueryProvider>
   );
 }

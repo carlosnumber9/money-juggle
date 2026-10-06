@@ -3,13 +3,19 @@ import type { MonthlyTransactionSummary } from "@/definitions";
 export function updateTransactionReportingDateInList(
   transactions: MonthlyTransactionSummary[],
   transactionId: string,
-  reportingDate: string
+  reportingDate: string,
+  selectedMonth?: string
 ): MonthlyTransactionSummary[] {
   return transactions
     .map((transaction) =>
       transaction.id === transactionId
         ? { ...transaction, reporting_date: reportingDate }
         : transaction
+    )
+    .filter(
+      (transaction) =>
+        !selectedMonth ||
+        transaction.reporting_date?.slice(0, 7) === selectedMonth
     )
     .sort(compareTransactionsByReportingDate);
 }

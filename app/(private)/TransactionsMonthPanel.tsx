@@ -1,12 +1,21 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import type { TransactionMonthData } from "@/definitions";
 import { getSelectedTransactionMonth } from "@/lib/domain/transactionRanges";
 import { Button } from "@/components/ui/button";
 import { MonthlyTransactionsPanel } from "./MonthlyTransactionsPanel";
-import { requestTransactionMonth } from "./MonthlyTransactionsPanel/monthRequest";
+import {
+  MonthRequestError,
+  requestTransactionMonth
+} from "./MonthlyTransactionsPanel/monthRequest";
+import {
+  monthKey,
+  patchMonthRows
+} from "./MonthlyTransactionsPanel/monthCache";
+import { usePrivateQuerySession } from "./PrivateQueryProvider";
 
 const EMPTY_ROWS: TransactionMonthData["rows"] = [];
 const EMPTY_CATEGORIES: TransactionMonthData["categoryGroups"] = [];
@@ -21,62 +30,72 @@ export function TransactionsMonthPanel({
   const month = getSelectedTransactionMonth(
     searchParams.get("month") ?? undefined
   );
-  const [snapshot, setSnapshot] = useState({
-    month: initialData.selectedMonth.value,
-    data: initialData,
-    error: initialData.error
+  const client = useQueryClient();
+  const { userId, rejectAccess } = usePrivateQuerySession();
+  const query = useQuery({
+    queryKey: monthKey(userId, month.value),
+    queryFn: async ({ signal }) => {
+      try {
+        return await requestTransactionMonth(month.value, signal);
+      } catch (error) {
+        if (error instanceof MonthRequestError) rejectAccess(error.status);
+        throw error;
+      }
+    },
+    initialData:
+      month.value === initialData.selectedMonth.value && !initialData.error
+        ? initialData
+        : undefined,
+    initialDataUpdatedAt: initialData.loadedAt
   });
-  const initialRef = useRef(initialData);
-  const hasNavigatedRef = useRef(false);
-  const [retry, setRetry] = useState(0);
-  useEffect(() => {
-    if (
-      !hasNavigatedRef.current &&
-      month.value === initialRef.current.selectedMonth.value &&
-      retry === 0
-    )
-      return;
-    hasNavigatedRef.current = true;
-    const controller = new AbortController();
-    requestTransactionMonth(month.value, controller.signal)
-      .then((data) => {
-        if (!controller.signal.aborted)
-          setSnapshot({ month: month.value, data, error: null });
-      })
-      .catch((error: unknown) => {
-        if (!controller.signal.aborted)
-          setSnapshot({
-            month: month.value,
-            data: initialRef.current,
-            error:
-              error instanceof Error
-                ? error.message
-                : "No se pudieron cargar los movimientos."
-          });
-      });
-    return () => controller.abort();
-  }, [month.value, retry]);
-  const dataReady = snapshot.month === month.value && !snapshot.error;
+  const [selection, setSelection] = useState({
+    month: month.value,
+    waiting: query.isFetching
+  });
+  const waiting =
+    selection.month === month.value ? selection.waiting : query.isFetching;
+  if (selection.month !== month.value)
+    setSelection({ month: month.value, waiting: query.isFetching });
+  else if (selection.waiting && !query.isFetching)
+    setSelection({ month: month.value, waiting: false });
+  const loading = !query.isError && (query.isPending || waiting);
+  const dataReady = Boolean(
+    query.data && query.data.selectedMonth.value === month.value && !loading
+  );
+  const error = query.error instanceof Error ? query.error.message : null;
   return (
     <>
       <MonthlyTransactionsPanel
-        transactions={dataReady ? snapshot.data.rows : EMPTY_ROWS}
+        transactions={dataReady ? query.data!.rows : EMPTY_ROWS}
         categoryGroups={
-          dataReady ? snapshot.data.categoryGroups : EMPTY_CATEGORIES
+          dataReady ? query.data!.categoryGroups : EMPTY_CATEGORIES
         }
-        labels={dataReady ? snapshot.data.labels : EMPTY_LABELS}
+        labels={dataReady ? query.data!.labels : EMPTY_LABELS}
         selectedMonth={month}
-        error={snapshot.month === month.value ? snapshot.error : null}
-        loading={snapshot.month !== month.value}
+        error={error}
+        loading={loading}
+        onTransactionsChange={(update) => {
+          void patchMonthRows(client, userId, month.value, update);
+        }}
+        onLabelAdd={(label) => {
+          void client.cancelQueries({ queryKey: monthKey(userId) }).then(() => {
+            client.setQueriesData<TransactionMonthData>(
+              { queryKey: monthKey(userId) },
+              (data) =>
+                data && !data.labels.some((item) => item.id === label.id)
+                  ? {
+                      ...data,
+                      labels: [...data.labels, label].sort((a, b) =>
+                        a.name.localeCompare(b.name, "es")
+                      )
+                    }
+                  : data
+            );
+          });
+        }}
       />
-      {snapshot.month === month.value && snapshot.error && (
-        <Button
-          variant="outline"
-          onClick={() => {
-            setSnapshot((value) => ({ ...value, month: "", error: null }));
-            setRetry((value) => value + 1);
-          }}
-        >
+      {query.isError && (
+        <Button variant="outline" onClick={() => void query.refetch()}>
           Reintentar
         </Button>
       )}

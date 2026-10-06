@@ -39,11 +39,13 @@ export function MonthlyTransactionsPanel({
   labels,
   selectedMonth,
   error,
-  loading = false
+  loading = false,
+  onTransactionsChange,
+  onLabelAdd
 }: MonthlyTransactionsPanelProps) {
-  const [sourceTransactions, setSourceTransactions] = useState(transactions);
-  const [displayTransactions, setDisplayTransactions] = useState(transactions);
-  const [availableLabels, setAvailableLabels] = useState(labels);
+  const displayTransactions = transactions;
+  const availableLabels = labels;
+  const [sourceMonth, setSourceMonth] = useState(selectedMonth.value);
   const [selectedTransactionId, setSelectedTransactionId] = useState<
     string | null
   >(null);
@@ -84,12 +86,9 @@ export function MonthlyTransactionsPanel({
     [categoryFilterTransactions, categoryGroups]
   );
 
-  // Reset the review state when the requested month supplies a new dataset.
-  // Updating during render prevents one paint of the previous month's rows.
-  if (sourceTransactions !== transactions) {
-    setSourceTransactions(transactions);
-    setDisplayTransactions(transactions);
-    setAvailableLabels(labels);
+  // Reset filters and dialogs before displaying a different month.
+  if (sourceMonth !== selectedMonth.value) {
+    setSourceMonth(selectedMonth.value);
     setSelectedTransactionId(null);
     setReconciliationSourceId(null);
     setSelectedReconciliationId(null);
@@ -127,7 +126,7 @@ export function MonthlyTransactionsPanel({
     transactionId: string,
     nextLabels: TransactionLabelSummary[]
   ) {
-    setDisplayTransactions((currentTransactions) =>
+    onTransactionsChange((currentTransactions) =>
       currentTransactions.map((transaction) =>
         transaction.id === transactionId
           ? { ...transaction, labels: nextLabels }
@@ -140,7 +139,7 @@ export function MonthlyTransactionsPanel({
     transactionId: string,
     nextCategory: MonthlyTransactionCategory | null
   ) {
-    setDisplayTransactions((currentTransactions) =>
+    onTransactionsChange((currentTransactions) =>
       updateTransactionCategoryInList(
         currentTransactions,
         transactionId,
@@ -153,23 +152,18 @@ export function MonthlyTransactionsPanel({
     transactionId: string,
     reportingDate: string
   ) {
-    setDisplayTransactions((currentTransactions) =>
+    onTransactionsChange((currentTransactions) =>
       updateTransactionReportingDateInList(
         currentTransactions,
         transactionId,
-        reportingDate
+        reportingDate,
+        selectedMonth.value
       )
     );
   }
 
   function handleAvailableLabelAdd(label: TransactionLabelSummary) {
-    setAvailableLabels((currentLabels) =>
-      currentLabels.some((currentLabel) => currentLabel.id === label.id)
-        ? currentLabels
-        : [...currentLabels, label].sort((left, right) =>
-            left.name.localeCompare(right.name, "es")
-          )
-    );
+    onLabelAdd(label);
   }
 
   function handleReconciliationSaved({
@@ -188,7 +182,7 @@ export function MonthlyTransactionsPanel({
     const memberIds = new Set(transactionIds);
     const previousMemberIds = new Set(previousTransactionIds);
 
-    setDisplayTransactions((currentTransactions) =>
+    onTransactionsChange((currentTransactions) =>
       currentTransactions.map((transaction) => {
         if (memberIds.has(transaction.id)) {
           return {
@@ -280,7 +274,7 @@ export function MonthlyTransactionsPanel({
           availableLabels={availableLabels}
           onSaved={handleReconciliationSaved}
           onDeleted={(reconciliationId) => {
-            setDisplayTransactions((currentTransactions) =>
+            onTransactionsChange((currentTransactions) =>
               currentTransactions.map((transaction) =>
                 transaction.reconciliation?.id === reconciliationId
                   ? { ...transaction, reconciliation: null }

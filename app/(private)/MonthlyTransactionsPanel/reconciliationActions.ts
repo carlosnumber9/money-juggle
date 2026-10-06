@@ -1,7 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-
 import type {
   Result,
   SaveTransactionReconciliationInput,
@@ -118,7 +116,6 @@ export async function saveReconciliationAction(
       ...input,
       userId: user.value.id
     });
-    revalidatePath("/");
     return { ok: true, value: saved };
   } catch (error) {
     logReconciliationError("save", error);
@@ -146,7 +143,6 @@ export async function deleteReconciliationAction(input: {
     await deleteTransactionReconciliation({
       reconciliationId: input.reconciliationId
     });
-    revalidatePath("/");
     return { ok: true, value: null };
   } catch (error) {
     logReconciliationError("delete", error);
@@ -163,7 +159,8 @@ async function getAllowedUser() {
   if (!user || !isEmailAllowed(user.email)) {
     return {
       ok: false,
-      reason: "Inicia sesión de nuevo para gestionar compensaciones."
+      reason: "Inicia sesión de nuevo para gestionar compensaciones.",
+      status: user ? (403 as const) : (401 as const)
     } as const;
   }
 

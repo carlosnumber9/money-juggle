@@ -300,3 +300,32 @@ or the document is hidden, and all resources are released on unmount.
 
 Local browser startup was not requested. Shader fidelity and fade appearance
 must be verified visually when browser-based testing is authorized.
+
+## Browser Month Cache
+
+Transactions uses TanStack Query v5 in the authenticated layout. Keys contain
+both the authenticated user ID and resolved month. Successful initial data is
+seeded with its server read time, so hydration does not issue a duplicate read.
+Entries remain fresh for five minutes and inactive entries are collected after
+thirty minutes. There is no prefetch, polling, automatic retry or persistent
+browser storage. Stale entries revalidate on selection, focus or reconnect.
+
+A new uncached or stale selected month covers the list with the orb until its
+request completes. Focus and mutation revalidation within the same month retain
+its current rows. The query cache is the source of movement and label data;
+filters and dialog state reset only when the selected month changes.
+
+Category and label writes invalidate the affected month. Label creation,
+reconciliation changes and any completed or uncertain sync invalidate all months
+of that user. Date edits remove out-of-period rows and invalidate both original
+and destination months, including across years. In-flight reads are cancelled
+before optimistic updates or invalidation. Successful writes no longer re-render
+the entire home page. Dashboard and Evolution read current data on entry.
+
+Each private layout owns its query client. Sign-out clears it before form
+submission; auth changes and 401/403 responses clear it and leave the private
+area. A browser back-forward cache restore reloads the server session check.
+Financial reads remain authenticated and RLS-protected; caching never grants
+server access. Other devices may remain out of date until the next revalidation
+of a stale entry. Action failures may include an optional 401/403 status so the
+client can distinguish rejected access from a recoverable save error.

@@ -27,15 +27,26 @@ describe("updateTransactionReportingDateInList", () => {
     expect(transactions[1].reporting_date).toBe("2026-08-07");
   });
 
-  it("keeps a movement moved to another month in the local list", () => {
+  it("removes a movement moved to another month from the selected list", () => {
     const result = updateTransactionReportingDateInList(
       [createTransaction("movement", "2026-08-02")],
       "movement",
-      "2026-07-31"
+      "2026-07-31",
+      "2026-08"
     );
 
-    expect(result).toHaveLength(1);
-    expect(result[0].reporting_date).toBe("2026-07-31");
+    expect(result).toHaveLength(0);
+  });
+
+  it("removes a movement moved across the year boundary", () => {
+    expect(
+      updateTransactionReportingDateInList(
+        [createTransaction("movement", "2026-01-02")],
+        "movement",
+        "2025-12-31",
+        "2026-01"
+      )
+    ).toEqual([]);
   });
 
   it("groups movements by reporting date instead of bank date", () => {

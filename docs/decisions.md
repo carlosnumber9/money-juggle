@@ -1825,3 +1825,17 @@ Possible future revisit trigger:
 
 - If the owner needs verified period coverage, report snapshots, portfolio data,
   recurring commitments, or aligned dashboard calculations.
+
+## Transaction Navigation and Browser Cache
+
+- Load annual movements only in Evolution and mount only the active home tab.
+- Read transaction months through an authenticated, private/no-store monthly
+  endpoint that never calls Enable Banking; preserve the query-string URL.
+- Use TanStack Query v5 for per-user, per-month memory caching, with five minutes
+  of freshness and thirty minutes of inactive retention. Do not persist finance
+  data in browser storage or prefetch historical months.
+- Invalidate local edits immediately, including both months when reporting dates
+  move. Broader label catalogs, compensations and syncs invalidate all owner
+  months. Keep authorization and Supabase RLS independent of browser caching.
+- Use the supplied Liquid Orb style 9 to cover only the transaction list during
+  requested-month loading, with 500 ms fades and reduced-motion/GPU fallbacks.

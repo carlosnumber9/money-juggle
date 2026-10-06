@@ -1,1 +1,2 @@
-export type Result<T> = { ok: true; value: T } | { ok: false; reason: string };
+export type Result<T> =
+  { ok: true; value: T } | { ok: false; reason: string; status?: 401 | 403 };

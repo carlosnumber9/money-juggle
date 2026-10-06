@@ -23,6 +23,8 @@ import type {
   TransactionReconciliationDifferenceTreatment
 } from "@/definitions";
 
+import { useMonthInvalidation } from "./useMonthInvalidation";
+
 import { formatCurrency } from "./formatters";
 import {
   deleteReconciliationAction,
@@ -63,6 +65,7 @@ export function TransactionReconciliationDetailDialog({
   onDeleted: (reconciliationId: string) => void;
   onClose: () => void;
 }) {
+  const monthCache = useMonthInvalidation();
   const [detail, setDetail] = useState<TransactionReconciliationDetail | null>(
     null
   );
@@ -79,6 +82,7 @@ export function TransactionReconciliationDetailDialog({
           return;
         }
 
+        monthCache.checkResult(result);
         if (result.ok) {
           setDetail(result.value);
         } else {
@@ -94,7 +98,7 @@ export function TransactionReconciliationDetailDialog({
     return () => {
       active = false;
     };
-  }, [reconciliationId]);
+  }, [reconciliationId, monthCache]);
 
   async function handleDelete() {
     if (
@@ -107,18 +111,22 @@ export function TransactionReconciliationDetailDialog({
 
     setIsDeleting(true);
     setError(null);
+    await monthCache.cancel();
     const result = await deleteReconciliationAction({
       reconciliationId
     }).catch(() => null);
 
+    monthCache.checkResult(result);
     if (!result?.ok) {
       setError(result?.reason ?? "No se pudo eliminar la compensación.");
       setIsDeleting(false);
+      await monthCache.invalidate();
       return;
     }
 
     onDeleted(reconciliationId);
     onClose();
+    await monthCache.invalidate();
   }
 
   if (isEditing && detail) {

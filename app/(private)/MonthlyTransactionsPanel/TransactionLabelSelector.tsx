@@ -21,6 +21,8 @@ import {
   removeTransactionLabelAction
 } from "./actions";
 
+import { useMonthInvalidation } from "./useMonthInvalidation";
+
 type LabelOption =
   | { kind: "create"; name: string }
   | { kind: "existing"; label: TransactionLabelSummary };
@@ -36,6 +38,10 @@ export function TransactionLabelSelector({
   onLabelsChange: (labels: TransactionLabelSummary[]) => void;
   onAvailableLabelAdd: (label: TransactionLabelSummary) => void;
 }) {
+  const monthCache = useMonthInvalidation();
+  const months = transaction.reporting_date
+    ? [transaction.reporting_date.slice(0, 7)]
+    : undefined;
   const listboxId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [searchValue, setSearchValue] = useState("");
@@ -70,11 +76,13 @@ export function TransactionLabelSelector({
     setSaveError(null);
     onLabelsChange(nextLabels);
 
+    await monthCache.cancel(months);
     const result = await assignTransactionLabelAction({
       transactionId: transaction.id,
       labelId: label.id
     }).catch(() => null);
 
+    monthCache.checkResult(result);
     if (!result?.ok) {
       onLabelsChange(previousLabels);
       setSaveError(
@@ -85,6 +93,7 @@ export function TransactionLabelSelector({
     }
 
     setIsPending(false);
+    await monthCache.invalidate(months);
   }
 
   async function createLabel(name: string) {
@@ -98,11 +107,13 @@ export function TransactionLabelSelector({
     setSaveError(null);
     onLabelsChange([...previousLabels, temporaryLabel]);
 
+    await monthCache.cancel();
     const result = await createAndAssignTransactionLabelAction({
       transactionId: transaction.id,
       name
     }).catch(() => null);
 
+    monthCache.checkResult(result);
     if (!result?.ok) {
       onLabelsChange(previousLabels);
       setSaveError(
@@ -115,6 +126,7 @@ export function TransactionLabelSelector({
     }
 
     setIsPending(false);
+    await monthCache.invalidate();
   }
 
   async function removeLabel(label: TransactionLabelSummary) {
@@ -124,11 +136,13 @@ export function TransactionLabelSelector({
     setSaveError(null);
     onLabelsChange(previousLabels.filter((item) => item.id !== label.id));
 
+    await monthCache.cancel(months);
     const result = await removeTransactionLabelAction({
       transactionId: transaction.id,
       labelId: label.id
     }).catch(() => null);
 
+    monthCache.checkResult(result);
     if (!result?.ok) {
       onLabelsChange(previousLabels);
       setSaveError(
@@ -137,6 +151,7 @@ export function TransactionLabelSelector({
     }
 
     setIsPending(false);
+    await monthCache.invalidate(months);
   }
 
   function selectOption(option: LabelOption | undefined) {

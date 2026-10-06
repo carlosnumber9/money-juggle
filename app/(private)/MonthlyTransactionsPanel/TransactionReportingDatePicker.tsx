@@ -1,7 +1,6 @@
 "use client";
 
 import { CalendarIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState, type RefObject } from "react";
 import { es } from "date-fns/locale";
 
@@ -16,6 +15,8 @@ import { buttonVariants } from "@/components/ui/button";
 import type { MonthlyTransactionSummary } from "@/definitions";
 import { cn } from "@/lib/utils";
 
+import { useMonthInvalidation } from "./useMonthInvalidation";
+
 import { updateTransactionReportingDateAction } from "./actions";
 import { formatTransactionDetailDate } from "./formatters";
 
@@ -28,7 +29,7 @@ export function TransactionReportingDatePicker({
   portalContainer: RefObject<HTMLElement | null>;
   onReportingDateChange: (reportingDate: string) => void;
 }) {
-  const router = useRouter();
+  const monthCache = useMonthInvalidation();
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -51,22 +52,29 @@ export function TransactionReportingDatePicker({
     setIsPending(true);
     setSaveError(null);
 
+    const months = [
+      transaction.reporting_date?.slice(0, 7),
+      reportingDate.slice(0, 7)
+    ].filter((month): month is string => Boolean(month));
+    await monthCache.cancel(months);
     const result = await updateTransactionReportingDateAction({
       transactionId: transaction.id,
       reportingDate
     }).catch(() => null);
 
+    monthCache.checkResult(result);
     if (!result?.ok) {
       setSaveError(
         result?.reason ?? "No se pudo guardar la fecha. Inténtalo de nuevo."
       );
       setIsPending(false);
+      await monthCache.invalidate(months);
       return;
     }
 
     onReportingDateChange(result.value.reportingDate);
     setIsPending(false);
-    router.refresh();
+    await monthCache.invalidate(months);
   }
 
   return (

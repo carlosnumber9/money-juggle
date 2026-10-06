@@ -13,6 +13,8 @@ import {
 } from "./DashboardSyncControls/feedback";
 import { requestSync } from "./DashboardSyncControls/requests";
 
+import { useMonthInvalidation } from "./MonthlyTransactionsPanel/useMonthInvalidation";
+
 import { useSyncActivity } from "./SyncActivityProvider";
 import { MonthlyExportButton } from "./MonthlyExport/MonthlyExportButton";
 
@@ -24,6 +26,7 @@ export function DashboardSyncControls({
   exportPeriod
 }: DashboardSyncControlsProps) {
   const router = useRouter();
+  const { invalidate: invalidateMonths } = useMonthInvalidation();
   const { beginSync } = useSyncActivity();
   const didAutoRefreshRef = useRef(false);
   const [activeOperation, setActiveOperation] = useState<ActiveOperation>(null);
@@ -58,6 +61,7 @@ export function DashboardSyncControls({
         router.refresh();
       })
       .finally(() => {
+        void invalidateMonths();
         finishSync();
         if (!abortController.signal.aborted) {
           setActiveOperation(null);
@@ -66,9 +70,10 @@ export function DashboardSyncControls({
 
     return () => {
       abortController.abort();
+      void invalidateMonths();
       finishSync();
     };
-  }, [beginSync, enabled, router]);
+  }, [beginSync, enabled, router, invalidateMonths]);
 
   async function handleRefresh() {
     if (!enabled || activeOperation) {
@@ -89,6 +94,7 @@ export function DashboardSyncControls({
       setRefreshResult(NETWORK_SYNC_FAILURE);
       router.refresh();
     } finally {
+      await invalidateMonths();
       finishSync();
       setActiveOperation(null);
     }
@@ -119,6 +125,7 @@ export function DashboardSyncControls({
       setBackfillResult(NETWORK_SYNC_FAILURE);
       router.refresh();
     } finally {
+      await invalidateMonths();
       finishSync();
       setActiveOperation(null);
     }

@@ -17,6 +17,7 @@ export async function getPrivateLayoutView(): Promise<PrivateLayoutView> {
   return {
     kind: "authenticated",
     user: {
+      id: user.id,
       email: user.email
     }
   };

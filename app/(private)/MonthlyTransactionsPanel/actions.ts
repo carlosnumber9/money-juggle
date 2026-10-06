@@ -1,7 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-
 import type { Result, TransactionLabelSummary } from "@/definitions";
 import { isEmailAllowed } from "@/lib/auth/allowlist";
 import { updateTransactionCategoryAssignment } from "@/lib/db/transactionCategories";
@@ -35,7 +33,8 @@ export async function updateTransactionCategoryAction(
   if (!user || !isEmailAllowed(user.email)) {
     return {
       ok: false,
-      reason: "Inicia sesión de nuevo para guardar la categoría."
+      reason: "Inicia sesión de nuevo para guardar la categoría.",
+      status: user ? 403 : 401
     };
   }
 
@@ -45,7 +44,6 @@ export async function updateTransactionCategoryAction(
       transactionId: input.transactionId,
       categoryId: input.categoryId
     });
-    revalidatePath("/");
 
     return { ok: true, value: null };
   } catch (error) {
@@ -90,7 +88,6 @@ export async function updateTransactionReportingDateAction(input: {
       transactionId: input.transactionId,
       reportingDate: input.reportingDate
     });
-    revalidatePath("/");
 
     return { ok: true, value: { reportingDate } };
   } catch (error) {
@@ -128,7 +125,6 @@ export async function assignTransactionLabelAction(input: {
       transactionId: input.transactionId,
       labelId: input.labelId
     });
-    revalidatePath("/");
 
     return { ok: true, value: null };
   } catch (error) {
@@ -160,7 +156,6 @@ export async function createAndAssignTransactionLabelAction(input: {
       transactionId: input.transactionId,
       name: input.name
     });
-    revalidatePath("/");
 
     return { ok: true, value: label };
   } catch (error) {
@@ -192,7 +187,6 @@ export async function removeTransactionLabelAction(input: {
       transactionId: input.transactionId,
       labelId: input.labelId
     });
-    revalidatePath("/");
 
     return { ok: true, value: null };
   } catch (error) {
@@ -207,7 +201,8 @@ async function getAllowedUser(action: string) {
   if (!user || !isEmailAllowed(user.email)) {
     return {
       ok: false,
-      reason: `Inicia sesión de nuevo para ${action}.`
+      reason: `Inicia sesión de nuevo para ${action}.`,
+      status: user ? (403 as const) : (401 as const)
     } as const;
   }
 
