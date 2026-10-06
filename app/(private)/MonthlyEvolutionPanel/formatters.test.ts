@@ -97,7 +97,7 @@ describe("monthly evolution formatters", () => {
     expect(normalizeWhitespace(description)).toBe("24,50 € de ahorro neto");
   });
 
-  it("preserves the monthly category description", () => {
+  it("shows only the monthly category expense amount", () => {
     const description = formatMonthlyCategoryExpensesDescription({
       monthLabel: "julio de 2026",
       currency: "EUR",
@@ -114,12 +114,25 @@ describe("monthly evolution formatters", () => {
       transactionCount: 2,
       uncategorizedExpenseCount: 1,
       excludedInternalTransferCount: 0,
-      excludedCategoryNames: ["Hipoteca"]
+      excludedCategoryNames: ["Hipoteca", "Ahorro"]
     });
 
-    expect(normalizeWhitespace(description)).toBe(
-      "80,00 € en julio de 2026 · 1 sin categoría · Hipoteca excluida"
-    );
+    expect(normalizeWhitespace(description)).toBe("80,00 €");
+  });
+
+  it("shows a zero amount for months without category expenses", () => {
+    const description = formatMonthlyCategoryExpensesDescription({
+      monthLabel: "junio de 2026",
+      currency: "EUR",
+      points: [],
+      totalExpenses: 0,
+      transactionCount: 0,
+      uncategorizedExpenseCount: 0,
+      excludedInternalTransferCount: 0,
+      excludedCategoryNames: []
+    });
+
+    expect(normalizeWhitespace(description)).toBe("0,00 €");
   });
 });
 

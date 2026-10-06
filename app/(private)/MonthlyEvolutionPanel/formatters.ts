@@ -40,20 +40,7 @@ export function formatAnnualLabelExpensesDescription(
 export function formatMonthlyCategoryExpensesDescription(
   summary: MonthlyCategoryExpensesSummary
 ): string {
-  const excludedCategoriesText = getExcludedCategoriesText(
-    summary.excludedCategoryNames
-  );
-
-  if (summary.points.length === 0) {
-    return `Sin categorías con gasto en ${summary.monthLabel}${excludedCategoriesText}.`;
-  }
-
-  const uncategorizedText =
-    summary.uncategorizedExpenseCount > 0
-      ? ` · ${summary.uncategorizedExpenseCount} sin categoría`
-      : "";
-
-  return `${formatCurrency(summary.totalExpenses, summary.currency)} en ${summary.monthLabel}${uncategorizedText}${excludedCategoriesText}`;
+  return formatCurrency(summary.totalExpenses, summary.currency);
 }
 
 export function formatCurrency(value: number, currency: string): string {
@@ -61,19 +48,6 @@ export function formatCurrency(value: number, currency: string): string {
     style: "currency",
     currency
   }).format(value);
-}
-
-function getExcludedCategoriesText(categoryNames: string[]): string {
-  if (categoryNames.length === 0) {
-    return "";
-  }
-
-  const categoryList = new Intl.ListFormat("es-ES", {
-    style: "long",
-    type: "conjunction"
-  }).format(categoryNames);
-
-  return ` · ${categoryList} ${categoryNames.length === 1 ? "excluida" : "excluidas"}`;
 }
 
 export function formatCompactCurrency(value: number, currency: string): string {

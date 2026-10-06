@@ -145,6 +145,15 @@ ownership from the session, and reads Supabase through RLS. Its responses are
 private and not HTTP-cached. It never calls Enable Banking. Evolution continues
 to use server navigation. Moving between periods does not trigger historical
 Enable Banking requests.
+The category expense radar owns its month navigation transition. Clicking a
+month arrow immediately displays the requested month, disables both arrows,
+and covers the old chart with the shared Liquid Orb overlay, centered in the
+chart area. The previous amount is hidden while loading. The chart keeps its
+height and uses the same 500 ms fades and reduced-motion/GPU fallbacks as
+transactions. When the transition settles, the server's month, amount, and
+chart are displayed, including empty or error results; interrupted navigation
+returns to the committed month. Its subtitle contains only the formatted
+expense amount, with no repeated month, category list, or uncategorized count.
 The annual evolution line, labeled-expense radial, and annual savings line do
 not change with the selected month.
 

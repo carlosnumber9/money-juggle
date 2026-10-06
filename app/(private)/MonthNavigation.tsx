@@ -11,18 +11,28 @@ import { cn } from "@/lib/utils";
 export function MonthNavigation({
   selectedMonth,
   tab,
-  className
+  className,
+  pending = false,
+  onMonthChange
 }: {
   selectedMonth: MonthlyPeriodView;
   tab: "transactions" | "evolution";
   className?: string;
+  pending?: boolean;
+  onMonthChange?: (month: string) => void;
 }) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const navigationPending = pending || isPending;
 
   function navigateTo(month: string) {
+    if (navigationPending) return;
+    if (onMonthChange) {
+      onMonthChange(month);
+      return;
+    }
     const nextSearchParams = new URLSearchParams(searchParams.toString());
 
     nextSearchParams.set("month", month);
@@ -52,7 +62,7 @@ export function MonthNavigation({
         variant="outline"
         size="icon-xs"
         aria-label={`Ver ${formatNavigationLabel(selectedMonth.previousMonth)}`}
-        disabled={isPending}
+        disabled={navigationPending}
         onClick={() => navigateTo(selectedMonth.previousMonth)}
       >
         <ChevronLeftIcon aria-hidden />
@@ -69,7 +79,7 @@ export function MonthNavigation({
             ? `Ver ${formatNavigationLabel(selectedMonth.nextMonth)}`
             : "No hay un mes posterior disponible"
         }
-        disabled={isPending || !selectedMonth.nextMonth}
+        disabled={navigationPending || !selectedMonth.nextMonth}
         onClick={() => {
           if (selectedMonth.nextMonth) {
             navigateTo(selectedMonth.nextMonth);

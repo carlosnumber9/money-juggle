@@ -16,12 +16,14 @@ export function LoadingOverlay({
   label,
   loadingLabel,
   className,
+  centerOrb = false,
   children
 }: {
   loading: boolean;
   label: string;
   loadingLabel: string;
   className?: string;
+  centerOrb?: boolean;
   children: ReactNode;
 }) {
   const [overlay] = useState(() =>
@@ -78,7 +80,13 @@ export function LoadingOverlay({
           aria-label={loadingLabel}
           aria-hidden={!loading}
         >
-          <div className="sticky top-[calc(50dvh-5rem)] mx-auto grid h-40 w-40 place-items-center">
+          <div
+            className={
+              centerOrb
+                ? "absolute inset-0 grid place-items-center"
+                : "sticky top-[calc(50dvh-5rem)] mx-auto grid h-40 w-40 place-items-center"
+            }
+          >
             <LiquidOrb state={loading ? "thinking" : "idle"} />
           </div>
         </div>
