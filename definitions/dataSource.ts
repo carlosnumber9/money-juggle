@@ -5,6 +5,7 @@ export type AppUser = {
 };
 
 export type ProviderApplication = {
+  checkedAt: string;
   name: string;
   kid: string;
   environment: string;

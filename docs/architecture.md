@@ -329,3 +329,18 @@ Financial reads remain authenticated and RLS-protected; caching never grants
 server access. Other devices may remain out of date until the next revalidation
 of a stale entry. Action failures may include an optional 401/403 status so the
 client can distinguish rejected access from a recoverable save error.
+
+## Provider Display Metadata Cache
+
+The data-source boundary caches only normalized application display metadata and
+supported-bank catalogs for five minutes through Next.js `unstable_cache`.
+Keys include deployment environment, API base URL, application ID and catalog
+filters. Keys and values exclude signing keys, JWTs and other credentials.
+Failed reads throw before any successful value can be stored. Next.js may serve
+a previous successful value while revalidating it; the displayed check time
+therefore describes the last successful check, not current provider availability.
+
+The status tooltip shows its check time and explicitly describes the result as
+informational. This cache does not wrap session authorization, account reads,
+balance/transaction synchronization or financial Supabase reads. Those calls
+continue through their authenticated, uncached integration paths.

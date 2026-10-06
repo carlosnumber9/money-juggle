@@ -22,7 +22,8 @@ export async function loadProviderStatus(
       ok: true,
       value: {
         status: "success",
-        applicationName: application.name
+        applicationName: application.name,
+        checkedAt: application.checkedAt
       }
     };
   } catch (error) {

@@ -1,12 +1,6 @@
 import "server-only";
 
-import {
-  INITIAL_BANK_NAMES,
-  type AppUser,
-  type BankingDataSource,
-  type InstitutionAvailability,
-  type ProviderApplication
-} from "@/definitions";
+import { type AppUser, type BankingDataSource } from "@/definitions";
 import { isEmailAllowed } from "@/lib/auth/allowlist";
 import { listUserEnableBankingConnections } from "@/lib/db/enableBankingConnections";
 import { loadBankAccountReview } from "@/lib/db/enableBankingConnections/accountReview";
@@ -18,9 +12,9 @@ import { listTransactionCategoryGroups } from "@/lib/db/transactionCategories";
 import { listTransactionLabels } from "@/lib/db/transactionLabels";
 import { listTransactionReconciliationAdjustments } from "@/lib/db/transactionReconciliations";
 import {
-  getEnableBankingApplication,
-  getEnableBankingAspsps
-} from "@/lib/enableBanking/client";
+  getCachedProviderApplication,
+  getCachedAvailableInstitutions
+} from "@/lib/enableBanking/displayMetadata";
 import { getCurrentSupabaseUser } from "@/lib/supabase/currentUser";
 import { getMonthlyReportData } from "@/lib/db/monthlyReportData";
 
@@ -42,37 +36,10 @@ export const bankingDataSource: BankingDataSource = {
     } satisfies AppUser;
   },
   async getProviderApplication() {
-    const application = await getEnableBankingApplication();
-
-    return {
-      name: application.name,
-      kid: application.kid,
-      environment: application.environment,
-      active: application.active,
-      countries: application.countries,
-      services: application.services
-    } satisfies ProviderApplication;
+    return getCachedProviderApplication();
   },
   async listAvailableInstitutions() {
-    const aspsps = await getEnableBankingAspsps({
-      country: "ES",
-      psuType: "personal",
-      service: "AIS"
-    });
-
-    return aspsps
-      .filter((aspsp) =>
-        INITIAL_BANK_NAMES.some((bankName) =>
-          aspsp.name.toLowerCase().includes(bankName.toLowerCase())
-        )
-      )
-      .map((aspsp): InstitutionAvailability => ({
-        name: aspsp.name,
-        country: aspsp.country,
-        logo: aspsp.logo,
-        beta: aspsp.beta,
-        maximumConsentValidity: aspsp.maximum_consent_validity
-      }));
+    return getCachedAvailableInstitutions();
   },
   async listBankConnections(userId: string) {
     return listUserEnableBankingConnections(userId);

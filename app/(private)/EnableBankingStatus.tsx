@@ -40,10 +40,18 @@ export function EnableBankingStatus({ status }: EnableBankingStatusProps) {
     );
   }
 
+  const checkedAt = status.checkedAt
+    ? new Intl.DateTimeFormat("es-ES", {
+        dateStyle: "short",
+        timeStyle: "medium",
+        timeZone: "Europe/Madrid"
+      }).format(new Date(status.checkedAt))
+    : null;
+  const label = `Aplicación verificada: ${status.applicationName}.${checkedAt ? ` Última comprobación: ${checkedAt}.` : ""} Estado informativo; puede reutilizarse durante cinco minutos.`;
   return (
     <Tooltip
-      triggerLabel={`Conexión viva con Enable Banking. Aplicación verificada: ${status.applicationName}`}
-      label={`Conexión viva con Enable Banking. Aplicación verificada: ${status.applicationName}.`}
+      triggerLabel={label}
+      label={label}
       triggerClassName={`${statusTriggerClassName} text-primary`}
     >
       <WifiIcon className="size-7" aria-hidden />

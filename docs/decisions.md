@@ -1839,3 +1839,11 @@ Possible future revisit trigger:
   months. Keep authorization and Supabase RLS independent of browser caching.
 - Use the supplied Liquid Orb style 9 to cover only the transaction list during
   requested-month loading, with 500 ms fades and reduced-motion/GPU fallbacks.
+
+## Provider Display Metadata Freshness
+
+Cache normalized provider application display data and bank catalogs for five
+minutes, separated by environment, application and filters. Show the successful
+check time rather than describing a cached response as a live connection.
+Financial reads, consent operations and synchronization remain uncached on the
+server. Do not cache provider failures, signing material or tokens.
