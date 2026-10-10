@@ -1,5 +1,6 @@
 import type {
   MonthlyReportData,
+  PortfolioSnapshot,
   MonthlyTransactionCategory,
   MonthlyTransactionSummary
 } from "@/definitions";
@@ -78,6 +79,38 @@ export function reportData(
       }
     ],
     unavailableAdjustmentCount: 0,
+    ...overrides
+  };
+}
+
+export function reportPortfolio(
+  overrides: Partial<PortfolioSnapshot> = {}
+): PortfolioSnapshot {
+  return {
+    id: "snapshot-secret",
+    revision: "revision-secret",
+    cash: "9876543.21",
+    reportDate: "2026-09-20",
+    currency: "EUR",
+    investments: "0.3",
+    positions: [
+      {
+        name: "Small fund",
+        isin: "IE00B4L5Y983",
+        quantity: "1.123456",
+        price: "0.33",
+        priceDate: "2026-09-19",
+        value: "0.1"
+      },
+      {
+        name: "Large fund",
+        isin: "IE00B3XXRP09",
+        quantity: "0.123456",
+        price: "1.62",
+        priceDate: "2026-09-18",
+        value: "0.2"
+      }
+    ],
     ...overrides
   };
 }

@@ -9,6 +9,7 @@ import { getSelectedTransactionMonth } from "@/lib/domain/transactionRanges";
 
 import { selectReportBalances } from "./accountBalances";
 import { isInReportRange } from "./period";
+import { buildReportPortfolio } from "./portfolio";
 import type {
   CategoryTreatment,
   MonthlyExportReport,
@@ -24,11 +25,15 @@ export function buildMonthlyExportReport(
   const period = getSelectedTransactionMonth(month, generatedAt);
   if (period.value !== month) throw new Error("Invalid monthly report period.");
   const range = period.range;
+  const portfolio = buildReportPortfolio(data.portfolio, range.to);
   const observations = [
     "Informe parcial: la cobertura bancaria completa del mes no puede verificarse con los datos guardados.",
     "Se incluyen solo movimientos contabilizados. Categorías usa fecha económica; Cuentas usa fecha bancaria.",
     "Ingresos y gastos son netos por categoría; pueden ser negativos. Los campos no aplicables quedan vacíos y los desconocidos se explican en observaciones.",
-    "No disponibles en esta versión: recurrencia, nóminas pendientes, reservas para pagos, colchón y valoraciones de inversiones.",
+    "No disponibles en esta versión: recurrencia, nóminas pendientes, reservas para pagos y colchón.",
+    portfolio
+      ? "La hoja Inversiones muestra una valoración observada del portfolio, separada de los flujos y saldos bancarios."
+      : "Inversiones: no hay foto confirmada disponible hasta el cierre del mes; valoración desconocida, no cero.",
     "El excedente excluye movimientos sin categoría y no representa por sí solo variación del efectivo ni del patrimonio."
   ];
   const accountsById = new Map(
@@ -211,6 +216,7 @@ export function buildMonthlyExportReport(
       "Mes en curso: informe provisional hasta el cierre y la actualización de los datos."
     );
   return {
+    portfolio,
     month,
     generatedAt,
     provisional,

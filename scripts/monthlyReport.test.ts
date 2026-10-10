@@ -26,6 +26,7 @@ vi.mock("@/lib/db/monthlyReportData", () => ({
 import {
   reportCategory,
   reportData,
+  reportPortfolio,
   reportTransaction,
   REPORT_NOW
 } from "@/lib/reports/monthlyExport/fixtures.testSupport";
@@ -151,6 +152,24 @@ describe("monthly report command", () => {
     expect(mocks.readData).not.toHaveBeenCalled();
     expect(mocks.signOut).toHaveBeenCalledWith({ scope: "local" });
     expect(await readdir(directory)).toEqual([]);
+  });
+
+  it("includes the saved portfolio in the same authenticated CLI workbook", async () => {
+    mocks.readData.mockResolvedValue(
+      reportData({ portfolio: reportPortfolio() })
+    );
+    const filename = await runMonthlyReport([], directory, REPORT_NOW);
+    const files = unzipSync(await readFile(filename!));
+    expect(strFromU8(files["xl/workbook.xml"])).toContain('name="Inversiones"');
+    expect(strFromU8(files["xl/worksheets/sheet4.xml"])).toMatch(
+      /r="B5"[^>]*><v>0.3<\/v>/
+    );
+    expect(strFromU8(files["xl/sharedStrings.xml"])).toContain("Large fund");
+    expect(mocks.readData).toHaveBeenCalledWith(
+      OWNER_ID,
+      { from: "2026-09-01", to: "2026-10-01" },
+      client
+    );
   });
 
   it("replaces the same month's workbook with updated data using a stable filename", async () => {

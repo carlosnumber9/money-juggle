@@ -1,3 +1,5 @@
+import type { PortfolioPosition } from "@/definitions";
+
 export type CategoryTreatment =
   | "income"
   | "expense"
@@ -38,6 +40,13 @@ export type ReportAccountRow = {
 };
 
 export type MonthlyExportReport = {
+  portfolio: {
+    reportDate: string;
+    currency: "EUR";
+    investments: string;
+    positions: PortfolioPosition[];
+    observations: string;
+  } | null;
   month: string;
   generatedAt: Date;
   provisional: boolean;

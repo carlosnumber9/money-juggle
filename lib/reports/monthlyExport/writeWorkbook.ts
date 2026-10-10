@@ -24,6 +24,13 @@ function text(value: string): Cell {
 }
 
 function money(value: string | null, currency: string): Cell {
+  return numeric(
+    value,
+    `#,##0.00####" ${currency}";[Red]-#,##0.00####" ${currency}"`
+  );
+}
+
+function numeric(value: string | null, format: string): Cell {
   if (value === null) return null;
   const number = Number(value);
   if (
@@ -36,7 +43,7 @@ function money(value: string | null, currency: string): Cell {
   return {
     type: Number,
     value: number,
-    format: `#,##0.00####" ${currency}";[Red]-#,##0.00####" ${currency}"`
+    format
   };
 }
 
@@ -216,6 +223,55 @@ export async function writeMonthlyWorkbook(
       text(row.observations)
     ])
   ];
+  const portfolio = report.portfolio;
+  const portfolioCurrency = portfolio?.currency ?? "EUR";
+  const investments: SheetData = [
+    header(["Campo", "Valor"]),
+    [text("Entidad"), text("Trade Republic")],
+    [
+      text("Estado"),
+      text(
+        portfolio
+          ? "Foto confirmada disponible"
+          : "Sin foto confirmada disponible hasta el cierre del mes"
+      )
+    ],
+    [text("Fecha del informe PDF"), date(portfolio?.reportDate ?? null)],
+    [
+      text("Total inversiones"),
+      money(portfolio?.investments ?? null, portfolioCurrency)
+    ],
+    [
+      text("Origen"),
+      portfolio ? text("Importación PDF revisada y confirmada") : null
+    ],
+    [
+      text("Observaciones"),
+      text(
+        portfolio?.observations ??
+          "No hay foto confirmada disponible hasta el cierre del mes. Valoración desconocida; no se representa como cero ni se usa una foto posterior."
+      )
+    ],
+    [],
+    header([
+      "Producto",
+      "ISIN",
+      "Unidades",
+      "Precio unitario",
+      "Fecha de cotización",
+      "Valoración",
+      "Moneda"
+    ]),
+    ...(portfolio?.positions ?? []).map((position) => [
+      text(position.name),
+      text(position.isin),
+      numeric(position.quantity, "#,##0.######"),
+      money(position.price, portfolioCurrency),
+      date(position.priceDate),
+      money(position.value, portfolioCurrency),
+      text(portfolioCurrency)
+    ])
+  ];
   return writeExcelFile(
     [
       {
@@ -242,6 +298,11 @@ export async function writeMonthlyWorkbook(
         columns: [
           30, 20, 10, 24, 25, 22, 24, 25, 22, 24, 25, 25, 25, 28, 70
         ].map((width) => ({ width }))
+      },
+      {
+        sheet: "Inversiones",
+        data: investments,
+        columns: [48, 65, 20, 24, 25, 24, 10].map((width) => ({ width }))
       }
     ],
     { fontFamily: "Calibri", fontSize: 11 }

@@ -16,7 +16,10 @@ vi.mock("@/lib/reports/monthlyExport/writeWorkbook", () => ({
   writeMonthlyWorkbook: mocks.write
 }));
 
-import { reportData } from "@/lib/reports/monthlyExport/fixtures.testSupport";
+import {
+  reportData,
+  reportPortfolio
+} from "@/lib/reports/monthlyExport/fixtures.testSupport";
 import { POST } from "./route";
 
 function request(body: unknown = { month: "2000-09" }) {
@@ -83,6 +86,20 @@ describe("private monthly export endpoint", () => {
     );
     expect(Buffer.from(await response.arrayBuffer()).toString()).toBe(
       "xlsx-fixture"
+    );
+  });
+  it("passes the owner's eligible portfolio to the shared workbook writer", async () => {
+    mocks.data.mockResolvedValue(
+      reportData({ portfolio: reportPortfolio({ reportDate: "2000-09-20" }) })
+    );
+    expect((await POST(request())).status).toBe(200);
+    expect(mocks.write).toHaveBeenCalledWith(
+      expect.objectContaining({
+        portfolio: expect.objectContaining({
+          reportDate: "2000-09-20",
+          investments: "0.3"
+        })
+      })
     );
   });
   it("fails on unavailable data instead of issuing an empty successful report", async () => {
