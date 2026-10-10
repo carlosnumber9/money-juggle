@@ -110,7 +110,7 @@ loading continues to use the same overlay through `TransactionListLoading`.
 On desktop, the Base UI tab list owns one persistent underline indicator.
 Below 768 px it uses 28 px icons with transparent 44 px hit areas and hides the
 underline. A scoped proximity controller scales only the content, from 1 to
-1.18, starting 16 px outside the fixed tab area. Touch and reduced-motion
+1.35, starting 16 px outside the fixed tab area. Touch and reduced-motion
 preferences disable the effect. The desktop underline position uses
 `transform: translateX(...)`, and its transform and width animate for 200 ms.
 Reduced motion disables the transition. This explicit transform is required

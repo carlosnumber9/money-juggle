@@ -83,7 +83,7 @@ Below 768 px, four labeled tabs become accessible icon-only controls using
 28 px Lucide icons and transparent 44 px hit areas. There is no visible
 container or underline. Desktop retains text tabs and their underline.
 
-Mouse proximity scales content from 1 to 1.18 using a two-dimensional cosine
+Mouse proximity scales content from 1 to 1.35 using a two-dimensional cosine
 falloff, extending 16 px beyond each fixed tab area. A requestAnimationFrame
 loop smooths the scale without moving layout or hit areas. Touch input,
 reduced-motion preferences, navigation, cancellation and window exit reset or

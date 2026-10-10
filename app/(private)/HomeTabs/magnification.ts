@@ -19,7 +19,7 @@ export function tabMagnification(
   const distance = Math.hypot(x, y);
   return distance >= 1
     ? 1
-    : 1 + (0.18 * (1 + Math.cos(Math.PI * distance))) / 2;
+    : 1 + (0.35 * (1 + Math.cos(Math.PI * distance))) / 2;
 }
 
 export function smoothTabScale(
