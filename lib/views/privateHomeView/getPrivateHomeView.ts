@@ -1,6 +1,10 @@
 import "server-only";
 
-import type { PrivateHomeView, ProviderStatusView } from "@/definitions";
+import type {
+  InitialLoadReporter,
+  PrivateHomeView,
+  ProviderStatusView
+} from "@/definitions";
 import { bankingDataSource } from "@/lib/data/bankingDataSource";
 import { getDefaultExportMonth } from "@/lib/reports/monthlyExport/period";
 import {
@@ -30,12 +34,15 @@ import {
 
 export async function getPrivateHomeView(
   requestedMonth?: string,
-  tab: import("@/definitions").HomeTab = "dashboard"
+  tab: import("@/definitions").HomeTab = "dashboard",
+  report?: InitialLoadReporter
 ): Promise<PrivateHomeView> {
   const dataSource = bankingDataSource;
   const user = await dataSource.getCurrentUser();
   if (!user) return { kind: "unauthenticated" };
   if (!user.isAllowed) return { kind: "forbidden" };
+
+  report?.("session", "completed");
 
   const selectedMonth = getSelectedTransactionMonth(requestedMonth);
   const providerPromise =
@@ -50,6 +57,13 @@ export async function getPrivateHomeView(
       getTransactionMonthView(user.id, requestedMonth, dataSource),
       providerPromise
     ]);
+    report?.(
+      "data",
+      monthlyTransactions.error || providerStatus.status !== "success"
+        ? "warning"
+        : "completed"
+    );
+    report?.("prepared", "completed");
     return { ...common, tab, providerStatus, monthlyTransactions };
   }
 
@@ -81,7 +95,18 @@ export async function getPrivateHomeView(
       providerStatus.status === "success"
         ? await loadInstitutions(dataSource)
         : undefined;
-    return {
+    report?.(
+      "data",
+      !transactions.ok ||
+        !adjustments.ok ||
+        !connectionsResult.ok ||
+        !completedConnectionIdsResult.ok ||
+        providerStatus.status !== "success" ||
+        !institutionsResult?.ok
+        ? "warning"
+        : "completed"
+    );
+    const view: PrivateHomeView = {
       ...common,
       tab,
       providerStatus,
@@ -113,6 +138,8 @@ export async function getPrivateHomeView(
           : adjustments.reason
         : transactions.reason
     };
+    report?.("prepared", "completed");
+    return view;
   }
 
   const yearlyRange = getCurrentYearTransactionRange();
@@ -130,7 +157,17 @@ export async function getPrivateHomeView(
     loadTransactionReconciliationAdjustments(dataSource, user.id, yearlyRange),
     providerPromise
   ]);
-  return {
+  report?.(
+    "data",
+    !transactions.ok ||
+      !adjustments.ok ||
+      !yearlyTransactions.ok ||
+      !yearlyAdjustments.ok ||
+      providerStatus.status !== "success"
+      ? "warning"
+      : "completed"
+  );
+  const view: PrivateHomeView = {
     ...common,
     tab,
     providerStatus,
@@ -167,6 +204,8 @@ export async function getPrivateHomeView(
         : yearlyTransactions.reason
     }
   };
+  report?.("prepared", "completed");
+  return view;
 }
 
 function getProviderStatus(

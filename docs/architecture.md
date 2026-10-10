@@ -378,3 +378,58 @@ The status tooltip shows its check time and explicitly describes the result as
 informational. This cache does not wrap session authorization, account reads,
 balance/transaction synchronization or financial Supabase reads. Those calls
 continue through their authenticated, uncached integration paths.
+
+## Initial Load And Dashboard Progress
+
+The private home uses a centered Steps trace on a document load for Dashboard,
+Transactions, and Evolution. Its four steps validate access, read the selected
+panel's data, prepare the panel, and mount the content. The authenticated layout
+and prepared page must both mount before the panel is revealed. The shell only
+contains branding and generic Spanish status text. Account review routes do not
+use this home bootstrap gate.
+
+Initial progress uses request-local promises and small React Server Component
+Suspense checkpoints. It does not issue duplicate financial reads or serialize
+the existing parallel loaders. Session, data and preparation checkpoints come
+from the existing view preparation; the final checkpoint comes from a mounted
+client component. Recoverable read errors are warnings and preserve the existing
+panel error feedback. A private page error boundary provides a full reload retry
+for unrecoverable failures. Tab navigation and subsequent server refreshes do not
+restart the centered document-load trace.
+
+Dashboard's update control uses the same Steps presentation. It automatically
+expands during synchronization, shows separate bank rows under balances and
+transactions, and collapses into an Update button after the refreshed view
+commits. Each bank remains running through persistence. Rows distinguish fresh
+data, partial results, provider retry deadlines, expired consent and busy
+connections. No account numbers or provider session data appear in the trace.
+
+`POST /api/sync/dashboard` negotiates a private, uncached SSE response when the
+caller sends `Accept: text/event-stream`; other callers retain the JSON response.
+Authentication and the email allowlist run before the stream opens. Progress
+events contain phase states and connection IDs with bank display names, never
+raw provider responses, amounts or credentials. The terminal event retains the
+existing result and its logical HTTP status because streaming headers have
+already been sent. Unexpected failures produce a sanitized error event, and a
+truncated stream is never treated as success.
+
+Optional callbacks expose real resource progress without changing financial
+rules. Balances still finish before transactions begin, automatic freshness is
+six hours, and manual updates still use `force=true` while respecting leases,
+consent and provider deadlines. Stream cancellation stops event delivery rather
+than restarting or cancelling bank work. Next.js `after` retains the operation
+promise so its cleanup can release leases after a browser disconnect, subject to
+the deployment's normal execution duration limit. The UI invalidates monthly
+queries and keeps its sync indicator active through the server refresh transition.
+
+The custom Steps composition is a narrow exception to the default UI primitives:
+it combines the existing Button, Spinner, Lucide icons and theme tokens for a
+status trace that those primitives do not provide. It keeps square controls,
+supports reduced motion, and announces the active step and bank to assistive
+technology. Historical import and export retain their existing controls.
+
+Verification uses mocked provider/database route tests, fragmented stream tests,
+progress state tests and static accessible-markup checks. No local application
+was started, as browser-based local testing was not requested. Visual appearance
+and progressive delivery on the deployed application still require browser
+verification.

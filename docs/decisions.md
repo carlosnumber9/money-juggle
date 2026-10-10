@@ -1907,3 +1907,17 @@ minutes, separated by environment, application and filters. Show the successful
 check time rather than describing a cached response as a live connection.
 Financial reads, consent operations and synchronization remain uncached on the
 server. Do not cache provider failures, signing material or tokens.
+
+## Observable Loading Steps
+
+Use the supplied Thinking Steps interaction for document-load feedback and the
+dashboard update action, with the application's existing colors, typography and
+square controls. Initial loading has request-local React streaming checkpoints;
+bank synchronization negotiates SSE on the existing authenticated dashboard
+POST endpoint. Keep its JSON response for other callers.
+
+Show a separate bank status under each synchronization resource and complete it
+only after persistence finishes. Do not display account numbers, simulate
+progress with timers, or add a numeric completion percentage. Preserve existing
+financial reads, ownership/RLS rules, freshness checks, consent and retry gates.
+Collapse the finished synchronization trace into the manual update action.

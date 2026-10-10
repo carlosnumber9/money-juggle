@@ -26,6 +26,7 @@ export async function syncEnableBankingConnectionBalances(input: {
   userId: string;
   bankConnectionId: string;
   psuHeaders?: EnableBankingPsuHeaders;
+  onPersist?: () => void;
 }) {
   const connection = await getConnectionForBalanceSync(input);
 
@@ -34,7 +35,7 @@ export async function syncEnableBankingConnectionBalances(input: {
       reason: getBalanceSyncSkipReason(connection),
       bank_connection_id: input.bankConnectionId
     });
-    return { status: "skipped" as const };
+    return { status: "skipped" as const, skipReason: "unavailable" as const };
   }
 
   const cooldownUntil = getActiveRateLimitCooldown(
@@ -49,7 +50,7 @@ export async function syncEnableBankingConnectionBalances(input: {
       consentExpiresAt: connection.consent_expires_at
     })
   ) {
-    return { status: "skipped" as const };
+    return { status: "skipped" as const, skipReason: "expired" as const };
   }
 
   if (cooldownUntil) {
@@ -121,6 +122,7 @@ export async function syncEnableBankingConnectionBalances(input: {
     }
   }
 
+  input.onPersist?.();
   await finishBalanceSync({ ...input, syncRunId, fetchedAt, rows, failures });
   return { status: "completed" as const, partialFailure: failures.length > 0 };
 }

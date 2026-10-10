@@ -29,6 +29,42 @@ beforeEach(() => {
 });
 
 describe("active home tab", () => {
+  it("reports session before any data and preparation only after reads finish", async () => {
+    const report = vi.fn();
+    let release!: (rows: []) => void;
+    source.listMonthlyTransactions.mockImplementation(
+      () =>
+        new Promise<[]>((resolve) => {
+          release = resolve;
+        })
+    );
+    const view = getPrivateHomeView("2026-07", "dashboard", report);
+    await vi.waitFor(() =>
+      expect(report).toHaveBeenCalledWith("session", "completed")
+    );
+    expect(report).not.toHaveBeenCalledWith("data", expect.anything());
+    expect(report).not.toHaveBeenCalledWith("prepared", expect.anything());
+    release([]);
+    await view;
+    expect(report.mock.calls).toEqual([
+      ["session", "completed"],
+      ["data", "completed"],
+      ["prepared", "completed"]
+    ]);
+    expect(source.listMonthlyTransactions).toHaveBeenCalledOnce();
+  });
+  it("reports failed reads as warnings while preparing available data", async () => {
+    source.listMonthlyTransactions.mockRejectedValue(new Error("Read failed"));
+    const report = vi.fn();
+    const view = await getPrivateHomeView("2026-07", "dashboard", report);
+    expect(view.kind).toBe("ready");
+    expect(report.mock.calls).toEqual([
+      ["session", "completed"],
+      ["data", "warning"],
+      ["prepared", "completed"]
+    ]);
+  });
+
   it("reads only the requested month and review catalogs for transactions", async () => {
     const view = await getPrivateHomeView("2026-07", "transactions");
     expect(view).toMatchObject({ kind: "ready", tab: "transactions" });

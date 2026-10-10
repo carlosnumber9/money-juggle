@@ -1,5 +1,8 @@
 import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
+
+import type { BankSyncProgress, DashboardProgressEvent } from "@/definitions";
+import { createDashboardProgressStream } from "@/lib/db/enableBankingSync/progressStream";
 
 import { isEmailAllowed } from "@/lib/auth/allowlist";
 import { syncStaleEnableBankingBalances } from "@/lib/db/enableBankingBalances";
@@ -25,44 +28,129 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "not-allowed" }, { status: 403 });
   }
 
+  if (request.headers.get("accept")?.includes("text/event-stream")) {
+    const { response, finished } = createDashboardProgressStream((report) =>
+      runDashboardSync(request, user.id, report)
+    );
+    after(finished);
+    return response;
+  }
   try {
+    const result = await runDashboardSync(request, user.id);
+    return NextResponse.json(result.body, { status: result.status });
+  } catch {
+    return NextResponse.json(
+      { error: "dashboard-sync-failed" },
+      { status: 500 }
+    );
+  }
+}
+
+async function runDashboardSync(
+  request: NextRequest,
+  userId: string,
+  report?: (event: DashboardProgressEvent) => void
+) {
+  const progressByResource = {
+    balances: new Map<string, BankSyncProgress>(),
+    transactions: new Map<string, BankSyncProgress>()
+  };
+  const reportBank = (progress: BankSyncProgress) => {
+    progressByResource[progress.resource].set(
+      progress.bankConnectionId,
+      progress
+    );
+    report?.({ type: "bank", ...progress });
+  };
+  try {
+    report?.({ type: "phase", phase: "connections", status: "running" });
     const force = request.nextUrl.searchParams.get("force") === "true";
-    const connections = await listUserEnableBankingConnections(user.id, {
+    const connections = await listUserEnableBankingConnections(userId, {
       useServiceRole: true
     });
     const linkedConnections = connections.filter(
       (connection) =>
         connection.status === "linked" && connection.accounts.length > 0
     );
+    report?.({
+      type: "banks",
+      banks: linkedConnections.map((connection) => ({
+        id: connection.id,
+        name: connection.institution?.name ?? "Banco"
+      }))
+    });
     const range = getIncrementalProviderDateRange();
     const leaseResult = await withConnectionSyncLeases({
-      userId: user.id,
+      userId,
       bankConnectionIds: linkedConnections.map((connection) => connection.id),
       run: async (acquiredConnectionIds) => {
+        for (const connection of linkedConnections) {
+          if (!acquiredConnectionIds.has(connection.id)) {
+            for (const resource of ["balances", "transactions"] as const)
+              reportBank({
+                bankConnectionId: connection.id,
+                resource,
+                status: "warning",
+                reason: "busy"
+              });
+          }
+        }
         const psuHeadersByConnectionId =
           await getInteractivePsuHeadersByConnection({
-            userId: user.id,
+            userId,
             bankConnectionIds: acquiredConnectionIds,
             requestHeaders: request.headers
           });
+        report?.({ type: "phase", phase: "connections", status: "completed" });
+        report?.({ type: "phase", phase: "balances", status: "running" });
         const balances = await syncStaleEnableBankingBalances({
-          userId: user.id,
+          userId,
           connections: linkedConnections.filter((connection) =>
             acquiredConnectionIds.has(connection.id)
           ),
           force,
-          psuHeadersByConnectionId
+          psuHeadersByConnectionId,
+          onProgress: report ? reportBank : undefined
         });
+        report?.({ type: "phase", phase: "balances", status: "completed" });
+        report?.({ type: "phase", phase: "transactions", status: "running" });
         const transactions = await syncEnableBankingTransactions({
-          userId: user.id,
+          userId,
           dateFrom: range.from,
           dateTo: range.to,
           mode: "incremental",
           bankConnectionIds: acquiredConnectionIds,
           force,
-          psuHeadersByConnectionId
+          psuHeadersByConnectionId,
+          onProgress: report ? reportBank : undefined
         });
 
+        if (
+          report &&
+          linkedConnections.some(
+            (connection) => !progressByResource.transactions.has(connection.id)
+          )
+        ) {
+          const latest = await listUserEnableBankingConnections(userId, {
+            useServiceRole: true
+          });
+          for (const connection of linkedConnections) {
+            if (progressByResource.transactions.has(connection.id)) continue;
+            const status = latest.find(
+              (candidate) => candidate.id === connection.id
+            )?.status;
+            reportBank({
+              bankConnectionId: connection.id,
+              resource: "transactions",
+              status: "warning",
+              reason:
+                status === "expired" || status === "error"
+                  ? "expired"
+                  : "unavailable"
+            });
+          }
+        }
+        report?.({ type: "phase", phase: "transactions", status: "completed" });
         return { balances, transactions };
       }
     });
@@ -74,7 +162,7 @@ export async function POST(request: NextRequest) {
     });
 
     console.info("Dashboard sync completed", {
-      user_id_suffix: user.id.slice(-8),
+      user_id_suffix: userId.slice(-8),
       force,
       balance_succeeded_connection_count: balances.succeededConnectionCount,
       balance_failed_connection_count: balances.failedConnectionCount,
@@ -93,21 +181,18 @@ export async function POST(request: NextRequest) {
       busy_connection_count: leaseResult.busyConnectionCount
     });
 
-    return NextResponse.json(
-      {
+    return {
+      status: result.status,
+      body: {
         ...result.body,
         syncInProgress: leaseResult.busyConnectionCount > 0
-      },
-      { status: result.status }
-    );
+      }
+    };
   } catch (error) {
     console.error("Dashboard sync failed", {
       message: error instanceof Error ? error.message : "Unknown error."
     });
 
-    return NextResponse.json(
-      { error: "dashboard-sync-failed" },
-      { status: 500 }
-    );
+    throw error;
   }
 }

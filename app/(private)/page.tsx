@@ -1,3 +1,12 @@
+import { Suspense } from "react";
+import { InitialLoadCheckpoint } from "./InitialLoadProvider";
+import { createInitialLoadProgress } from "@/lib/views/privateHomeView/initialLoadProgress";
+import type {
+  InitialLoadReporter,
+  PrivateHomeView,
+  ProgressStatus
+} from "@/definitions";
+
 import { redirect } from "next/navigation";
 
 import { BankConnectionsPanel } from "@/app/(private)/BankConnectionsPanel";
@@ -10,12 +19,65 @@ import { HomeTabs } from "./HomeTabs";
 import type { PrivateHomePageProps } from "@/definitions";
 import { getPrivateHomeView } from "@/lib/views/privateHomeView";
 
-export default async function Home({ searchParams }: PrivateHomePageProps) {
-  const { month, tab } = await searchParams;
-  const requestedMonth = typeof month === "string" ? month : undefined;
-  const selectedTab = getSelectedTab(tab);
-  const view = await getPrivateHomeView(requestedMonth, selectedTab);
+export default function Home({ searchParams }: PrivateHomePageProps) {
+  const progress = createInitialLoadProgress();
+  const view = loadHome(searchParams, progress.report).catch(
+    (error: unknown) => {
+      progress.fail();
+      throw error;
+    }
+  );
+  return (
+    <>
+      {(["session", "data", "prepared"] as const).map((phase) => (
+        <Suspense key={phase} fallback={null}>
+          <StreamedCheckpoint
+            phase={phase}
+            milestone={progress.milestones[phase]}
+          />
+        </Suspense>
+      ))}
+      <Suspense fallback={null}>
+        <PreparedHome viewPromise={view} />
+      </Suspense>
+    </>
+  );
+}
 
+async function StreamedCheckpoint({
+  phase,
+  milestone
+}: {
+  phase: "session" | "data" | "prepared";
+  milestone: Promise<ProgressStatus>;
+}) {
+  return <InitialLoadCheckpoint phase={phase} status={await milestone} />;
+}
+
+async function loadHome(
+  searchParams: PrivateHomePageProps["searchParams"],
+  report: InitialLoadReporter
+) {
+  const { month, tab } = await searchParams;
+  const view = await getPrivateHomeView(
+    typeof month === "string" ? month : undefined,
+    getSelectedTab(tab),
+    report
+  );
+  if (view.kind !== "ready") {
+    report("session", "error");
+    report("data", "skipped");
+    report("prepared", "skipped");
+  }
+  return view;
+}
+
+async function PreparedHome({
+  viewPromise
+}: {
+  viewPromise: Promise<PrivateHomeView>;
+}) {
+  const view = await viewPromise;
   if (view.kind === "unauthenticated") {
     redirect("/login");
   }
@@ -26,8 +88,9 @@ export default async function Home({ searchParams }: PrivateHomePageProps) {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-6 py-14">
+      <InitialLoadCheckpoint phase="mounted" />
       <HomeTabs
-        selectedTab={selectedTab}
+        selectedTab={view.tab}
         heading={
           <div className="flex min-w-0 items-center gap-2">
             <EnableBankingStatus status={view.providerStatus} />

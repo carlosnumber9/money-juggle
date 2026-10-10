@@ -63,6 +63,39 @@ const successful: TransactionSyncResult = {
 };
 
 describe("transaction scheduling", () => {
+  it("does not complete a bank row until its persistence operation resolves", async () => {
+    let release!: () => void;
+    const wait = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    mocks.sync.mockImplementation(async ({ onPersist }) => {
+      onPersist?.();
+      await wait;
+      return successful;
+    });
+    const onProgress = vi.fn();
+    const operation = syncEnableBankingTransactions({
+      ...input,
+      force: true,
+      onProgress
+    });
+    // Promise turns let eligibility and the mocked persistence boundary run.
+    for (let turn = 0; turn < 10; turn += 1) await Promise.resolve();
+    expect(onProgress).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "running", reason: "persisting" })
+    );
+    expect(onProgress).not.toHaveBeenCalledWith(
+      expect.objectContaining({ status: "completed" })
+    );
+    release();
+    await operation;
+    expect(onProgress).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        bankConnectionId: "connection",
+        status: "completed"
+      })
+    );
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();

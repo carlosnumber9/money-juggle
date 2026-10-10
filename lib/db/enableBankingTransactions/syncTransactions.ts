@@ -2,7 +2,12 @@ import "server-only";
 import { expireConnectionConsent } from "../enableBankingSync/invalidSession";
 import { isTransactionRetryDeferred } from "./retry";
 
-import type { EnableBankingPsuHeaders } from "@/definitions";
+import type {
+  BankProgressReason,
+  BankSyncReporter,
+  EnableBankingPsuHeaders,
+  ProgressStatus
+} from "@/definitions";
 import { getErrorMessage } from "../shared/getErrorMessage";
 import { getActiveRateLimitCooldown } from "../enableBankingSync/rateLimitCooldown";
 import {
@@ -22,7 +27,8 @@ export async function syncEnableBankingTransactions({
   bankConnectionIds,
   force = false,
   maxAgeMs = TRANSACTION_AUTO_REFRESH_MS,
-  psuHeadersByConnectionId
+  psuHeadersByConnectionId,
+  onProgress
 }: {
   userId: string;
   dateFrom: string;
@@ -30,6 +36,7 @@ export async function syncEnableBankingTransactions({
   mode: TransactionSyncMode;
   bankConnectionIds?: ReadonlySet<string>;
   force?: boolean;
+  onProgress?: BankSyncReporter;
   maxAgeMs?: number;
   psuHeadersByConnectionId?: ReadonlyMap<string, EnableBankingPsuHeaders>;
 }): Promise<TransactionSyncResult> {
@@ -54,14 +61,27 @@ export async function syncEnableBankingTransactions({
   };
 
   for (const connection of connections) {
+    const update = (status: ProgressStatus, reason?: BankProgressReason) =>
+      onProgress?.({
+        bankConnectionId: connection.id,
+        resource: "transactions",
+        status,
+        reason
+      });
     if (
       !shouldSyncConnection(connection) ||
       (bankConnectionIds && !bankConnectionIds.has(connection.id)) ||
       completedBackfillConnectionIds.has(connection.id)
     ) {
+      if (!bankConnectionIds || bankConnectionIds.has(connection.id))
+        update(
+          "warning",
+          connection.status === "expired" ? "expired" : "unavailable"
+        );
       continue;
     }
 
+    update("running");
     if (
       await expireConnectionConsent({
         userId,
@@ -70,6 +90,7 @@ export async function syncEnableBankingTransactions({
         consentExpiresAt: connection.consent_expires_at
       })
     ) {
+      update("warning", "expired");
       continue;
     }
 
@@ -78,6 +99,7 @@ export async function syncEnableBankingTransactions({
     );
 
     if (cooldownUntil) {
+      update("warning", "deferred");
       result.cooldownConnectionCount += 1;
       result.deferredAccountCount += connection.accounts.length;
       result.issues.push({
@@ -94,6 +116,7 @@ export async function syncEnableBankingTransactions({
     }
 
     if (isTransactionRetryDeferred(connection.transaction_retry_after)) {
+      update("warning", "deferred");
       result.deferredAccountCount += connection.accounts.length;
       result.issues.push({
         bankConnectionId: connection.id,
@@ -110,6 +133,7 @@ export async function syncEnableBankingTransactions({
       !connection.transaction_sync_incomplete &&
       !shouldRefreshConnectionTransactions({ connection, maxAgeMs })
     ) {
+      update("skipped", "fresh");
       result.freshConnectionCount += 1;
       continue;
     }
@@ -121,11 +145,23 @@ export async function syncEnableBankingTransactions({
         dateFrom,
         dateTo,
         mode,
-        psuHeaders: psuHeadersByConnectionId?.get(connection.id)
+        psuHeaders: psuHeadersByConnectionId?.get(connection.id),
+        onPersist: onProgress
+          ? () => update("running", "persisting")
+          : undefined
       });
 
+      const failed = connectionResult.failedAccountCount > 0;
+      const partial = connectionResult.partialAccountCount > 0;
+      const allFailed =
+        failed && connectionResult.succeededAccountCount === 0 && !partial;
+      update(
+        allFailed ? "error" : failed || partial ? "warning" : "completed",
+        allFailed ? "failure" : failed || partial ? "partial" : undefined
+      );
       mergeSyncResult(result, connectionResult);
     } catch (error) {
+      update("error", "failure");
       result.attemptedAccountCount += connection.accounts.length;
       result.failedAccountCount += connection.accounts.length;
       result.issues.push({

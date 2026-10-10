@@ -32,6 +32,7 @@ export async function syncConnectionTransactions(input: {
   dateTo: string;
   mode: TransactionSyncMode;
   psuHeaders?: EnableBankingPsuHeaders;
+  onPersist?: () => void;
 }): Promise<TransactionSyncResult> {
   const syncRunId = await createSyncRun({
     userId: input.userId,
@@ -167,6 +168,7 @@ export async function syncConnectionTransactions(input: {
     }
   }
 
+  input.onPersist?.();
   await persistRowsAndFinishRun({
     ...input,
     syncRunId,

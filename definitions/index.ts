@@ -9,3 +9,4 @@ export * from "./supabase";
 export * from "./ui";
 export * from "./sync";
 export * from "./monthlyReport";
+export * from "./progress";

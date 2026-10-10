@@ -1,6 +1,7 @@
 import "server-only";
 
 import type {
+  BankSyncReporter,
   BankConnectionSummary,
   EnableBankingPsuHeaders,
   ConnectionSyncIssue
@@ -17,10 +18,12 @@ export async function syncStaleEnableBankingBalances({
   connections,
   maxAgeMs = BALANCE_AUTO_REFRESH_MS,
   force = false,
-  psuHeadersByConnectionId
+  psuHeadersByConnectionId,
+  onProgress
 }: {
   userId: string;
   connections: BankConnectionSummary[];
+  onProgress?: BankSyncReporter;
   maxAgeMs?: number;
   force?: boolean;
   psuHeadersByConnectionId?: ReadonlyMap<string, EnableBankingPsuHeaders>;
@@ -32,6 +35,16 @@ export async function syncStaleEnableBankingBalances({
         : shouldRefreshConnection(connection, maxAgeMs)
     )
     .map((connection) => connection.id);
+
+  for (const connection of connections) {
+    if (!staleConnectionIds.includes(connection.id))
+      onProgress?.({
+        bankConnectionId: connection.id,
+        resource: "balances",
+        status: "skipped",
+        reason: "fresh"
+      });
+  }
 
   console.info("Balance sync eligibility checked", {
     connection_count: connections.length,
@@ -49,14 +62,30 @@ export async function syncStaleEnableBankingBalances({
   const issues: ConnectionSyncIssue[] = [];
 
   for (const bankConnectionId of staleConnectionIds) {
+    onProgress?.({ bankConnectionId, resource: "balances", status: "running" });
     try {
       const connectionResult = await syncEnableBankingConnectionBalances({
         userId,
         bankConnectionId,
-        psuHeaders: psuHeadersByConnectionId?.get(bankConnectionId)
+        psuHeaders: psuHeadersByConnectionId?.get(bankConnectionId),
+        onPersist: onProgress
+          ? () =>
+              onProgress({
+                bankConnectionId,
+                resource: "balances",
+                status: "running",
+                reason: "persisting"
+              })
+          : undefined
       });
 
       if (connectionResult.status === "rate-limited") {
+        onProgress?.({
+          bankConnectionId,
+          resource: "balances",
+          status: "warning",
+          reason: "deferred"
+        });
         issues.push({
           bankConnectionId,
           resource: "balances",
@@ -72,9 +101,21 @@ export async function syncStaleEnableBankingBalances({
       }
 
       if (connectionResult.status === "skipped") {
+        onProgress?.({
+          bankConnectionId,
+          resource: "balances",
+          status: "warning",
+          reason: connectionResult.skipReason ?? "unavailable"
+        });
         continue;
       }
 
+      onProgress?.({
+        bankConnectionId,
+        resource: "balances",
+        status: connectionResult.partialFailure ? "warning" : "completed",
+        reason: connectionResult.partialFailure ? "partial" : undefined
+      });
       synced = true;
       succeededConnectionCount += 1;
       if (connectionResult.partialFailure) {
@@ -87,6 +128,12 @@ export async function syncStaleEnableBankingBalances({
         });
       }
     } catch (error) {
+      onProgress?.({
+        bankConnectionId,
+        resource: "balances",
+        status: "error",
+        reason: "failure"
+      });
       failedConnectionCount += 1;
       issues.push({
         bankConnectionId,

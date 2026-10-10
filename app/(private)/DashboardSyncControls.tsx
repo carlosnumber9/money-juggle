@@ -1,22 +1,39 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import type { DashboardSyncControlsProps, SyncResponse } from "@/definitions";
+import type {
+  DashboardProgressEvent,
+  DashboardSyncControlsProps,
+  SyncResponse
+} from "@/definitions";
 import {
   getSyncNotices,
   NETWORK_SYNC_FAILURE,
   resolveTransactionFeedback
 } from "./DashboardSyncControls/feedback";
-import { requestSync } from "./DashboardSyncControls/requests";
+import {
+  requestSync,
+  SyncRequestError
+} from "./DashboardSyncControls/requests";
 
 import { useMonthInvalidation } from "./MonthlyTransactionsPanel/useMonthInvalidation";
 
 import { useSyncActivity } from "./SyncActivityProvider";
 import { MonthlyExportButton } from "./MonthlyExport/MonthlyExportButton";
+
+import { LoadingSteps } from "@/components/LoadingSteps";
+import { useInitialLoadReady } from "./InitialLoadProvider";
+import { usePrivateQuerySession } from "./PrivateQueryProvider";
+import {
+  applyDashboardProgress,
+  createDashboardProgress,
+  failDashboardProgress,
+  setViewProgress
+} from "./loadingProgress";
 
 type ActiveOperation = "refresh" | "backfill" | null;
 
@@ -26,6 +43,13 @@ export function DashboardSyncControls({
   exportPeriod
 }: DashboardSyncControlsProps) {
   const router = useRouter();
+  const initialReady = useInitialLoadReady();
+  const { rejectAccess } = usePrivateQuerySession();
+  const [viewPending, startViewTransition] = useTransition();
+  const refreshRequested = useRef(false);
+  const syncFinished = useRef<(() => void) | null>(null);
+  const [progress, setProgress] = useState(createDashboardProgress);
+  const [expanded, setExpanded] = useState(false);
   const { invalidate: invalidateMonths } = useMonthInvalidation();
   const { beginSync } = useSyncActivity();
   const didAutoRefreshRef = useRef(false);
@@ -35,79 +59,108 @@ export function DashboardSyncControls({
     null
   );
 
+  const operationRef = useRef<ActiveOperation>(null);
+  const operationAbort = useRef<AbortController | null>(null);
+
+  const refresh = useCallback(
+    async (force: boolean) => {
+      if (!enabled || operationRef.current) return;
+      operationRef.current = "refresh";
+      const abortController = new AbortController();
+      operationAbort.current = abortController;
+      const finishSync = beginSync();
+      syncFinished.current = finishSync;
+      setActiveOperation("refresh");
+      setRefreshResult(null);
+      setProgress(createDashboardProgress());
+      setExpanded(true);
+      let waitingForView = false;
+      try {
+        try {
+          const result = await requestSync(
+            force ? "/api/sync/dashboard?force=true" : "/api/sync/dashboard",
+            abortController.signal,
+            (event: DashboardProgressEvent) =>
+              setProgress((rows) => applyDashboardProgress(rows, event))
+          );
+          if (abortController.signal.aborted) return;
+          setRefreshResult(result);
+        } catch (error) {
+          if (abortController.signal.aborted || isAbortError(error)) return;
+          if (error instanceof SyncRequestError) rejectAccess(error.status);
+          console.error("No se pudieron actualizar los datos.", error);
+          setRefreshResult(NETWORK_SYNC_FAILURE);
+          setProgress((rows) => failDashboardProgress(rows));
+        }
+        await invalidateMonths();
+        if (abortController.signal.aborted) return;
+        refreshRequested.current = true;
+        waitingForView = true;
+        setProgress((rows) => setViewProgress(rows, "running"));
+        startViewTransition(() => router.refresh());
+      } finally {
+        if (!waitingForView) {
+          finishSync();
+          syncFinished.current = null;
+          operationRef.current = null;
+          if (!abortController.signal.aborted) {
+            setActiveOperation(null);
+            setExpanded(false);
+          }
+        }
+      }
+    },
+    [beginSync, enabled, invalidateMonths, rejectAccess, router]
+  );
+
   useEffect(() => {
-    if (!enabled || didAutoRefreshRef.current) {
-      return;
-    }
-
-    didAutoRefreshRef.current = true;
-    const abortController = new AbortController();
-    const finishSync = beginSync();
-
-    setActiveOperation("refresh");
-    requestSync("/api/sync/dashboard", abortController.signal)
-      .then((result) => {
-        setRefreshResult(result);
-
-        router.refresh();
-      })
-      .catch((error: unknown) => {
-        if (isAbortError(error)) {
-          return;
-        }
-
-        console.error("No se pudieron actualizar los datos.", error);
-        setRefreshResult(NETWORK_SYNC_FAILURE);
-        router.refresh();
-      })
-      .finally(() => {
-        void invalidateMonths();
-        finishSync();
-        if (!abortController.signal.aborted) {
-          setActiveOperation(null);
-        }
-      });
-
+    if (!initialReady || !enabled || didAutoRefreshRef.current) return;
+    let disposed = false;
+    // Defer dispatch until effect replay has settled, without delaying progress.
+    queueMicrotask(() => {
+      if (disposed || didAutoRefreshRef.current) return;
+      didAutoRefreshRef.current = true;
+      void refresh(false);
+    });
     return () => {
-      abortController.abort();
-      void invalidateMonths();
-      finishSync();
+      disposed = true;
     };
-  }, [beginSync, enabled, router, invalidateMonths]);
+  }, [enabled, initialReady, refresh]);
 
-  async function handleRefresh() {
-    if (!enabled || activeOperation) {
-      return;
-    }
+  useEffect(
+    () => () => {
+      operationAbort.current?.abort();
+      syncFinished.current?.();
+      void invalidateMonths();
+    },
+    [invalidateMonths]
+  );
 
-    setActiveOperation("refresh");
-    setRefreshResult(null);
-    const finishSync = beginSync();
+  useEffect(() => {
+    if (!refreshRequested.current || viewPending) return;
+    refreshRequested.current = false;
+    operationRef.current = null;
+    setProgress((rows) => setViewProgress(rows, "completed"));
+    setExpanded(false);
+    setActiveOperation(null);
+    syncFinished.current?.();
+    syncFinished.current = null;
+  }, [viewPending]);
 
-    try {
-      const result = await requestSync("/api/sync/dashboard?force=true");
-
-      setRefreshResult(result);
-      router.refresh();
-    } catch (error) {
-      console.error("No se pudieron actualizar los datos.", error);
-      setRefreshResult(NETWORK_SYNC_FAILURE);
-      router.refresh();
-    } finally {
-      await invalidateMonths();
-      finishSync();
-      setActiveOperation(null);
-    }
+  function handleRefresh() {
+    void refresh(true);
   }
 
   async function handleBackfill() {
-    if (backfill.status !== "available" || activeOperation) {
+    if (backfill.status !== "available" || operationRef.current) {
       return;
     }
 
+    operationRef.current = "backfill";
     setActiveOperation("backfill");
     setBackfillResult(null);
     const finishSync = beginSync();
+    syncFinished.current = finishSync;
 
     try {
       const result = await requestSync("/api/sync/transactions/backfill");
@@ -127,6 +180,8 @@ export function DashboardSyncControls({
     } finally {
       await invalidateMonths();
       finishSync();
+      syncFinished.current = null;
+      operationRef.current = null;
       setActiveOperation(null);
     }
   }
@@ -157,25 +212,22 @@ export function DashboardSyncControls({
         currentMonth={exportPeriod.currentMonth}
         disabled={isBusy}
       />
-      {enabled ? (
-        <Button
-          type="button"
-          size="sm"
-          variant={shouldRetryRefresh ? "destructive" : "outline"}
-          disabled={isBusy}
-          onClick={handleRefresh}
-        >
-          {activeOperation === "refresh" ? (
-            <>
-              <Spinner aria-hidden />
-              Actualizando
-            </>
-          ) : shouldRetryRefresh ? (
-            "Reintentar actualización"
-          ) : (
-            "Actualizar"
-          )}
-        </Button>
+      {enabled || activeOperation === "refresh" ? (
+        <LoadingSteps
+          label={
+            activeOperation === "refresh"
+              ? "Actualizando tus cuentas"
+              : shouldRetryRefresh
+                ? "Reintentar actualización"
+                : "Actualizar"
+          }
+          rows={progress}
+          busy={activeOperation === "refresh"}
+          expanded={expanded}
+          onToggle={() => setExpanded((value) => !value)}
+          onAction={handleRefresh}
+          disabled={activeOperation === "backfill"}
+        />
       ) : null}
       {backfill.status === "available" ? (
         <Button
