@@ -53,6 +53,7 @@ export function reportData(
   overrides: Partial<MonthlyReportData> = {}
 ): MonthlyReportData {
   return {
+    portfolio: null,
     accounts: [
       {
         id: "account-a",

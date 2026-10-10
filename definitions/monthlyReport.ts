@@ -4,6 +4,7 @@ import type {
   TransactionCategoryGroupSummary,
   TransactionReconciliationAdjustment
 } from "./dataSource";
+import type { PortfolioSnapshot } from "./portfolio";
 
 export type MonthlyReportAccount = {
   id: string;
@@ -25,6 +26,7 @@ export type MonthlyReportSync = {
 };
 
 export type MonthlyReportData = {
+  portfolio: PortfolioSnapshot | null;
   accounts: MonthlyReportAccount[];
   transactions: MonthlyTransactionSummary[];
   adjustments: TransactionReconciliationAdjustment[];

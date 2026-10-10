@@ -10,6 +10,7 @@ import type { StoredMonthlyTransactionRow } from "@/lib/db/enableBankingTransact
 import { listTransactionReconciliationStates } from "@/lib/db/transactionReconciliations";
 import { shiftReportDate } from "@/lib/reports/monthlyExport/period";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getLatestPortfolioSnapshot } from "./portfolio/reads";
 
 import { readReportAdjustments } from "./monthlyReportData/adjustments";
 import {
@@ -28,7 +29,8 @@ export async function getMonthlyReportData(
     storedTransactions,
     balances,
     categoryGroups,
-    adjustmentData
+    adjustmentData,
+    portfolio
   ] = await Promise.all([
     readReportPages((offset) =>
       supabase
@@ -82,7 +84,11 @@ export async function getMonthlyReportData(
         .order("id")
         .range(offset, offset + REPORT_PAGE_SIZE - 1)
     ),
-    readReportAdjustments(userId, range, supabase)
+    readReportAdjustments(userId, range, supabase),
+    getLatestPortfolioSnapshot(userId, {
+      beforeDate: range.to,
+      client: supabase
+    })
   ]);
 
   const rows = storedTransactions as unknown as StoredMonthlyTransactionRow[];
@@ -162,6 +168,7 @@ export async function getMonthlyReportData(
       .map((account) => account.id)
   );
   return {
+    portfolio,
     accounts: reportAccounts,
     transactions: rows.map((row) =>
       mapStoredTransactionToSummary(

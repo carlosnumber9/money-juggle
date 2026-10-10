@@ -70,6 +70,26 @@ function mockDatabase(
     const offset = Number(url.searchParams.get("offset") ?? 0);
     const limit = Number(url.searchParams.get("limit") ?? 500);
     let rows = tables[table] ?? [];
+    if (table === "portfolio_snapshot_values") {
+      const before = url.searchParams.get("report_date")?.slice(3);
+      rows = rows.filter(
+        (row) =>
+          !before || (row as { report_date: string }).report_date < before
+      );
+      for (const field of ["id", "revision", "user_id"]) {
+        const filter = url.searchParams.get(field)?.slice(3);
+        rows = rows.filter(
+          (row) => !filter || (row as Record<string, unknown>)[field] === filter
+        );
+      }
+      if (url.searchParams.get("order") === "report_date.desc") {
+        rows = [...rows].sort((a, b) =>
+          (b as { report_date: string }).report_date.localeCompare(
+            (a as { report_date: string }).report_date
+          )
+        );
+      }
+    }
     const balanceTypes = url.searchParams.get("balance_type");
     if (table === "balances" && balanceTypes?.startsWith("in.(")) {
       const includedTypes = balanceTypes.slice(4, -1).split(",");
@@ -157,6 +177,76 @@ describe("monthly report database reads", () => {
     ).toBe(true);
     for (const url of urls)
       expect(url.searchParams.get("user_id")).toBe(`eq.${OWNER}`);
+  });
+
+  it("selects the latest confirmed report date before month end without requiring a bank account", async () => {
+    const snapshot = (report_date: string) => ({
+      id: `snapshot-${report_date}`,
+      user_id: OWNER,
+      report_date,
+      currency: "EUR",
+      cash: "900",
+      investments: "123456789012.123456",
+      revision: "revision"
+    });
+    const { urls } = mockDatabase({
+      portfolio_snapshot_values: [
+        snapshot("2026-10-01"),
+        snapshot("2026-09-30"),
+        snapshot("2026-08-31")
+      ],
+      portfolio_position_values: [
+        {
+          name: "Fund",
+          isin: "IE00B4L5Y983",
+          quantity: "1.123456",
+          price: "2.123456",
+          price_date: "2026-09-29",
+          value: "123456789012.123456"
+        }
+      ]
+    });
+    const data = await getMonthlyReportData(OWNER, RANGE);
+    expect(data.accounts).toEqual([]);
+    expect(data.portfolio).toMatchObject({
+      reportDate: "2026-09-30",
+      investments: "123456789012.123456",
+      positions: [{ quantity: "1.123456", priceDate: "2026-09-29" }]
+    });
+    const query = urls.find((url) => url.searchParams.has("report_date"))!;
+    expect(query.searchParams.get("report_date")).toBe("lt.2026-10-01");
+    expect(query.searchParams.get("platform")).toBe("eq.trade-republic");
+    expect(query.searchParams.get("order")).toBe("report_date.desc");
+    expect(query.searchParams.get("limit")).toBe("1");
+    for (const url of urls)
+      expect(url.searchParams.get("user_id")).toBe(`eq.${OWNER}`);
+  });
+
+  it("uses earlier snapshots and never substitutes a later report date", async () => {
+    const earlier = {
+      id: "snapshot",
+      user_id: OWNER,
+      report_date: "2026-08-20",
+      currency: "EUR",
+      cash: "0",
+      investments: "0",
+      revision: "revision"
+    };
+    mockDatabase({ portfolio_snapshot_values: [earlier] });
+    expect(
+      (await getMonthlyReportData(OWNER, RANGE)).portfolio?.reportDate
+    ).toBe("2026-08-20");
+    mockDatabase({
+      portfolio_snapshot_values: [{ ...earlier, report_date: "2026-10-01" }]
+    });
+    expect((await getMonthlyReportData(OWNER, RANGE)).portfolio).toBeNull();
+  });
+
+  it("fails portfolio read errors instead of claiming no imports", async () => {
+    mockDatabase({}, "portfolio_snapshot_values");
+    await expect(getMonthlyReportData(OWNER, RANGE)).rejects.toThrow(
+      "Portfolio import failed."
+    );
   });
 
   it("fails a required read instead of treating failed queries as an empty month", async () => {
