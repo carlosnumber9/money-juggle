@@ -281,3 +281,23 @@ Security expectations:
 - Monitor sync failures and unusual access patterns.
 - Add structured error handling that avoids leaking secrets.
 - Review RLS policies before every schema expansion.
+
+## Portfolio Document Imports
+
+Portfolio upload, review and confirmation require a validated session and owner
+allowlist. The preview endpoint additionally requires a same-origin request,
+PDF content type and a bounded body. Server extraction limits size, pages,
+positions, text items and processing time; scanned and protected files are
+rejected without sending them to external extraction services.
+
+Persist only financial fields, source fingerprint, parser version and owner
+corrections. Do not log document text or persist customer names, addresses,
+account identifiers or original PDF bytes. Draft expiry is 24 hours; cleanup
+runs on subsequent owner uploads, not a scheduled job.
+
+All portfolio tables enforce owner RLS and composite ownership relationships.
+Authenticated read views use `security_invoker`; the confirmation function uses
+`SECURITY INVOKER`, derives ownership from `auth.uid()` and validates inputs
+again. Draft/date locking and revision checks prevent duplicate confirmations
+and stale replacements. No elevated client is introduced. See
+[Portfolio imports](portfolio-imports.md) for contracts and deployment limits.

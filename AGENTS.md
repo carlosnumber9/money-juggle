@@ -63,8 +63,12 @@ over generic skills and publication defaults when compatible with them.
   reporting dates. Do not merge currencies or infer complete historical coverage.
 - Keep full IBANs out of persistence. Use masked suffixes and server-generated
   HMAC fingerprints. Do not commit secrets or generated financial workbooks.
-- Trade Republic AIS covers current-account cash and movements. Brokerage,
-  crypto, portfolio valuation, and Cobee integration remain deferred.
+- Trade Republic AIS covers current-account cash and movements. Brokerage
+  snapshots come from reviewed server-only PDF imports, with cash kept separate
+  from AIS balances. Crypto and Cobee integration remain deferred.
+- Portfolio imports retain financial extraction data and corrections, not PDFs,
+  full document text or customer/account identifiers. Preserve exact decimals
+  and distinguish report dates from quote dates.
 
 ## Code Boundaries
 
@@ -76,6 +80,7 @@ over generic skills and publication defaults when compatible with them.
 | `lib/views/`                 | Prepare route and panel view props                             |
 | `lib/data/`                  | Single authenticated application-facing banking data source    |
 | `lib/db/`                    | Persistence, normalization, and provider sync orchestration    |
+| `lib/imports/`               | Server-only document extraction                                |
 | `lib/domain/`                | Framework-independent financial rules                          |
 | `lib/enableBanking/`         | Server-only provider client, signing, display metadata         |
 | `lib/supabase/`              | Authenticated clients, session refresh, narrow elevated client |

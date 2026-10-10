@@ -56,7 +56,8 @@ This app should make financial review easier by collecting read-only financial d
   matching visualizations.
 - Compare bank spending with external benefit consumption data when a safe
   official integration exists.
-- Track assets that may not be available through PSD2.
+- Import and review Trade Republic portfolio PDFs, inspect positions and compare
+  observed cash/investment values over time.
 - Reconnect a bank when consent expires.
 
 ## Target Banks And Platforms
@@ -65,7 +66,7 @@ This app should make financial review easier by collecting read-only financial d
 | ----------------------- | ---------------------------------- | --------------------------------------------------------------------------- |
 | CaixaBank               | Enable Banking Account Information | Primary PSD2 path; linked as an own account.                                |
 | ING                     | Enable Banking Account Information | Primary PSD2 path; linked as an own account.                                |
-| Trade Republic          | Enable Banking Account Information | Cash balance and movements only; brokerage and crypto remain separate.      |
+| Trade Republic          | Enable Banking Account Information | AIS cash/movements; reviewed PDFs for portfolio positions. Crypto deferred. |
 | Cobee by Pluxee         | Exploratory official API           | Flexible compensation consumptions; separate from bank Account Information. |
 
 ## Current Capabilities And Limitations
@@ -110,8 +111,9 @@ limits, and [roadmap](feature-roadmap.md) for remaining scope.
   handling are confirmed.
 - Investment data should not block the banking foundation.
 - Trade Republic current-account cash and movements use Enable Banking AIS.
-  Brokerage positions, crypto holdings, and portfolio valuation remain future
-  manual-asset or separate-integration work.
+  Portfolio positions and valuation come from reviewed PDF snapshots, with
+  separate observed cash/investment history. Crypto and general manual assets
+  remain deferred. See [Portfolio imports](portfolio-imports.md).
 - No banking credentials should ever be stored.
 
 ## Read-Only Meaning
@@ -130,10 +132,11 @@ PSD2 access is focused on payment accounts. Enable Banking can read the Trade
 Republic current-account cash balance and booked cash movements, but it does
 not expose investment positions, crypto holdings, or portfolio performance.
 
-The current account should use the standard Enable Banking path. Brokerage and
-crypto valuation should remain separate. Possible future approaches include:
+The current account uses the standard Enable Banking path. Brokerage valuation
+is imported from reviewed PDFs without modifying AIS cash or inferring
+performance. Crypto remains deferred. Possible future extensions include:
 
 - Manual asset entries.
 - CSV import if available and acceptable.
 - A dedicated integration if a safe official option exists.
-- A placeholder model until the banking foundation is complete.
+- Additional broker and document formats after explicit scope review.

@@ -15,6 +15,7 @@ history is not a prerequisite for a focused change.
 | Bank connection, sync, reconnection | [Enable Banking](enable-banking.md), [Security](security.md)                                     | `lib/enableBanking/`, `lib/db/enableBanking*`, `app/api/`               |
 | Schema or financial rules           | [Data model](data-model.md), [Security](security.md)                                             | `supabase/migrations/`, `lib/domain/`, `supabase/tests/`                |
 | Excel export or report CLI          | [Monthly Excel export](monthly-excel-export.md)                                                  | `lib/reports/monthlyExport/`, `lib/db/monthlyReportData.ts`, `scripts/` |
+| Portfolio PDF imports and history   | [Portfolio imports](portfolio-imports.md), [Data model](data-model.md), [Security](security.md)  | `lib/imports/tradeRepublic/`, `lib/db/portfolio/`, investment UI        |
 | Plan a next feature                 | [Roadmap](feature-roadmap.md), relevant feature docs                                             | Confirm missing behavior in source before implementation                |
 | Understand a past tradeoff          | Relevant entry in [decisions](decisions.md)                                                      | Follow superseding ADR references                                       |
 | Research Cobee                      | [Cobee research](cobee.md)                                                                       | No implemented Cobee client or tables                                   |

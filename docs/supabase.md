@@ -242,6 +242,15 @@ isolation. This SQL check creates synthetic fixtures in one transaction and
 rolls them all back. It does not modify existing user transactions. The unit
 tests mock HTTP and verify POST bodies, response pagination, and failures.
 
+After reviewing and applying the two portfolio migrations, run
+`npx supabase db query --linked --file supabase/tests/portfolio_imports.sql`
+only as an explicitly requested operational check. It verifies exact-decimal
+read views, owner isolation, composite ownership, expired drafts, idempotent
+confirmation and same-date replacement with rollback fixtures. Imports require
+both portfolio storage and security-invoker read views; see
+[Portfolio imports](portfolio-imports.md). This implementation did not apply
+migrations or run linked checks remotely.
+
 ## Local Development Practices
 
 When local development starts:

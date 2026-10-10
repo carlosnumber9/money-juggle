@@ -38,7 +38,7 @@ Magic-link phases 5/6 were superseded by password login in phase 31.
 - [x] 21. Add current-month transaction review.
 - [x] 22. Add transaction categorization.
 - [x] 23. Add initial monthly reports and aggregate Excel export; richer reporting remains deferred.
-- [ ] 24. Add manual assets for Trade Republic brokerage / crypto investments.
+- [ ] 24. Reviewed Trade Republic portfolio PDF imports implemented; general manual assets and crypto remain deferred.
 - [ ] 25. Add scheduled sync with Vercel Cron.
 - [x] 26. Add error feedback, consent reconnection, and owner account-match review.
 - [ ] 27. Security hardening.
@@ -1242,6 +1242,20 @@ Do not do yet:
 - Add tax or accounting features.
 
 ## 24. Add Manual Assets For Trade Republic Brokerage / Crypto Investments
+
+Current status:
+
+- Reviewed Spanish EUR portfolio PDF imports, owner snapshots, positions,
+  same-date replacement and cash/investment history are implemented.
+- Dashboard shows AIS cash and latest imported investments separately. Private
+  navigation includes Investments, mobile icons and proximity magnification.
+- See [Portfolio imports](portfolio-imports.md) for source, ownership, limits and
+  migration requirements. Original PDFs are discarded; no OCR or external model
+  service is used.
+- General manual assets, crypto imports and other broker formats remain deferred.
+
+The original general manual-asset proposal below is retained as future context;
+its proposed `manual_assets` table was not used for portfolio snapshots.
 
 Goal:
 

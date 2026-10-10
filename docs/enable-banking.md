@@ -28,7 +28,9 @@ Status:
   of 90 days.
 - Trade Republic AIS covers its current-account cash balance and booked cash
   movements. It does not expose brokerage positions, crypto holdings, or total
-  portfolio valuation.
+  portfolio valuation. Reviewed [PDF imports](portfolio-imports.md) supply a
+  separate portfolio snapshot; hiding the dashboard Beta badge does not change
+  provider status.
 
 Registered application URLs:
 
@@ -229,7 +231,9 @@ dashboard card labels the synchronized total as `Efectivo` because the total is
 the selected current-account cash balance, not the combined value of cash,
 brokerage positions, and crypto holdings. Its cash movements use the same
 `transactions` rows, deduplication rules, categorization, labels,
-reconciliations, filters, and reports as CaixaBank and ING movements.
+reconciliations, filters, and reports as CaixaBank and ING movements. The card
+shows imported `Inversiones` separately from the latest confirmed PDF report
+date; it never combines PDF cash with AIS cash.
 
 Balances are synchronized automatically by server-only code after a connection
 is completed and through an internal `POST /api/sync/balances` request when the

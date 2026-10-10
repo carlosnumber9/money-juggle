@@ -21,6 +21,8 @@ Remote deployment must be checked separately through the migration workflow.
 - [`20260810120000_add_transaction_reconciliations.sql`](../supabase/migrations/20260810120000_add_transaction_reconciliations.sql)
 - [`20261004211500_add_fines_category.sql`](../supabase/migrations/20261004211500_add_fines_category.sql)
 - [`20261005013000_add_reconciliation_state_rpc.sql`](../supabase/migrations/20261005013000_add_reconciliation_state_rpc.sql)
+- [`20261010120000_add_portfolio_snapshots.sql`](../supabase/migrations/20261010120000_add_portfolio_snapshots.sql)
+- [`20261010123000_add_portfolio_read_views.sql`](../supabase/migrations/20261010123000_add_portfolio_read_views.sql)
 
 The model should preserve user ownership even though the app starts as a personal project.
 
@@ -75,6 +77,29 @@ all members of each requested group, including transactions outside the report
 period, with exact numeric arithmetic. The application reads ordered pages of
 500 states so the API row limit cannot silently omit reconciled transactions.
 
+### Portfolio Snapshots And Import Drafts
+
+`portfolio_snapshots` stores one EUR Trade Republic snapshot per owner and report
+date, with cash, summed investment valuation, revision, source fingerprint,
+parser version and original financial extraction. `portfolio_positions` stores
+ISIN, product name, fractional units, price, quote date and declared valuation.
+`portfolio_import_drafts` stores financial previews for 24 hours and records the
+confirmed snapshot for idempotent retries. No original PDF or customer/account
+identifier is persisted.
+
+All three tables have `user_id` RLS; position and draft relationships use
+composite owner foreign keys. `confirm_portfolio_import` runs as security
+invoker, validates financial values, locks the draft and owner/date, checks the
+expected revision and atomically inserts or replaces all positions. Repeat
+confirmations return the same snapshot; replacements require acknowledgement.
+
+`portfolio_snapshot_values` and `portfolio_position_values` are authenticated
+security-invoker read views. They retain base-table RLS and cast numeric fields
+to text for exact JSON reads. Values use `numeric(20,6)` and report dates remain
+separate from quote dates. History reads paginate in batches of 500. See
+[Portfolio imports](portfolio-imports.md) and
+[SQL verification](../supabase/tests/portfolio_imports.sql).
+
 Included tables:
 
 - `profiles`
@@ -90,6 +115,9 @@ Included tables:
 - `transaction_reconciliations`
 - `transaction_reconciliation_items`
 - `transaction_reconciliation_label_assignments`
+- `portfolio_snapshots`
+- `portfolio_positions`
+- `portfolio_import_drafts`
 - `sync_runs`
 - `consent_events`
 
@@ -98,8 +126,8 @@ Deferred tables:
 - `transaction_category_rules`: useful later, after manual categorization exists.
 - Cobee integration tables: useful later after API access and desired
   consumption granularity are confirmed.
-- `manual_assets`: useful later for Trade Republic brokerage or crypto holdings
-  and other non-PSD2 assets.
+- `manual_assets`: deferred general manual assets and crypto. Reviewed Trade
+  Republic brokerage imports use portfolio tables instead.
 - Report cache or materialized report tables.
 - Advanced sync scheduler metadata.
 
@@ -870,7 +898,9 @@ Source:
 
 ### `manual_assets`
 
-Status: deferred; no table or feature exists in the migration chain.
+Status: deferred general-purpose proposal; this table is not in the migration
+chain. Reviewed Trade Republic PDF snapshots use `portfolio_snapshots` and
+`portfolio_positions` instead.
 
 Purpose:
 
@@ -956,5 +986,8 @@ Important modeling notes:
 | `transaction_label_assignments` | Manual user action                                  |
 | `sync_runs`                     | App sync process                                    |
 | `consent_events`                | App consent lifecycle tracking                      |
+| `portfolio_snapshots`           | Reviewed portfolio PDF import                       |
+| `portfolio_positions`           | Reviewed portfolio PDF positions                    |
+| `portfolio_import_drafts`       | Temporary financial extraction                      |
 | `manual_assets`                 | Deferred: manual input or future import             |
 | Future Cobee report rows        | Cobee by Pluxee Public API                          |

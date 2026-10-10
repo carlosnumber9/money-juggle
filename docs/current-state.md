@@ -1,6 +1,6 @@
 # Current Implementation State
 
-Reviewed against repository source (`2f3a7bd`) on 2026-10-10. This describes local
+Reviewed against repository source (`9eb25f1`) on 2026-10-10. This describes local
 implementation, not a certification of production configuration or provider
 availability. Update the affected entry when a feature changes.
 
@@ -23,7 +23,7 @@ remote settings require independent operational verification.
 | Area                   | Implemented behavior                                                                                                                             | Entry points                                                                                            |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
 | Authentication         | Owner password login, allowlist, cookie refresh, sign-out; no public registration or self-service recovery                                       | `app/login/`, `lib/auth/`, `lib/supabase/`, `proxy.ts`                                                  |
-| Private home           | Dashboard, Transacciones, Evolución; only the active panel loads its financial data                                                              | `app/(private)/page.tsx`, `lib/views/privateHomeView/getPrivateHomeView.ts`                             |
+| Private home           | Dashboard, Transacciones, Evolución, Inversiones; only the active panel loads its financial data                                                 | `app/(private)/page.tsx`, `lib/views/privateHomeView/getPrivateHomeView.ts`                             |
 | Bank authorization     | AIS discovery, authorization, state-validated callback, empty-account failure, iOS return page                                                   | `app/api/bank-connections/enable-banking/`, `app/bank-connection-result/`                               |
 | Reconnection           | Reuses connection/history, strong account matching, authenticated owner review for ambiguous matches                                             | `lib/db/enableBankingConnections/`, `app/(private)/bank-connections/[connectionId]/review/`             |
 | Synchronization        | Balance snapshots, overlapping recent transaction sync, current-year backfill, per-connection leases, cooldowns, partial-page persistence        | `lib/db/enableBankingBalances/`, `lib/db/enableBankingTransactions/`, `lib/db/enableBankingSync/`       |
@@ -32,12 +32,15 @@ remote settings require independent operational verification.
 | Browser cache          | Per-user/month memory cache, five-minute freshness, thirty-minute inactive retention, invalidation after writes/sync and cleanup after auth loss | `app/(private)/PrivateQueryProvider.tsx`, `app/(private)/MonthlyTransactionsPanel/monthCache.ts`        |
 | Reconciliations        | Finalized same-currency booked groups, optional reportable residual, edit/delete, live balance and review state                                  | `lib/db/transactionReconciliations.ts`, `lib/domain/reconciliations.ts`, reconciliation dialogs/actions |
 | Reporting UI           | Monthly cashflow, annual income/expense evolution, net category radar, annual labeled spending, net categorized savings                          | `lib/views/privateHomeView/`, `app/(private)/MonthlyEvolutionPanel/`                                    |
+| Portfolio imports      | Reviewed Trade Republic EUR PDF snapshots, positions, cash/investment history, same-date replacement and responsive proximity navigation         | `app/(private)/investments/import/`, `lib/imports/tradeRepublic/`, `lib/db/portfolio/`                  |
 | Excel export           | Three aggregate sheets from authenticated, paginated saved-data reads; no bank refresh                                                           | `app/api/reports/monthly/route.ts`, `lib/db/monthlyReportData.ts`, `lib/reports/monthlyExport/`         |
 | Report CLI             | Shares Excel logic, authenticates owner with RLS, replaces one workbook per month atomically                                                     | `scripts/report-monthly.ts`, `scripts/monthlyReport.ts`                                                 |
 | Provider display cache | Five-minute normalized application/catalog metadata cache; no financial-data cache at this boundary                                              | `lib/enableBanking/displayMetadata.ts`                                                                  |
 
 CaixaBank, ING, and Trade Republic current-account cash use the same AIS path.
-Trade Republic brokerage/crypto valuation is not implemented. Dashboard balances
+Trade Republic portfolio valuation and positions use reviewed PDF snapshots;
+crypto imports and a brokerage API client remain deferred. See
+[Portfolio imports](portfolio-imports.md). Dashboard balances
 select latest saved observations; Excel uses historical observations and admits
 Trade Republic `OTHR` cash only, without treating it as booked opening/closing
 balance evidence.
@@ -62,7 +65,9 @@ balance evidence.
 - Financial reads/export use authenticated RLS. Provider writes, category
   assignment, and reporting-date edits use narrow server-only elevated helpers
   with explicit ownership checks. Labels and reconciliation mutations use the
-  authenticated persistence path. See [Security](security.md).
+  authenticated persistence path. Portfolio reads and writes also use authenticated
+  RLS; exact-decimal read views preserve the underlying owner policies. See
+  [Security](security.md).
 
 ## Schema Evidence
 
@@ -71,18 +76,22 @@ The executable local schema is the ordered chain in
 [Data model](data-model.md). It includes provider connection fields, account
 fingerprints, category seeds, labels, provider cooldowns, connection leases,
 transaction freshness, reporting dates, reconciliations, and reconciliation
-state RPCs. Owned tables enable RLS; institutions are authenticated reference data.
+state RPCs, portfolio drafts/snapshots/positions and exact-decimal read views.
+Owned tables enable RLS; institutions are authenticated reference data.
 
 [Reconciliation SQL verification](../supabase/tests/transaction_reconciliation_states.sql)
 uses rollback fixtures. Applying migrations and running linked database checks
 are explicit operational actions, not incidental documentation verification.
-Local files do not establish which migrations are deployed remotely.
+[Portfolio SQL verification](../supabase/tests/portfolio_imports.sql) was executed
+in isolated PostgreSQL during implementation. Local files do not establish which
+migrations are deployed remotely.
 
 ## Remaining Work And Verification Limits
 
 - No Vercel Cron or unattended sync route is implemented.
-- No manual asset UI/table, brokerage client, crypto valuation, or Cobee client
-  exists. Cobee documentation remains dated research.
+- No general manual asset UI/table, brokerage API client, crypto import, or Cobee
+  client exists. Reviewed portfolio PDF imports are implemented; Cobee remains
+  dated research.
 - No automatic categorization rules, global category/label management UI, or
   transaction-list label filter exists. Annual label reporting is implemented.
 - No dedicated `/privacy` or `/terms` page exists, despite URLs recorded in

@@ -10,6 +10,8 @@ Common reading paths:
 
 - Authentication: ADR-035 supersedes ADR-003.
 - Banking provider: ADR-016 supersedes ADR-005; ADR-041 scopes Trade Republic AIS.
+- Portfolio imports: ADR-050 supersedes earlier deferral of reviewed brokerage
+  snapshots; AIS cash scope and deferred crypto remain unchanged.
 - Runtime data: ADR-040 supersedes ADR-018.
 - Elevated writes: ADR-017 plus the narrow category/date exceptions in ADR-028
   and ADR-038; ordinary reads and exports retain authenticated RLS.
@@ -1554,7 +1556,8 @@ Possible future revisit trigger:
 
 Status:
 
-- Accepted and implemented.
+- Accepted and implemented for AIS. ADR-050 supersedes the deferral of reviewed
+  brokerage PDF snapshots and the dashboard exclusion of investment valuation.
 
 Context:
 
@@ -1992,3 +1995,47 @@ only after persistence finishes. Do not display account numbers, simulate
 progress with timers, or add a numeric completion percentage. Preserve existing
 financial reads, ownership/RLS rules, freshness checks, consent and retry gates.
 Collapse the finished synchronization trace into the manual update action.
+
+## ADR-050: Store Reviewed Portfolio PDF Snapshots Separately From AIS Cash
+
+Status:
+
+- Accepted and implemented in local source; remote migration deployment requires
+  separate operational verification.
+
+Context:
+
+- Enable Banking AIS does not expose brokerage positions. The owner can export
+  a selectable-text EUR net-worth report with positions, cash and report/quote
+  dates, and explicitly chose reviewed imports rather than an external model.
+
+Decision:
+
+- Extract the supported Spanish Trade Republic report with server-only PDF.js.
+  Review and edit financial fields before confirming an owner-scoped snapshot.
+  Discard PDF bytes and personal document fields; retain financial extraction,
+  corrections, source fingerprint and parser version.
+- Keep one snapshot per owner/platform/report date. Temporary drafts expire
+  after 24 hours with opportunistic cleanup. Confirmation is atomic and
+  idempotent; same-date replacements require acknowledgement and current
+  revision. Derive ownership in a security-invoker RPC and preserve owner RLS.
+- Preserve exact decimals and declared valuations, with report dates distinct
+  from quote dates. Read views return numeric strings under underlying RLS.
+- Dashboard cash remains AIS cash. Display imported investments alongside it,
+  with their own reference date, even without a bank connection. The Investments
+  chart uses both cash and investment values from confirmed PDFs only; no daily
+  history, purchase cost, contributions or profit is inferred.
+- Extend existing tabs, data source and chart primitives. Use icon-only mobile
+  controls and restrained mouse-proximity scaling without adding an animation
+  dependency. Touch and reduced-motion preferences disable magnification.
+
+Consequences:
+
+- Portfolio imports do not modify bank records or double-count PDF cash in
+  cashflow and Excel reports. General manual assets and crypto remain deferred.
+- Discarding source PDFs reduces retained personal data but requires re-upload
+  for extraction after parser upgrades.
+- Two migrations add owned storage and exact-decimal read views. Vercel needs
+  the external PDF.js worker and native dependencies in function traces.
+- Browser presentation and remote configuration remain unverified by unit,
+  isolated SQL and production-build checks. See [Portfolio imports](portfolio-imports.md).

@@ -20,8 +20,8 @@ The frontend should:
 - Start authentication and bank connection flows.
 - Show connection, account, balance, transaction, and report states.
 - Let the owner add app-owned metadata such as categories and labels.
-- Render the private account area as separate dashboard and transaction review
-  sections.
+- Render Dashboard, Transactions, Evolution and Investments as separate active
+  sections, with an owner-reviewed portfolio import flow.
 - Call internal Next.js endpoints or server actions when server work is required.
 - Never call Enable Banking directly.
 - Never receive Enable Banking signing keys, provider tokens, service role keys, or raw sensitive integration credentials.
@@ -62,6 +62,7 @@ lib/data/
 lib/domain/
 lib/db/
 lib/enableBanking/
+lib/imports/tradeRepublic/
 lib/supabase/
 lib/reports/monthlyExport/
 lib/views/
@@ -85,7 +86,9 @@ without maintaining alternate runtime behavior.
 
 The private home view loads only the active tab. Transactions reads its month
 and review catalogs; Dashboard reads bank state and monthly cashflow; Evolution
-alone reads annual movements and adjustments. Inactive panels are not mounted,
+alone reads annual movements and adjustments. Investments reads only portfolio
+snapshots and their history; Dashboard additionally reads the latest portfolio.
+Inactive panels are not mounted,
 so a hidden Dashboard cannot start its automatic synchronization. Tab changes
 update the URL while retaining the selected month.
 
@@ -104,7 +107,11 @@ transaction list's Liquid Orb, 500 ms fades, and reduced-motion/GPU fallbacks.
 Cached responses do not incur an artificial loading delay. Monthly transaction
 loading continues to use the same overlay through `TransactionListLoading`.
 
-The Base UI tab list owns one persistent underline indicator. Its position uses
+On desktop, the Base UI tab list owns one persistent underline indicator.
+Below 768 px it uses 28 px icons with transparent 44 px hit areas and hides the
+underline. A scoped proximity controller scales only the content, from 1 to
+1.18, starting 16 px outside the fixed tab area. Touch and reduced-motion
+preferences disable the effect. The desktop underline position uses
 `transform: translateX(...)`, and its transform and width animate for 200 ms.
 Reduced motion disables the transition. This explicit transform is required
 because Tailwind 4 translation utilities set the separate CSS `translate`
@@ -123,10 +130,10 @@ validated `month=YYYY-MM` URL value is resolved into a range in
 instead of querying persistence directly. Malformed and future periods fall
 back to the current month.
 
-The private UI is split into three tabs:
+The private UI is split into four tabs:
 
-- `Dashboard`: bank institution cards, connected accounts, latest balances, and
-  per-bank balance totals, plus selected-month income and expense cards.
+- `Dashboard`: bank institution cards, aggregate cash balances, latest imported
+  Trade Republic investments, and selected-month income and expense cards.
 - `Transacciones`: selected-month transaction review with date grouping,
   institution cues, signed amounts, reporting-date edits, finalized
   reconciliation dialogs, client-side filters over already-loaded
@@ -141,6 +148,7 @@ The private UI is split into three tabs:
   Negative amounts reduce savings and can produce a negative month (ADR-046).
   The visualizations are calculated from cached transaction rows with
   shadcn/Recharts.
+- `Inversiones`: latest reviewed PDF positions and observed cash/investment history.
 
 The selected month is shared by transaction rows, cashflow cards, and the
 category expense radar. Transactions updates the month through the native History API and reads only
@@ -462,3 +470,17 @@ progress state tests and static accessible-markup checks. No local application
 was started, as browser-based local testing was not requested. Visual appearance
 and progressive delivery on the deployed application still require browser
 verification.
+
+## Portfolio Document Boundary
+
+[Portfolio imports](portfolio-imports.md) use server-only PDF.js under
+`lib/imports/tradeRepublic/`, exact financial validation under `lib/domain/portfolio/`,
+owner-scoped persistence under `lib/db/portfolio/`, and the existing application
+source for reads. The preview endpoint discards bytes after extraction; its
+private review page loads a temporary draft and confirms through an atomic
+`SECURITY INVOKER` RPC. No bank balance or transaction is changed.
+
+Report dates govern history and latest-photo selection, while position quote
+dates remain separate. Authenticated read views serialize decimals as strings;
+chart preparation alone uses display numbers. Next.js traces the external
+PDF.js worker and native dependencies explicitly for Vercel.
