@@ -120,18 +120,21 @@ type StoredReconciliationRow = {
     | null;
 };
 
-export async function listTransactionReconciliationStates({
-  userId,
-  transactionIds
-}: {
-  userId: string;
-  transactionIds: string[];
-}): Promise<Map<string, TransactionReconciliationMembership>> {
+export async function listTransactionReconciliationStates(
+  {
+    userId,
+    transactionIds
+  }: {
+    userId: string;
+    transactionIds: string[];
+  },
+  client?: Awaited<ReturnType<typeof createSupabaseServerClient>>
+): Promise<Map<string, TransactionReconciliationMembership>> {
   if (transactionIds.length === 0) {
     return new Map();
   }
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = client ?? (await createSupabaseServerClient());
   const states = new Map<string, TransactionReconciliationMembership>();
   const uniqueTransactionIds = [...new Set(transactionIds)];
   let offset = 0;

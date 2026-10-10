@@ -18,12 +18,14 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "report:monthly": "node --conditions=react-server --import tsx scripts/report-monthly.ts",
     "db:link": "supabase link --project-ref qsmtxtnugihqawjesslo",
     "db:push": "supabase db push",
     "db:migrations": "supabase migration list"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
+    "@next/env": "^16.2.10",
     "@number-flow/react": "^0.6.2",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.109.0",
@@ -38,6 +40,7 @@
     "react-day-picker": "^10.0.1",
     "react-dom": "19.2.7",
     "recharts": "^3.8.0",
+    "server-only": "^0.0.1",
     "shadcn": "^4.13.0",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.3.2",
@@ -55,6 +58,7 @@
     "fflate": "0.8.3",
     "prettier": "^3.9.4",
     "supabase": "^2.109.0",
+    "tsx": "^4.23.15",
     "typescript": "6.0.3",
     "vitest": "^4.1.10"
   },

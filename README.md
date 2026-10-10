@@ -105,6 +105,28 @@ Use `npm run test:watch` while developing a focused unit. Coverage is written
 to `coverage/` for local inspection and CI artifacts; it is diagnostic and does
 not enforce a global percentage threshold.
 
+## Monthly Reports From The Command Line
+
+Generate the same monthly Excel workbook as the dashboard, without starting
+the local app:
+
+```bash
+npm run report:monthly -- --month 2026-09
+```
+
+Omit `--month` to use the previous month in `Europe/Madrid`. Each run writes a
+distinct file in the ignored `reports/` directory. The command reads saved
+Supabase data without synchronizing banks.
+
+Configure `REPORT_PASSWORD` with the existing owner's Supabase Auth password
+in the shell environment or ignored `.env.local`. Configure `REPORT_EMAIL` as
+well if the allowlist has more than one email. These credentials are used for
+an authenticated, RLS-protected session; no service role is used. Never put a
+password in command arguments or commit credentials or generated workbooks.
+
+See [Monthly Excel Export](docs/monthly-excel-export.md) for the workbook
+contract and command details. Run `npm run report:monthly -- --help` for usage.
+
 Format files:
 
 ```bash

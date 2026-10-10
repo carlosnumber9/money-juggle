@@ -3,6 +3,7 @@ node_modules/
 out/
 tsconfig.tsbuildinfo
 coverage/
+/reports/
 supabase/.temp/
 
 .env*

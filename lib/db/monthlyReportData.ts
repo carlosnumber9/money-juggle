@@ -18,9 +18,10 @@ import {
 
 export async function getMonthlyReportData(
   userId: string,
-  range: MonthlyTransactionRange
+  range: MonthlyTransactionRange,
+  client?: Awaited<ReturnType<typeof createSupabaseServerClient>>
 ): Promise<MonthlyReportData> {
-  const supabase = await createSupabaseServerClient();
+  const supabase = client ?? (await createSupabaseServerClient());
   const [
     accounts,
     storedTransactions,
@@ -72,7 +73,7 @@ export async function getMonthlyReportData(
         .order("id")
         .range(offset, offset + REPORT_PAGE_SIZE - 1)
     ),
-    readReportAdjustments(userId, range)
+    readReportAdjustments(userId, range, supabase)
   ]);
 
   const rows = storedTransactions as unknown as StoredMonthlyTransactionRow[];
@@ -91,10 +92,13 @@ export async function getMonthlyReportData(
             .range(offset, offset + REPORT_PAGE_SIZE - 1)
         )
       : [],
-    listTransactionReconciliationStates({
-      userId,
-      transactionIds: rows.map((row) => row.id)
-    })
+    listTransactionReconciliationStates(
+      {
+        userId,
+        transactionIds: rows.map((row) => row.id)
+      },
+      supabase
+    )
   ]);
   const merged = new Map(rows.map((row) => [row.id, row]));
   for (const row of matchingRows as unknown as StoredMonthlyTransactionRow[])

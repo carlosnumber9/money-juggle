@@ -80,6 +80,29 @@ describe("reconciliation state RPC", () => {
     expect(result.get(ids[2])?.requiresReview).toBe(true);
   });
 
+  it("uses an injected client without requesting a cookie-backed session", async () => {
+    const fetchMock = mockResponses([{ data: [state(1)] }]);
+    const client = await mocks.createClient();
+    mocks.createClient.mockClear();
+    const result = await listTransactionReconciliationStates(
+      {
+        userId: OWNER_ID,
+        transactionIds: [transactionId(1)]
+      },
+      client
+    );
+    expect(result.size).toBe(1);
+    expect(mocks.createClient).not.toHaveBeenCalled();
+    const [, options] = fetchMock.mock.calls[0] as unknown as [
+      string,
+      RequestInit
+    ];
+    expect(JSON.parse(String(options.body))).toEqual({
+      p_user_id: OWNER_ID,
+      p_transaction_ids: [transactionId(1)]
+    });
+  });
+
   it("preserves reportable and neutralized states returned by the database", async () => {
     mockResponses([
       {

@@ -73,12 +73,11 @@ function mockDatabase(
       { headers: { "Content-Type": "application/json" } }
     );
   });
-  mocks.client.mockReturnValue(
-    new PostgrestClient("https://database.example.test/rest/v1", {
-      fetch: fetchMock
-    })
-  );
-  return urls;
+  const client = new PostgrestClient("https://database.example.test/rest/v1", {
+    fetch: fetchMock
+  });
+  mocks.client.mockReturnValue(client);
+  return { urls, client };
 }
 
 describe("monthly report database reads", () => {
@@ -88,7 +87,7 @@ describe("monthly report database reads", () => {
   });
 
   it("paginates transactions and matching context, filters owner and status, and uses both date axes", async () => {
-    const urls = mockDatabase({
+    const { urls, client } = mockDatabase({
       accounts: [account],
       transactions: Array.from({ length: 501 }, (_, index) =>
         transaction(index)
@@ -123,10 +122,33 @@ describe("monthly report database reads", () => {
       value.pathname.endsWith("/transactions")
     ))
       expect(url.searchParams.get("booking_status")).toBe("eq.booked");
-    expect(mocks.states).toHaveBeenCalledWith({
-      userId: OWNER,
-      transactionIds: expect.arrayContaining(["transaction-500"])
+    expect(mocks.states).toHaveBeenCalledWith(
+      {
+        userId: OWNER,
+        transactionIds: expect.arrayContaining(["transaction-500"])
+      },
+      client
+    );
+  });
+
+  it("uses the injected authenticated client for every report read without requesting Next.js cookies", async () => {
+    const { urls } = mockDatabase({
+      accounts: [account],
+      transactions: [transaction(1)]
     });
+    const client = await mocks.client();
+    mocks.client.mockClear();
+    await getMonthlyReportData(OWNER, RANGE, client);
+    expect(mocks.client).not.toHaveBeenCalled();
+    expect(mocks.states).toHaveBeenCalledWith(
+      { userId: OWNER, transactionIds: ["transaction-1"] },
+      client
+    );
+    expect(
+      urls.some((url) => url.pathname.endsWith("/transaction_reconciliations"))
+    ).toBe(true);
+    for (const url of urls)
+      expect(url.searchParams.get("user_id")).toBe(`eq.${OWNER}`);
   });
 
   it("fails a required read instead of treating failed queries as an empty month", async () => {
@@ -137,7 +159,7 @@ describe("monthly report database reads", () => {
   });
 
   it("reads all reconciliation members using real composite-key columns", async () => {
-    const urls = mockDatabase({
+    const { urls } = mockDatabase({
       transaction_reconciliations: [
         {
           id: "group",

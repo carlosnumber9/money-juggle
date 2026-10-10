@@ -11,9 +11,10 @@ import { readReportPages, REPORT_PAGE_SIZE } from "./pagination";
 
 export async function readReportAdjustments(
   userId: string,
-  range: MonthlyTransactionRange
+  range: MonthlyTransactionRange,
+  client?: Awaited<ReturnType<typeof createSupabaseServerClient>>
 ) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = client ?? (await createSupabaseServerClient());
   const groups = await readReportPages((offset) =>
     supabase
       .from("transaction_reconciliations")

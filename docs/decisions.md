@@ -1813,7 +1813,8 @@ Decision:
   Use numeric money cells, real date cells, stable Spanish headers, and literal
   owner-controlled text. Do not export raw transaction or provider identifiers.
 - Default to the previous month and `Finanzas-YYYY-MM.xlsx`. Allow a provisional
-  current month. Do not add report storage, migrations, or vault integration.
+  current month. Do not add server-side report storage, migrations, or vault
+  integration. Local command exports are covered by ADR-049.
 
 Consequences:
 
@@ -1885,6 +1886,40 @@ Possible future revisit trigger:
 
 - If the owner wants refunds allocated to the original expense period or
   consistent calculation rules across all reports and dashboard cards.
+
+## ADR-049: Reuse Monthly Export Logic In A Local Command
+
+Status:
+
+- Accepted and implemented.
+
+Context:
+
+- The owner needs repeated monthly reports while reviewing and correcting
+  financial reporting rules, without starting the local web application.
+
+Decision:
+
+- Provide `npm run report:monthly -- --month YYYY-MM`, defaulting to the
+  previous month in `Europe/Madrid`.
+- Reuse the dashboard's database readers, report calculations, and XLSX writer.
+  Allow the readers to receive an authenticated Supabase client; browser flows
+  continue to use their cookie-backed client by default.
+- Authenticate using the existing Supabase password login and publishable key,
+  check the email allowlist, derive ownership from the authenticated user, and
+  retain RLS and explicit owner filters. Never use the service role for exports.
+- Keep the CLI session in memory and sign out only that session during cleanup.
+- Save distinct workbooks in the Git-ignored `reports/` directory, using a
+  generation timestamp and UUID to preserve earlier exports.
+
+Consequences:
+
+- Reporting fixes apply to both generation paths through the same code.
+- Local generation requires owner credentials in the shell environment or an
+  ignored environment file. No credentials or sessions are committed.
+- Generated files contain financial data and require local protection even
+  though Git ignores them. No bank synchronization or server-side report
+  storage is added.
 
 ## Transaction Navigation and Browser Cache
 
