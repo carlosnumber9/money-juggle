@@ -76,7 +76,7 @@ export function DashboardSyncControls({
       setActiveOperation("refresh");
       setRefreshResult(null);
       setProgress(createDashboardProgress());
-      setExpanded(true);
+      setExpanded(false);
       let waitingForView = false;
       try {
         try {

@@ -440,8 +440,9 @@ presentation inside the existing non-modal Popover primitive. Its portalled
 content floats above the page without changing the layout, respects viewport
 boundaries, and can close with Escape or an outside click without stopping sync.
 The control is portalled from Dashboard into a header slot, preserving its
-existing mount lifecycle and automatic refresh behavior. It automatically
-expands during synchronization, shows separate bank rows under balances and
+existing mount lifecycle and automatic refresh behavior. Synchronization starts
+with details collapsed; only an explicit trigger click opens the popover. It
+shows separate bank rows under balances and
 transactions, and collapses into an Update button after the refreshed view
 commits. Each bank remains running through persistence. Rows distinguish fresh
 data, partial results, provider retry deadlines, expired consent and busy
