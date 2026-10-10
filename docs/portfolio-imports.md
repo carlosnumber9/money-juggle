@@ -75,7 +75,10 @@ to extract the document again.
   fields, source fingerprint and parser version. No original PDF, full text,
   customer name, address or account identifier is persisted by extraction.
 - Imports do not write bank balances, movements, categories or reconciliations,
-  and do not contribute again to existing cashflow or Excel reports.
+  and do not contribute again to existing cashflow or Excel economic totals.
+  The monthly workbook includes an `Inversiones` sheet with the latest confirmed
+  observation up to the selected month end; PDF cash is omitted. See
+  [Monthly Excel export](monthly-excel-export.md#investment-observations).
 
 ## Responsive Navigation
 

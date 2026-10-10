@@ -76,8 +76,8 @@ markers for this server-side Node process. It does not create an HTTP server.
 
 ## Stable Workbook Contract
 
-The workbook has three Spanish worksheet names: `Resumen`, `Categorías`, and
-`Cuentas`. Headers are stable. Tables have no merged cells or transaction rows.
+The workbook has four Spanish worksheet names: `Resumen`, `Categorías`,
+`Cuentas`, and `Inversiones`. Headers are stable. Tables have no merged cells or transaction rows.
 Amounts are numeric cells with currency formatting; dates are Excel date cells.
 Timestamp cells show Madrid wall-clock time, identified as `Europe/Madrid`.
 
@@ -109,6 +109,44 @@ adjustments use `Ajustes sin cuenta`, without inventing account attribution.
 All saved owner accounts are included, including inactive accounts. An account
 with multiple currencies has separate rows. Account names can include a masked
 IBAN suffix for disambiguation; internal and provider identifiers are not exported.
+
+## Investment Observations
+
+`Inversiones` includes the latest confirmed Trade Republic portfolio snapshot
+whose PDF report date is before the first day of the following month. This
+selection uses report dates, not upload order, and works without a linked or
+active bank account. An earlier month's snapshot may be selected; its real
+report date remains visible and observations disclose that it is not an exact
+month-end valuation. A report dated after the selected month is never used.
+Current-month exports remain provisional and use the same month cutoff.
+
+The sheet contains institution, availability, PDF report date, total investment
+valuation, source and observations, followed by these position columns:
+
+`Producto`, `ISIN`, `Unidades`, `Precio unitario`, `Fecha de cotización`,
+`Valoración`, `Moneda`.
+
+Positions are sorted by descending declared valuation, with ISIN as the tie
+breaker. Quantities, prices, valuations and totals use numeric cells; report and
+quote dates use real Excel dates. The total is checked against the exact sum of
+position valuations. Rounded prices are not multiplied to replace the PDF's
+reported valuations. Names and ISINs remain literal text, not formulas.
+
+The fourth sheet always exists. Without an eligible snapshot, the date and total
+are blank and the missing observation is explained; missing does not mean zero.
+A confirmed empty portfolio has a report date and a numeric zero total. Failed
+reads, revision changes while reading positions, or inconsistent valuation
+sums fail export rather than producing a misleading partial portfolio. Retry
+export after a concurrent import has completed.
+
+PDF cash is not exported or added to bank balances. Investment valuations do not
+change income, expenses, surplus, neutral flows or account reconciliation. This
+is a dated observation, not contributions, purchase cost, profitability or a
+reconstructed transaction history. Internal snapshot IDs, revisions, fingerprints,
+original extraction fields and customer document data are not exported.
+Re-exporting a month uses the currently confirmed eligible snapshot, including
+an explicitly replaced snapshot; the workbook is not an immutable historical
+version. Both dashboard downloads and the local command share these rules.
 
 ## Financial Rules
 
@@ -153,7 +191,8 @@ proven from cached rows. Zero denotes an aggregate of the available rows, not
 proof of no bank activity. Unknown numeric cells remain blank and are explained;
 non-applicable income/expense cells remain blank and are identified by treatment.
 Recurrence, pending salaries, reserved cash, liquidity cushions, loan principal
-tracking, positions, and portfolio valuations are not inferred.
+tracking and investment performance are not inferred. Portfolio positions and
+valuations are included only from confirmed PDF observations, as described above.
 
 ## Server Boundary And Verification
 
@@ -161,7 +200,11 @@ tracking, positions, and portfolio valuations are not inferred.
 allowlist are checked before reads. The owner comes from the session, never the
 request. Reads use the existing Supabase server client, explicit owner filters,
 and RLS; no service role or migration is needed. Transactions, matching context,
-accounts, balances, category groups, and reconciliation members are paginated.
+accounts, balances, category groups, reconciliation members and portfolio
+positions are paginated. Portfolio reads use the exact-decimal security-invoker
+views with owner filters and the same authenticated client. A revision check
+after reading positions detects concurrent snapshot replacement. No new schema
+or migration is needed for this export extension.
 
 `write-excel-file/node` generates the workbook in memory. The response uses the
 XLSX MIME type and `Cache-Control: private, no-store`. No file is persisted on the
@@ -171,7 +214,8 @@ precision fails rather than silently rounding an amount.
 
 Tests verify financial aggregation, date separation, missing balances,
 reconciliation, pagination, authorization, workbook structure, real date and
-numeric cells, and exclusion of raw transactions. Local application startup and
+numeric cells, exclusion of raw transactions, portfolio month cutoffs, exact declared values,
+quote dates, missing versus zero observations and separation from economic totals. Local application startup and
 browser testing are intentionally omitted unless explicitly requested.
 
 Command tests use mocked authentication and data reads, write actual workbooks

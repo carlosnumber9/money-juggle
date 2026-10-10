@@ -245,6 +245,10 @@ notes, labels, and residual adjustments remain sensitive financial metadata.
 The transaction browser cache is memory-only and scoped by user and month. It
 is cleared after sign-out or rejected access. The monthly read endpoint and
 Excel route validate session/allowlist and send private no-store responses.
+Monthly portfolio exports read exact-decimal views through the same authenticated
+client, explicit owner filters and underlying RLS. Export includes financial
+positions and dates, but omits PDF cash, snapshot IDs, revisions and original
+extraction metadata; these workbooks remain sensitive owner financial data.
 
 The local report CLI authenticates with the publishable key and owner password,
 keeps its session in memory, reads through RLS, and signs out only its own

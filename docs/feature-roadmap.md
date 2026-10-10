@@ -1150,16 +1150,18 @@ Status:
 
 - Initial reporting scope implemented: monthly dashboard cards, annual
   evolution, category and label charts, net savings, and aggregate Excel export.
-  Advanced budgeting, verified coverage, snapshots, and portfolio reporting
-  remain deferred.
+  Advanced budgeting, verified coverage, immutable report snapshots and
+  investment performance reporting remain deferred.
 
 Implemented so far:
 
-- Three-sheet monthly Excel export (`Resumen`, `Categorías`, `Cuentas`) is
-  available from the dashboard and `npm run report:monthly`. It reads saved
+- Four-sheet monthly Excel export (`Resumen`, `Categorías`, `Cuentas`,
+  `Inversiones`) is available from the dashboard and `npm run report:monthly`. It reads saved
   owner data through RLS without bank sync and explicitly discloses incomplete
   coverage. Its financial rules differ from dashboard totals; see
-  [Monthly Excel export](monthly-excel-export.md).
+  [Monthly Excel export](monthly-excel-export.md). The investment sheet preserves
+  the latest confirmed PDF observation up to month end, with real report/quote
+  dates and positions, without altering economic or bank totals.
 - Annual labeled expense reporting and finalized reconciliation residuals are
   implemented, with the shared owner-controlled reporting-date pipeline.
 

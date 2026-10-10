@@ -1,6 +1,6 @@
 # Current Implementation State
 
-Reviewed against repository source (`9eb25f1`) on 2026-10-10. This describes local
+Reviewed against repository source (`e8abd71`) on 2026-10-10. This describes local
 implementation, not a certification of production configuration or provider
 availability. Update the affected entry when a feature changes.
 
@@ -33,7 +33,7 @@ remote settings require independent operational verification.
 | Reconciliations        | Finalized same-currency booked groups, optional reportable residual, edit/delete, live balance and review state                                  | `lib/db/transactionReconciliations.ts`, `lib/domain/reconciliations.ts`, reconciliation dialogs/actions |
 | Reporting UI           | Monthly cashflow, annual income/expense evolution, net category radar, annual labeled spending, net categorized savings                          | `lib/views/privateHomeView/`, `app/(private)/MonthlyEvolutionPanel/`                                    |
 | Portfolio imports      | Reviewed Trade Republic EUR PDF snapshots, positions, cash/investment history, same-date replacement and responsive proximity navigation         | `app/(private)/investments/import/`, `lib/imports/tradeRepublic/`, `lib/db/portfolio/`                  |
-| Excel export           | Three aggregate sheets from authenticated, paginated saved-data reads; no bank refresh                                                           | `app/api/reports/monthly/route.ts`, `lib/db/monthlyReportData.ts`, `lib/reports/monthlyExport/`         |
+| Excel export           | Four sheets from authenticated saved-data reads, including a dated portfolio observation; no bank refresh                                        | `app/api/reports/monthly/route.ts`, `lib/db/monthlyReportData.ts`, `lib/reports/monthlyExport/`         |
 | Report CLI             | Shares Excel logic, authenticates owner with RLS, replaces one workbook per month atomically                                                     | `scripts/report-monthly.ts`, `scripts/monthlyReport.ts`                                                 |
 | Provider display cache | Five-minute normalized application/catalog metadata cache; no financial-data cache at this boundary                                              | `lib/enableBanking/displayMetadata.ts`                                                                  |
 
@@ -43,7 +43,9 @@ crypto imports and a brokerage API client remain deferred. See
 [Portfolio imports](portfolio-imports.md). Dashboard balances
 select latest saved observations; Excel uses historical observations and admits
 Trade Republic `OTHR` cash only, without treating it as booked opening/closing
-balance evidence.
+balance evidence. Its separate `Inversiones` sheet selects the latest confirmed
+PDF report date up to the selected month end, preserves quote dates and declared
+valuations, and omits PDF cash from economic and account totals.
 
 ## Important Financial And Ownership Boundaries
 

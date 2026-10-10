@@ -16,7 +16,7 @@ Common reading paths:
 - Elevated writes: ADR-017 plus the narrow category/date exceptions in ADR-028
   and ADR-038; ordinary reads and exports retain authenticated RLS.
 - Reporting: ADR-039 for reconciliations, ADR-046 for signed net savings,
-  ADR-047/049 for Excel and CLI, and ADR-048 for category netting.
+  ADR-047/049/051 for Excel and CLI, and ADR-048 for category netting.
 - Navigation/cache/progress: the named sections after ADR-049 describe later
   implementation updates.
 
@@ -1821,7 +1821,9 @@ Possible future revisit trigger:
 
 Status:
 
-- Accepted and implemented.
+- Accepted and implemented. The original three-sheet scope and deferred
+  portfolio observations are extended by ADR-051; the economic calculation
+  rules remain applicable.
 
 Context:
 
@@ -2039,3 +2041,38 @@ Consequences:
   the external PDF.js worker and native dependencies in function traces.
 - Browser presentation and remote configuration remain unverified by unit,
   isolated SQL and production-build checks. See [Portfolio imports](portfolio-imports.md).
+
+## ADR-051: Export Dated Portfolio Observations Separately From Economic Totals
+
+Status:
+
+- Accepted and implemented; extends ADR-047 and ADR-049's workbook contract.
+
+Context:
+
+- Reviewed portfolio snapshots already preserve declared valuations and report
+  dates, but the original monthly Excel contract omitted investment positions.
+  The owner wants the portfolio recorded in the exported workbook as well.
+
+Decision:
+
+- Add a stable fourth worksheet, `Inversiones`, to both dashboard and CLI
+  exports. Select the latest confirmed snapshot whose report date is before
+  the next month's first day, even if it is from an earlier month. Display its
+  actual date and disclose when it differs from month end. Never substitute a
+  later snapshot or infer missing historical valuations.
+- Export declared investment total and positions, including units, unit price,
+  quote date and valuation. Check the exact valuation sum and sort positions
+  by value. Omit PDF cash and leave economic totals and bank balances separate.
+- Reuse authenticated owner-filtered reads and exact-decimal views. Paginate
+  positions and reject revision changes during reads. Failed reads and
+  inconsistent sums fail export; absent snapshots leave unknown values blank.
+
+Consequences:
+
+- A workbook records an observed portfolio, not performance, purchase costs or
+  contributions. Earlier observations can be stale and retain explicit dates.
+- Re-exporting a month can reflect a replaced confirmed snapshot; this extends
+  the existing mutable report flow rather than creating immutable report history.
+- Four worksheets are always present. No new schema, provider integration or
+  elevated read path is required. Unsupported Excel precision still fails export.

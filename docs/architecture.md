@@ -344,7 +344,12 @@ The export route obtains owner-scoped data through `lib/data/`;
 session to the same database reader and report logic. Export reads saved data,
 never refreshes banks, and has no server-side report persistence. Its financial
 contract deliberately differs from dashboard totals. See
-[Monthly Excel export](monthly-excel-export.md).
+[Monthly Excel export](monthly-excel-export.md). The shared report reader also
+loads the latest confirmed portfolio before the next month's first day through
+owner-filtered exact-decimal views and checks its revision after paginated
+position reads. The fourth worksheet preserves declared valuations and real
+report/quote dates independently of economic totals and bank balances. It does
+not export PDF cash or reconstruct investment performance.
 
 ## Transaction Month Loading
 

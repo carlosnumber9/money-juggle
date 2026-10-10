@@ -83,7 +83,9 @@ limits, and [roadmap](feature-roadmap.md) for remaining scope.
   spending, and signed net categorized savings. Monthly Excel export is
   implemented from both the dashboard and CLI, with a distinct aggregate
   contract and explicitly unverified historical coverage. It is not a complete
-  accounting, budgeting, or portfolio system.
+  accounting, budgeting, or portfolio system. Monthly Excel workbooks include
+  a separate investment observation with positions and its actual report date,
+  selected from confirmed PDFs up to the chosen month end.
 - Reporting dates are owner-editable without changing bank booking dates.
   Finalized reconciliations exclude grouped principal movements and optionally
   report a residual difference once.
