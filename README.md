@@ -114,9 +114,10 @@ the local app:
 npm run report:monthly -- --month 2026-09
 ```
 
-Omit `--month` to use the previous month in `Europe/Madrid`. Each run writes a
-distinct file in the ignored `reports/` directory. The command reads saved
-Supabase data without synchronizing banks.
+Omit `--month` to use the previous month in `Europe/Madrid`. Each run writes
+`reports/Finanzas-YYYY-MM.xlsx`, replacing the previous report for that month.
+Reports for other months are preserved, and the directory remains ignored by
+Git. The command reads saved Supabase data without synchronizing banks.
 
 Configure `REPORT_PASSWORD` with the existing owner's Supabase Auth password
 in the shell environment or ignored `.env.local`. Configure `REPORT_EMAIL` as

@@ -53,14 +53,20 @@ bank synchronization, or financial-data write is involved. The session stays
 in memory and cleanup signs out only the command's session, preserving browser
 sessions.
 
-Each successful run writes
-`reports/Finanzas-YYYY-MM-<UTC-generation-timestamp>-<UUID>.xlsx` and prints its
-absolute path. The directory is created when needed and ignored by Git. Unique
-names and exclusive creation prevent overwriting earlier reports. On POSIX,
-new directories use mode `0700` and files use `0600`; existing directory
+Each successful run writes `reports/Finanzas-YYYY-MM.xlsx` and prints its
+absolute path. Re-exporting a month replaces its previous workbook with the
+latest available saved data; reports for other months are preserved. The
+directory is created when needed and ignored by Git. Generation completes in
+memory before writing a temporary file in that directory and atomically renaming
+it over the month's destination. The previous report is preserved if generation
+or replacement fails, and the temporary file is removed during cleanup. A UUID
+is used only for the temporary filename, never for a report version. Legacy
+timestamped exports are not automatically removed.
+
+On POSIX, new directories use mode `0700` and files use `0600`; existing directory
 permissions are left unchanged. Workbooks contain sensitive financial data
-even though Git ignores them. Read or generation failures exit with a nonzero
-status without writing a workbook or printing raw provider errors.
+even though Git ignores them. Read, generation, or replacement failures exit
+with a nonzero status without printing raw provider errors.
 
 The command reuses `getMonthlyReportData`, `buildMonthlyExportReport`, and
 `writeMonthlyWorkbook`. Changes to the reporting rules therefore affect both
@@ -132,6 +138,16 @@ Monthly reconciliation is calculated only with an opening booked balance (`OPBD`
 on the first day and a closing booked balance (`CLBD`) on the last day, with no
 loaded movements lacking booking dates. Any difference is shown explicitly.
 
+Trade Republic current-account cash snapshots use the provider's `OTHR` balance
+type. These observations are included alongside the standard cash balance types
+for Trade Republic accounts only. Other institutions retain the existing balance
+type selection because `OTHR` does not have a universally defined cash meaning.
+When several types share a capture, standard booked or available balances retain
+priority. An `OTHR` observation is never reclassified as `OPBD` or `CLBD` and
+cannot make monthly reconciliation comparable, even on a month boundary. Missing
+month-end snapshots remain explicitly unavailable; current balances are not
+substituted for historical observations.
+
 The export is explicitly partial because complete provider coverage cannot be
 proven from cached rows. Zero denotes an aggregate of the available rows, not
 proof of no bank activity. Unknown numeric cells remain blank and are explained;
@@ -160,5 +176,7 @@ browser testing are intentionally omitted unless explicitly requested.
 
 Command tests use mocked authentication and data reads, write actual workbooks
 to temporary directories, and verify ownership propagation, allowlist failures,
-month validation, session cleanup, file permissions, and repeated exports.
+month validation, session cleanup, file permissions, replacement with updated
+data, preservation of other months, and preservation of the prior workbook on
+generation or replacement failure.
 They never use real credentials or contact Supabase or Enable Banking.

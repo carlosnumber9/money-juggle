@@ -12,6 +12,7 @@ vi.mock("@/lib/db/transactionReconciliations", () => ({
 
 import { getMonthlyReportData } from "./monthlyReportData";
 import { readReportAdjustments } from "./monthlyReportData/adjustments";
+import { buildMonthlyExportReport } from "@/lib/reports/monthlyExport/buildReport";
 
 const OWNER = "10000000-0000-4000-8000-000000000001";
 const RANGE = { from: "2026-09-01", to: "2026-10-01" };
@@ -68,10 +69,17 @@ function mockDatabase(
       );
     const offset = Number(url.searchParams.get("offset") ?? 0);
     const limit = Number(url.searchParams.get("limit") ?? 500);
-    return new Response(
-      JSON.stringify((tables[table] ?? []).slice(offset, offset + limit)),
-      { headers: { "Content-Type": "application/json" } }
-    );
+    let rows = tables[table] ?? [];
+    const balanceTypes = url.searchParams.get("balance_type");
+    if (table === "balances" && balanceTypes?.startsWith("in.(")) {
+      const includedTypes = balanceTypes.slice(4, -1).split(",");
+      rows = rows.filter((row) =>
+        includedTypes.includes((row as { balance_type: string }).balance_type)
+      );
+    }
+    return new Response(JSON.stringify(rows.slice(offset, offset + limit)), {
+      headers: { "Content-Type": "application/json" }
+    });
   });
   const client = new PostgrestClient("https://database.example.test/rest/v1", {
     fetch: fetchMock
@@ -156,6 +164,138 @@ describe("monthly report database reads", () => {
     await expect(getMonthlyReportData(OWNER, RANGE)).rejects.toThrow(
       "Read unavailable"
     );
+  });
+
+  it("exports Trade Republic's OTHR cash observations while retaining date and booked-balance limits", async () => {
+    const tradeRepublic = {
+      ...account,
+      id: "trade-republic-account",
+      name: "Cash account",
+      bank_connections: {
+        status: "linked",
+        institutions: [{ name: "Trade Republic" }]
+      }
+    };
+    const { urls } = mockDatabase({
+      accounts: [tradeRepublic],
+      balances: [
+        {
+          account_id: tradeRepublic.id,
+          amount: "2000",
+          currency: "EUR",
+          balance_type: "OTHR",
+          reference_date: "2026-09-01",
+          fetched_at: "2026-09-01T09:00:00Z"
+        },
+        {
+          account_id: tradeRepublic.id,
+          amount: "750",
+          currency: "EUR",
+          balance_type: "OTHR",
+          reference_date: "2026-09-18",
+          fetched_at: "2026-09-18T18:00:00Z"
+        },
+        {
+          account_id: tradeRepublic.id,
+          amount: "3000",
+          currency: "EUR",
+          balance_type: "OTHR",
+          reference_date: "2026-10-05",
+          fetched_at: "2026-10-05T09:00:00Z"
+        }
+      ]
+    });
+    const data = await getMonthlyReportData(OWNER, RANGE);
+    const report = buildMonthlyExportReport(
+      data,
+      "2026-09",
+      new Date("2026-10-10T12:00:00Z")
+    );
+    expect(report.accounts[0]).toMatchObject({
+      institution: "Trade Republic",
+      firstBalance: "2000",
+      firstDate: "2026-09-01",
+      firstDateSource: "bank",
+      lastBalance: "750",
+      lastDate: "2026-09-18",
+      lastDateSource: "bank",
+      variation: "-1250",
+      reconciliationDifference: null
+    });
+    expect(report.accounts[0].observations).not.toContain(
+      "Saldos históricos del mes no disponibles"
+    );
+    expect(report.accounts[0].observations).toContain(
+      "Cuadre mensual no comparable"
+    );
+    const balanceQuery = urls.find((url) =>
+      url.pathname.endsWith("/balances")
+    )!;
+    expect(balanceQuery.searchParams.get("user_id")).toBe(`eq.${OWNER}`);
+    expect(balanceQuery.searchParams.get("or")).toContain(
+      "reference_date.gte.2026-09-01"
+    );
+    expect(balanceQuery.searchParams.get("or")).toContain(
+      "reference_date.lt.2026-10-01"
+    );
+  });
+
+  it("keeps OTHR specific to Trade Republic and preserves standard balance types for other institutions", async () => {
+    const tradeRepublic = {
+      ...account,
+      id: "trade-account",
+      bank_connections: [
+        { status: "linked", institutions: { name: "Trade-Republic" } }
+      ]
+    };
+    mockDatabase({
+      accounts: [tradeRepublic, account],
+      balances: [
+        {
+          account_id: tradeRepublic.id,
+          amount: "500",
+          currency: "EUR",
+          balance_type: "OTHR",
+          reference_date: "2026-09-10",
+          fetched_at: "2026-09-10T09:00:00Z"
+        },
+        {
+          account_id: account.id,
+          amount: "9000",
+          currency: "EUR",
+          balance_type: "OTHR",
+          reference_date: "2026-09-10",
+          fetched_at: "2026-09-10T09:00:00Z"
+        },
+        {
+          account_id: account.id,
+          amount: "1000",
+          currency: "EUR",
+          balance_type: "CLBD",
+          reference_date: "2026-09-10",
+          fetched_at: "2026-09-10T09:00:00Z"
+        },
+        {
+          account_id: tradeRepublic.id,
+          amount: "8000",
+          currency: "EUR",
+          balance_type: "INFO",
+          reference_date: "2026-09-10",
+          fetched_at: "2026-09-10T09:00:00Z"
+        }
+      ]
+    });
+    const data = await getMonthlyReportData(OWNER, RANGE);
+    expect(
+      data.balances.map((balance) => [
+        balance.account_id,
+        balance.balance_type,
+        balance.amount
+      ])
+    ).toEqual([
+      [tradeRepublic.id, "OTHR", "500"],
+      [account.id, "CLBD", "1000"]
+    ]);
   });
 
   it("reads all reconciliation members using real composite-key columns", async () => {

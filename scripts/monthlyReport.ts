@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, rename, rm, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 
@@ -30,7 +30,7 @@ Sin --month, genera el mes anterior en Europe/Madrid.
 Lee la configuración local de Next.js, incluida .env.local.
 REPORT_EMAIL: email permitido (opcional si hay un único email permitido).
 REPORT_PASSWORD: contraseña del usuario de Supabase Auth.
-Salida: reports/Finanzas-YYYY-MM-<fecha UTC>-<identificador>.xlsx
+Salida: reports/Finanzas-YYYY-MM.xlsx (reemplaza el informe anterior del mes).
 Lee datos guardados; no sincroniza bancos.`;
 
 export function parseMonthlyReportArguments(args: string[], now = new Date()) {
@@ -132,13 +132,18 @@ export async function runMonthlyReport(
     );
     const workbook = await writeMonthlyWorkbook(report);
     const directory = resolve(projectDirectory, "reports");
-    const timestamp = generatedAt.toISOString().replace(/[:.]/g, "-");
-    const path = resolve(
+    const path = resolve(directory, `Finanzas-${period.value}.xlsx`);
+    const temporaryPath = resolve(
       directory,
-      `Finanzas-${period.value}-${timestamp}-${randomUUID()}.xlsx`
+      `.Finanzas-${period.value}-${randomUUID()}.tmp`
     );
     await mkdir(directory, { recursive: true, mode: 0o700 });
-    await writeFile(path, workbook, { flag: "wx", mode: 0o600 });
+    try {
+      await writeFile(temporaryPath, workbook, { flag: "wx", mode: 0o600 });
+      await rename(temporaryPath, path);
+    } finally {
+      await rm(temporaryPath, { force: true });
+    }
     console.log(`Informe generado: ${path}`);
     return path;
   } finally {

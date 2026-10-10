@@ -4,6 +4,7 @@ import type { MonthlyReportData, MonthlyTransactionRange } from "@/definitions";
 import { getInternalTransferMatchingRange } from "@/lib/db/enableBankingTransactions/internalTransferMatchingRange";
 import { getInternalTransferTransactionIds } from "@/lib/db/enableBankingTransactions/internalTransfers";
 import { mapStoredTransactionToSummary } from "@/lib/db/enableBankingTransactions/mapStoredTransaction";
+import { getInstitutionSlug } from "@/lib/db/enableBankingTransactions/institutionSlug";
 import { MONTHLY_TRANSACTION_SELECT } from "@/lib/db/enableBankingTransactions/transactionReadContext";
 import type { StoredMonthlyTransactionRow } from "@/lib/db/enableBankingTransactions/types";
 import { listTransactionReconciliationStates } from "@/lib/db/transactionReconciliations";
@@ -58,7 +59,15 @@ export async function getMonthlyReportData(
           "id,account_id,balance_type,amount,currency,reference_date,fetched_at"
         )
         .eq("user_id", userId)
-        .in("balance_type", ["CLBD", "CLAV", "ITBD", "ITAV", "OPBD", "OPAV"])
+        .in("balance_type", [
+          "CLBD",
+          "CLAV",
+          "ITBD",
+          "ITAV",
+          "OPBD",
+          "OPAV",
+          "OTHR"
+        ])
         .or(
           `and(reference_date.gte.${range.from},reference_date.lt.${range.to}),and(reference_date.is.null,fetched_at.gte.${shiftReportDate(range.from, -1)}T00:00:00Z,fetched_at.lt.${shiftReportDate(range.to, 1)}T00:00:00Z)`
         )
@@ -127,24 +136,33 @@ export async function getMonthlyReportData(
       status: data?.[0]?.status ?? "unknown"
     });
   }
+  const reportAccounts = accounts.map((account) => {
+    const connection = Array.isArray(account.bank_connections)
+      ? account.bank_connections[0]
+      : account.bank_connections;
+    const institution = Array.isArray(connection?.institutions)
+      ? connection.institutions[0]
+      : connection?.institutions;
+    const institutionName = institution?.name ?? "Entidad no disponible";
+    return {
+      id: account.id,
+      name: `${account.name}${account.iban_last4 ? ` · •••• ${account.iban_last4}` : ""}`,
+      institution: institutionName,
+      currency: account.currency,
+      status: account.status,
+      connectionId: account.bank_connection_id
+    };
+  });
+  const tradeRepublicAccountIds = new Set(
+    reportAccounts
+      .filter(
+        (account) =>
+          getInstitutionSlug(account.institution) === "trade-republic"
+      )
+      .map((account) => account.id)
+  );
   return {
-    accounts: accounts.map((account) => {
-      const connection = Array.isArray(account.bank_connections)
-        ? account.bank_connections[0]
-        : account.bank_connections;
-      const institution = Array.isArray(connection?.institutions)
-        ? connection.institutions[0]
-        : connection?.institutions;
-      const institutionName = institution?.name ?? "Entidad no disponible";
-      return {
-        id: account.id,
-        name: `${account.name}${account.iban_last4 ? ` · •••• ${account.iban_last4}` : ""}`,
-        institution: institutionName,
-        currency: account.currency,
-        status: account.status,
-        connectionId: account.bank_connection_id
-      };
-    }),
+    accounts: reportAccounts,
     transactions: rows.map((row) =>
       mapStoredTransactionToSummary(
         row,
@@ -152,10 +170,18 @@ export async function getMonthlyReportData(
         states.get(row.id) ?? null
       )
     ),
-    balances: balances.map((balance) => ({
-      ...balance,
-      amount: String(balance.amount)
-    })),
+    // Trade Republic labels current-account cash as OTHR. Do not broaden this
+    // ambiguous provider type to other institutions without confirmed meaning.
+    balances: balances
+      .filter(
+        (balance) =>
+          balance.balance_type !== "OTHR" ||
+          tradeRepublicAccountIds.has(balance.account_id)
+      )
+      .map((balance) => ({
+        ...balance,
+        amount: String(balance.amount)
+      })),
     categoryGroups: categoryGroups.map((group) => ({
       ...group,
       categories: []

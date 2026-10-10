@@ -1,4 +1,4 @@
-import { mkdtemp, readdir, readFile, rm, stat } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rename, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -13,6 +13,10 @@ const mocks = vi.hoisted(() => ({
   readData: vi.fn()
 }));
 vi.mock("server-only", () => ({}));
+vi.mock("node:fs/promises", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:fs/promises")>();
+  return { ...actual, rename: vi.fn(actual.rename) };
+});
 vi.mock("@next/env", () => ({ loadEnvConfig: mocks.loadEnv }));
 vi.mock("@supabase/supabase-js", () => ({ createClient: mocks.createClient }));
 vi.mock("@/lib/db/monthlyReportData", () => ({
@@ -149,7 +153,7 @@ describe("monthly report command", () => {
     expect(await readdir(directory)).toEqual([]);
   });
 
-  it("writes real workbooks with shared financial rules, authenticated ownership, and distinct filenames", async () => {
+  it("replaces the same month's workbook with updated data using a stable filename", async () => {
     vi.stubEnv("REPORT_EMAIL", undefined);
     mocks.readData.mockResolvedValue(
       reportData({
@@ -165,16 +169,33 @@ describe("monthly report command", () => {
       })
     );
     const first = await runMonthlyReport([], directory, REPORT_NOW);
+    const originalWorkbook = await readFile(first!);
+    expect(
+      strFromU8(unzipSync(originalWorkbook)["xl/worksheets/sheet1.xml"])
+    ).toContain("<v>2000</v>");
+    mocks.readData.mockResolvedValue(
+      reportData({
+        transactions: [
+          reportTransaction({
+            id: "salary",
+            amount: "3000",
+            category: reportCategory("salary", true)
+          }),
+          reportTransaction({ id: "expense", amount: "-100" }),
+          reportTransaction({ id: "refund", amount: "40" })
+        ]
+      })
+    );
     const second = await runMonthlyReport(
       ["--month=2026-09"],
       directory,
-      REPORT_NOW
+      new Date("2026-10-06T11:00:00Z")
     );
-    expect(first).not.toBe(second);
-    expect(first).toMatch(
-      /reports\/Finanzas-2026-09-2026-10-05T10-30-00-000Z-[\da-f-]+\.xlsx$/
-    );
-    expect(await readdir(join(directory, "reports"))).toHaveLength(2);
+    expect(first).toBe(second);
+    expect(first).toBe(join(directory, "reports", "Finanzas-2026-09.xlsx"));
+    expect(await readdir(join(directory, "reports"))).toEqual([
+      "Finanzas-2026-09.xlsx"
+    ]);
     expect(mocks.loadEnv).toHaveBeenCalledWith(
       directory,
       true,
@@ -201,15 +222,62 @@ describe("monthly report command", () => {
       client
     );
     const files = unzipSync(await readFile(first!));
+    expect(await readFile(first!)).not.toEqual(originalWorkbook);
     expect(strFromU8(files["xl/workbook.xml"])).toContain('name="Resumen"');
     expect(strFromU8(files["xl/worksheets/sheet1.xml"])).toContain(
-      "<v>2000</v>"
+      "<v>3000</v>"
     );
     expect(strFromU8(files["xl/worksheets/sheet2.xml"])).toContain("<v>60</v>");
     if (process.platform !== "win32") {
       expect((await stat(first!)).mode & 0o777).toBe(0o600);
       expect((await stat(join(directory, "reports"))).mode & 0o777).toBe(0o700);
     }
+    expect(mocks.signOut).toHaveBeenCalledWith({ scope: "local" });
+  });
+
+  it("keeps other months' reports when exporting a different month", async () => {
+    const september = await runMonthlyReport(
+      ["--month", "2026-09"],
+      directory,
+      REPORT_NOW
+    );
+    const septemberWorkbook = await readFile(september!);
+    await runMonthlyReport(["--month", "2026-08"], directory, REPORT_NOW);
+    expect(await readdir(join(directory, "reports"))).toEqual([
+      "Finanzas-2026-08.xlsx",
+      "Finanzas-2026-09.xlsx"
+    ]);
+    expect(await readFile(september!)).toEqual(septemberWorkbook);
+  });
+
+  it("preserves the previous report if workbook generation fails", async () => {
+    const path = await runMonthlyReport([], directory, REPORT_NOW);
+    const original = await readFile(path!);
+    mocks.readData.mockResolvedValue(
+      reportData({
+        transactions: [reportTransaction({ amount: "-1000000000000000" })]
+      })
+    );
+    await expect(runMonthlyReport([], directory, REPORT_NOW)).rejects.toThrow(
+      "Excel numeric precision"
+    );
+    expect(await readFile(path!)).toEqual(original);
+    expect(await readdir(join(directory, "reports"))).toEqual([
+      "Finanzas-2026-09.xlsx"
+    ]);
+  });
+
+  it("preserves the previous report and removes the temporary file if replacement fails", async () => {
+    const path = await runMonthlyReport([], directory, REPORT_NOW);
+    const original = await readFile(path!);
+    vi.mocked(rename).mockRejectedValueOnce(new Error("Replacement denied"));
+    await expect(runMonthlyReport([], directory, REPORT_NOW)).rejects.toThrow(
+      "Replacement denied"
+    );
+    expect(await readFile(path!)).toEqual(original);
+    expect(await readdir(join(directory, "reports"))).toEqual([
+      "Finanzas-2026-09.xlsx"
+    ]);
     expect(mocks.signOut).toHaveBeenCalledWith({ scope: "local" });
   });
 

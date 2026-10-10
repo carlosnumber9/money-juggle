@@ -61,6 +61,35 @@ describe("historical export balances", () => {
     expect(selected.comparable).toBe(false);
   });
 
+  it("prefers booked cash over OTHR at the same capture and does not treat month-boundary OTHR as booked balances", () => {
+    const opening = balance({
+      balance_type: "OTHR",
+      reference_date: "2026-09-01",
+      fetched_at: "2026-09-01T12:00:00Z"
+    });
+    const otherClosing = balance({
+      balance_type: "OTHR",
+      reference_date: "2026-09-30",
+      fetched_at: "2026-09-30T12:00:00Z",
+      amount: "900"
+    });
+    const bookedClosing = {
+      ...otherClosing,
+      balance_type: "CLBD",
+      amount: "950"
+    };
+    const otherOnly = selectReportBalances([opening, otherClosing], range);
+    expect(otherOnly.first).toEqual(opening);
+    expect(otherOnly.last).toEqual(otherClosing);
+    expect(otherOnly.comparable).toBe(false);
+    const mixed = selectReportBalances(
+      [opening, otherClosing, bookedClosing],
+      range
+    );
+    expect(mixed.last).toEqual(bookedClosing);
+    expect(mixed.comparable).toBe(false);
+  });
+
   it("only reconciles exact opening and closing booked balances and exposes differences", () => {
     const opening = balance({
       reference_date: "2026-09-01",

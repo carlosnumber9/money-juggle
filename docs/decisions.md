@@ -1809,6 +1809,10 @@ Decision:
   balances separate from income and expenses. Do not change dashboard calculations.
 - Keep economic dates separate from booked bank dates. Show historical balances
   with their real dates and explicitly disclose unverified coverage.
+- Include Trade Republic current-account cash snapshots labeled `OTHR` by the
+  provider. Keep this exception scoped to Trade Republic; retain standard balance
+  priorities and require actual `OPBD`/`CLBD` observations for monthly
+  reconciliation. Do not infer a month-end balance from an earlier observation.
 - Generate XLSX server-side in memory with MIT-licensed `write-excel-file`.
   Use numeric money cells, real date cells, stable Spanish headers, and literal
   owner-controlled text. Do not export raw transaction or provider identifiers.
@@ -1909,8 +1913,11 @@ Decision:
   check the email allowlist, derive ownership from the authenticated user, and
   retain RLS and explicit owner filters. Never use the service role for exports.
 - Keep the CLI session in memory and sign out only that session during cleanup.
-- Save distinct workbooks in the Git-ignored `reports/` directory, using a
-  generation timestamp and UUID to preserve earlier exports.
+- Save one workbook per month at `reports/Finanzas-YYYY-MM.xlsx` in the
+  Git-ignored directory. Re-exporting a month atomically replaces that workbook
+  with the latest available saved data, while preserving other months and the
+  prior workbook on generation or replacement failure. UUIDs are used only for
+  temporary files, not report versions.
 
 Consequences:
 
