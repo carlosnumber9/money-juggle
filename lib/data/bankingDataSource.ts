@@ -23,7 +23,14 @@ import {
   getPortfolioSnapshotForDate
 } from "@/lib/db/portfolio/imports";
 
+import {
+  getLatestPortfolioSnapshot,
+  listPortfolioHistory
+} from "@/lib/db/portfolio/reads";
+
 export const bankingDataSource: BankingDataSource = {
+  getLatestPortfolioSnapshot,
+  listPortfolioHistory,
   getPortfolioImportDraft: getPortfolioDraft,
   getPortfolioSnapshotForDate,
   async getMonthlyReportData(userId, range) {

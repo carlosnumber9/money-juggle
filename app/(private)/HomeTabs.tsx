@@ -71,6 +71,12 @@ export function HomeTabs({
           >
             Evolución
           </TabsTrigger>
+          <TabsTrigger
+            value="investments"
+            disabled={loading && activeTab !== "investments"}
+          >
+            Inversiones
+          </TabsTrigger>
         </TabsList>
       </div>
       <TabsContent

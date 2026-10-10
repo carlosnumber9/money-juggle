@@ -15,6 +15,7 @@ import {
 import { getTransactionMonthView } from "../transactionMonthView";
 
 import { buildBankCards } from "./buildBankCards";
+import { loadLatestPortfolio, loadInvestmentsView } from "./investments";
 import { loadConnections } from "./loadConnections";
 import {
   loadCompletedTransactionBackfillConnectionIds,
@@ -67,6 +68,21 @@ export async function getPrivateHomeView(
     return { ...common, tab, providerStatus, monthlyTransactions };
   }
 
+  if (tab === "investments") {
+    const [investments, providerStatus] = await Promise.all([
+      loadInvestmentsView(dataSource, user.id),
+      providerPromise
+    ]);
+    report?.(
+      "data",
+      investments.error || providerStatus.status !== "success"
+        ? "warning"
+        : "completed"
+    );
+    report?.("prepared", "completed");
+    return { ...common, tab, providerStatus, investments };
+  }
+
   const transactionsPromise = loadMonthlyTransactions(
     dataSource,
     user.id,
@@ -83,13 +99,15 @@ export async function getPrivateHomeView(
       adjustments,
       connectionsResult,
       completedConnectionIdsResult,
-      providerStatus
+      providerStatus,
+      portfolio
     ] = await Promise.all([
       transactionsPromise,
       adjustmentsPromise,
       loadConnections(dataSource, user.id),
       loadCompletedTransactionBackfillConnectionIds(dataSource, user.id),
-      providerPromise
+      providerPromise,
+      loadLatestPortfolio(dataSource, user.id)
     ]);
     const institutionsResult =
       providerStatus.status === "success"
@@ -102,7 +120,8 @@ export async function getPrivateHomeView(
         !connectionsResult.ok ||
         !completedConnectionIdsResult.ok ||
         providerStatus.status !== "success" ||
-        !institutionsResult?.ok
+        !institutionsResult?.ok ||
+        portfolio.error
         ? "warning"
         : "completed"
     );
@@ -114,7 +133,20 @@ export async function getPrivateHomeView(
         connectionsResult,
         institutionsResult,
         providerStatus
-      }),
+      }).map((card) =>
+        card.slug === "trade-republic"
+          ? {
+              ...card,
+              investmentBalance: portfolio.latest
+                ? {
+                    amount: portfolio.latest.investments,
+                    reportDate: portfolio.latest.reportDate
+                  }
+                : null,
+              investmentError: portfolio.error
+            }
+          : card
+      ),
       dashboardSyncEnabled: getDashboardSyncEnabled({
         connectionsResult,
         providerStatus

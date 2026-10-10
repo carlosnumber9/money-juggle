@@ -8,3 +8,4 @@ export * from "./privateView/props";
 export * from "./privateView/providerStatus";
 export * from "./privateView/statusMessages";
 export * from "./privateView/transactionBackfill";
+export * from "./privateView/investments";

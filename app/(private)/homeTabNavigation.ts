@@ -21,7 +21,8 @@ export function createHomeTabNavigation(selectedTab: HomeTab) {
       if (
         (tab !== "dashboard" &&
           tab !== "transactions" &&
-          tab !== "evolution") ||
+          tab !== "evolution" &&
+          tab !== "investments") ||
         snapshot.loading ||
         tab === snapshot.selectedTab
       )

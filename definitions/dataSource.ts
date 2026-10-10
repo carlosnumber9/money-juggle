@@ -125,6 +125,12 @@ export type MonthlyTransactionRange = {
 };
 
 export type BankingDataSource = {
+  getLatestPortfolioSnapshot(
+    userId: string
+  ): Promise<import("./portfolio").PortfolioSnapshot | null>;
+  listPortfolioHistory(
+    userId: string
+  ): Promise<import("./portfolio").PortfolioSnapshotSummary[]>;
   getPortfolioImportDraft(
     userId: string,
     draftId: string

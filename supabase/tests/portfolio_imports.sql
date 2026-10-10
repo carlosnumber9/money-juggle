@@ -37,6 +37,11 @@ begin
   or (select quantity from public.portfolio_positions where snapshot_id = v_saved_id) <> 10.199032 then
   raise exception 'Reported value and fractional units must be preserved.';
  end if;
+ if (select cash from public.portfolio_snapshot_values where id = v_saved_id) <> '0.600000'
+  or (select quantity from public.portfolio_position_values where snapshot_id = v_saved_id) <> '10.199032' then
+  raise exception 'Read views must preserve decimal strings.';
+ end if;
+ perform set_config('test.portfolio_saved', v_saved_id::text, true);
  select revision into original_revision from public.portfolio_snapshots where id = v_saved_id;
  begin
   perform public.confirm_portfolio_import('f7000000-0000-4000-8000-000000000012', payload, null, true);
@@ -63,6 +68,14 @@ begin
 end $$;
 select set_config('request.jwt.claim.sub', 'f7000000-0000-4000-8000-000000000002', true);
 do $$ begin
+ if exists(select 1 from public.portfolio_snapshot_values) or exists(select 1 from public.portfolio_position_values) then
+  raise exception 'Views must preserve underlying RLS.';
+ end if;
+ begin
+  insert into public.portfolio_positions(snapshot_id, user_id, isin, name, quantity, price, price_date, value)
+  values (current_setting('test.portfolio_saved')::uuid, 'f7000000-0000-4000-8000-000000000002', 'IE00B4L5Y983', 'Synthetic', 1, 1, '2026-10-10', 1);
+  raise exception 'Cross-owner relationship was accepted.';
+ exception when foreign_key_violation then null; end;
  if exists(select 1 from public.portfolio_snapshots) or exists(select 1 from public.portfolio_positions)
   or exists(select 1 from public.portfolio_import_drafts) then
   raise exception 'Other-owner data was readable.';

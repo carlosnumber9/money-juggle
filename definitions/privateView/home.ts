@@ -14,7 +14,8 @@ import type { MonthlyPeriodView } from "./monthlyPeriod";
 import type { ProviderStatusView } from "./providerStatus";
 import type { TransactionBackfillView } from "./transactionBackfill";
 
-export type HomeTab = "dashboard" | "transactions" | "evolution";
+export type HomeTab =
+  "dashboard" | "transactions" | "evolution" | "investments";
 
 export type MonthlyTransactionsView = {
   range: { from: string; to: string };
@@ -60,6 +61,10 @@ export type PrivateHomeView =
       transactionBackfill: TransactionBackfillView;
       monthlyCashflow: MonthlyCashflowSummary;
       monthlyCashflowError: string | null;
+    })
+  | (ReadyHomeView & {
+      tab: "investments";
+      investments: import("./investments").InvestmentsView;
     })
   | (ReadyHomeView & {
       tab: "evolution";

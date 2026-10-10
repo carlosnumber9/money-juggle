@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 const source = vi.hoisted(() => ({
   getCurrentUser: vi.fn(),
+  getLatestPortfolioSnapshot: vi.fn(),
+  listPortfolioHistory: vi.fn(),
   getProviderApplication: vi.fn(),
   listAvailableInstitutions: vi.fn(),
   listBankConnections: vi.fn(),
@@ -22,6 +24,7 @@ beforeEach(() => {
     email: "owner@example.com",
     isAllowed: true
   });
+  source.getLatestPortfolioSnapshot.mockResolvedValue(null);
   source.getProviderApplication.mockResolvedValue({ name: "App" });
   for (const [name, method] of Object.entries(source)) {
     if (name.startsWith("list")) method.mockResolvedValue([]);
@@ -29,6 +32,33 @@ beforeEach(() => {
 });
 
 describe("active home tab", () => {
+  it("loads only portfolio financial data in investments", async () => {
+    const view = await getPrivateHomeView("2026-07", "investments");
+    expect(view).toMatchObject({
+      kind: "ready",
+      tab: "investments",
+      investments: { latest: null, points: [], error: null }
+    });
+    expect(source.getLatestPortfolioSnapshot).toHaveBeenCalledWith("owner");
+    expect(source.listPortfolioHistory).toHaveBeenCalledWith("owner");
+    expect(source.listMonthlyTransactions).not.toHaveBeenCalled();
+    expect(source.listBankConnections).not.toHaveBeenCalled();
+  });
+  it("keeps imported investments on a disconnected Trade Republic card", async () => {
+    source.getLatestPortfolioSnapshot.mockResolvedValue({
+      investments: "3905.02",
+      reportDate: "2026-10-10"
+    });
+    const view = await getPrivateHomeView(undefined, "dashboard");
+    expect(
+      view.kind === "ready" &&
+        view.tab === "dashboard" &&
+        view.bankCards.find((card) => card.slug === "trade-republic")
+    ).toMatchObject({
+      investmentBalance: { amount: "3905.02", reportDate: "2026-10-10" }
+    });
+  });
+
   it("reports session before any data and preparation only after reads finish", async () => {
     const report = vi.fn();
     let release!: (rows: []) => void;

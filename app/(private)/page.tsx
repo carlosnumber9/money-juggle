@@ -16,6 +16,7 @@ import { MonthlyCashflowCards } from "@/app/(private)/MonthlyCashflowCards";
 import { MonthlyEvolutionPanel } from "@/app/(private)/MonthlyEvolutionPanel";
 import { TransactionsMonthPanel } from "./TransactionsMonthPanel";
 import { HomeTabs } from "./HomeTabs";
+import { InvestmentsPanel } from "./InvestmentsPanel";
 import type { PrivateHomePageProps } from "@/definitions";
 import { getPrivateHomeView } from "@/lib/views/privateHomeView";
 
@@ -116,6 +117,9 @@ async function PreparedHome({
         {view.tab === "transactions" && (
           <TransactionsMonthPanel initialData={view.monthlyTransactions} />
         )}
+        {view.tab === "investments" && (
+          <InvestmentsPanel view={view.investments} />
+        )}
         {view.tab === "evolution" && (
           <MonthlyEvolutionPanel
             evolution={view.monthlyEvolution.summary}
@@ -134,8 +138,10 @@ async function PreparedHome({
 
 function getSelectedTab(
   value: string | string[] | undefined
-): "dashboard" | "transactions" | "evolution" {
-  return value === "transactions" || value === "evolution"
+): import("@/definitions").HomeTab {
+  return value === "transactions" ||
+    value === "evolution" ||
+    value === "investments"
     ? value
     : "dashboard";
 }

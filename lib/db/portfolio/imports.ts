@@ -70,7 +70,7 @@ export async function getPortfolioSnapshotForDate(
 ): Promise<PortfolioSnapshotSummary | null> {
   const client = await createSupabaseServerClient();
   const { data, error } = await client
-    .from("portfolio_snapshots")
+    .from("portfolio_snapshot_values")
     .select("id, report_date, currency, cash, investments, revision")
     .eq("user_id", userId)
     .eq("platform", "trade-republic")

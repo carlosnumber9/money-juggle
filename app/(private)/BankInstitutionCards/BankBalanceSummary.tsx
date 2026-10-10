@@ -7,7 +7,12 @@ import { formatLatestDate } from "./formatters";
 
 export function BankBalanceSummary({ card }: { card: BankInstitutionCard }) {
   if (card.state !== "connected") {
-    return null;
+    return card.slug === "trade-republic" ? (
+      <div className="mt-4 space-y-1">
+        <p className="text-xs font-medium text-muted-foreground">Efectivo</p>
+        <p className="text-xs text-muted-foreground">Sin conexión activa</p>
+      </div>
+    ) : null;
   }
 
   if (!card.balanceTotals || card.balanceTotals.length === 0) {
@@ -28,7 +33,11 @@ export function BankBalanceSummary({ card }: { card: BankInstitutionCard }) {
       {card.balanceTotals.map((total) => (
         <p
           key={total.currency}
-          className="text-2xl font-semibold tracking-normal"
+          className={
+            card.slug === "trade-republic"
+              ? "text-[clamp(0.75rem,8cqi,1.5rem)] font-semibold tracking-normal"
+              : "text-2xl font-semibold tracking-normal"
+          }
         >
           <AnimatedCurrency amount={total.amount} currency={total.currency} />
         </p>

@@ -4,6 +4,8 @@ export type BankInstitutionCard = {
   logoPath: string;
   provider: "enable_banking" | "manual";
   balanceLabel?: string;
+  investmentBalance?: { amount: string; reportDate: string } | null;
+  investmentError?: string | null;
   beta?: boolean;
   aspspName?: string;
   country?: string;
