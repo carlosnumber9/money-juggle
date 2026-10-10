@@ -10,3 +10,4 @@ export * from "./ui";
 export * from "./sync";
 export * from "./monthlyReport";
 export * from "./progress";
+export * from "./portfolio";
