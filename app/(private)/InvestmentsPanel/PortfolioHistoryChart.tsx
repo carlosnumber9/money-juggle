@@ -8,7 +8,11 @@ import {
   ChartTooltipContent
 } from "@/components/ui/chart";
 import type { InvestmentsView } from "@/definitions";
-import { formatPortfolioDate, portfolioHistoryConfig } from "./formatters";
+import {
+  formatPortfolioDate,
+  formatPortfolioTooltipDate,
+  portfolioHistoryConfig
+} from "./formatters";
 import { formatCompactCurrency } from "../MonthlyEvolutionPanel/formatters";
 
 export function PortfolioHistoryChart({
@@ -55,7 +59,7 @@ export function PortfolioHistoryChart({
         <ChartTooltip
           content={
             <ChartTooltipContent
-              labelFormatter={(label) => formatPortfolioDate(Number(label))}
+              labelFormatter={formatPortfolioTooltipDate}
               indicator="line"
             />
           }
