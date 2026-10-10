@@ -3,7 +3,6 @@ import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import type { BankInstitutionCard } from "@/definitions";
 
-import { BankAccountList } from "./BankAccountList";
 import { BankBalanceSummary } from "./BankBalanceSummary";
 import { BankStatusIcon } from "./BankStatusIcon";
 
@@ -25,7 +24,7 @@ export function BankCard({ card }: { card: BankInstitutionCard }) {
               <span className="block truncate text-base font-semibold">
                 {card.name}
               </span>
-              {card.beta ? (
+              {card.beta && card.slug !== "trade-republic" ? (
                 <span className="border border-border px-1.5 py-0.5 text-[0.625rem] font-medium tracking-wide text-muted-foreground uppercase">
                   Beta
                 </span>
@@ -38,7 +37,6 @@ export function BankCard({ card }: { card: BankInstitutionCard }) {
               </p>
             ) : null}
           </div>
-          <BankAccountList card={card} />
         </div>
       </CardContent>
       <BankStatusIcon card={card} />
