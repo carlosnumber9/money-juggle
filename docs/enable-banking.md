@@ -8,7 +8,12 @@ were not available when the project reached the banking-provider step. Enable
 Banking supports the project's immediate personal-use path because it allows a
 restricted production application to link the owner's own accounts.
 
-## Current Provider Decision
+## Provider Decision And Recorded Setup
+
+The following portal setup and ASPSP availability were recorded during earlier
+integration work. Local code inspection does not revalidate live provider
+availability, beta status, consent limits, or production registration. The app
+reads current ASPSP settings at runtime; verify them before operational changes.
 
 Status:
 
@@ -41,9 +46,10 @@ Terms of service URL:
 https://money-juggle.vercel.app/terms
 ```
 
-The privacy and terms routes should exist before relying on the production
-registration. They can start as short static pages because the first app version
-is personal and read-only.
+No `/privacy` or `/terms` page is present in the current source. These recorded
+registration URLs do not establish working app routes. Confirm the provider
+requirements and deployed behavior before relying on them; adding those pages
+is a separate feature task.
 
 ## Read-Only Scope
 
@@ -92,7 +98,7 @@ application.
 The public certificate is safe to provide to Enable Banking. The private key is
 a secret and must remain server-only.
 
-The local generated files currently live under:
+The documented local key convention is:
 
 ```text
 .secrets/enable-banking/private.key
@@ -128,9 +134,8 @@ This fits the initial `money-juggle` scope:
 9. Server-only code fetches account details, balances, and transactions.
 10. The app stores normalized data under the authenticated user.
 
-Implementation details may differ once the first API spike is built. Keep the
-first technical slice narrow: authenticate server-side and fetch a harmless
-resource before starting a full app UI flow.
+The connection, balance, and transaction flows below are implemented. Future
+changes should preserve these boundaries and remain small and reviewable.
 
 ## Implemented Connection Flow
 
@@ -313,7 +318,7 @@ the existing button spinner and stops on success, failure, cancellation, or a
 provider cooldown response.
 
 The private `Transacciones` tab presents cached rows for the month selected in
-the URL as a review surface: transactions are grouped by booking date, marked
+the URL as a review surface: transactions are grouped by owner-controlled reporting date, marked
 with the source bank logo or fallback, and can be filtered by institution or by
 income/spending direction. Its month controls query Supabase only and do not
 change the provider sync boundary; Enable Banking requests still only happen in
@@ -373,20 +378,21 @@ There is no single external transaction ID that should be assumed to exist for
 every transaction across all providers and banks. Provider IDs and bank-provided
 references are useful but may be optional or bank-dependent.
 
-Recommended identity priority:
+Implemented identity priority (see
+`lib/db/enableBankingTransactions/transactionIdentity.ts`):
 
 ```text
 if provider_internal_transaction_id exists:
   provider_internal:{account_id}:{provider_internal_transaction_id}
 
 else if provider_transaction_id exists:
-  bank_transaction:{account_id}:{provider_transaction_id}
+  provider_transaction:{account_id}:{provider_transaction_id}
 
 else if entry_reference exists:
-  bank_entry_reference:{account_id}:{entry_reference}
+  entry_reference:{account_id}:{entry_reference}
 
 else if end_to_end_id exists and is meaningful:
-  bank_end_to_end:{account_id}:{end_to_end_id}
+  end_to_end:{account_id}:{end_to_end_id}
 
 else:
   fingerprint:{account_id}:{deduplication_fingerprint}
@@ -407,19 +413,13 @@ Important rules:
 `deduplication_fingerprint` is the fallback identity when no useful external
 identifier is available.
 
-It should be a hash of normalized values such as:
-
-- Internal `account_id`.
-- Booking date or value date.
-- Amount in minor units.
-- Currency.
-- Normalized description or remittance text.
-- Counterparty or merchant name when available.
-- Counterparty account suffix when available.
-- Bank transaction code or merchant category code when available.
-
-The fingerprint implementation should normalize whitespace, casing, decimal
-precision, missing fields, and date formats before hashing.
+The implemented SHA-256 input includes account ID, separate booking and value
+dates, signed amount text, currency, description, counterparty and
+merchant names, account suffix, bank transaction code, and merchant category
+code. Whitespace and text normalization happen before hashing; amount
+sign/whitespace handling happens during mapping, but equivalent decimal
+representations are not canonicalized before hashing. See `transactionIdentity.ts`
+and `rowIdentity.ts` under `lib/db/enableBankingTransactions/`.
 
 Fingerprints are useful but imperfect. They can collide in rare cases, for
 example two same-day card payments for the same amount and merchant. They can
@@ -429,35 +429,21 @@ than provider IDs.
 
 ## Transaction Upsert And Reconciliation
 
-Transaction persistence should follow an upsert-like flow:
+Current persistence in
+`lib/db/enableBankingTransactions/persistTransactionRows.ts` deduplicates input
+by owner/account/stable key, looks up matching existing keys, and upserts in
+batches of 100. It preserves first-seen time, non-null reporting dates, and
+category/label/reconciliation metadata omitted from the provider payload.
 
-1. Fetch transactions server-side from Enable Banking.
-2. Normalize each transaction into app fields.
-3. Compute `stable_import_key`.
-4. Search for an existing row with the same `user_id`, `account_id`, and
-   `stable_import_key`.
-5. If found, update provider-owned fields and `last_seen_at`.
-6. Preserve user-owned fields such as `category_id`, user notes, or manual
-   review state.
-7. If no row exists by `stable_import_key`, search for recent compatible
-   same-account candidates using stored external IDs and the fallback
-   fingerprint.
-8. If a compatible candidate exists, update that row and improve its identity
-   fields.
-9. If no compatible candidate exists, insert a new transaction.
+Matching a new stable key against older external identifiers or fallback
+fingerprints is not implemented. Pending-to-booked promotion and changed
+fingerprints need explicit design and tests before being described as safe
+automatic merging. Unique provider-ID indexes constrain some duplicates but do
+not implement promotion. This is distinct from the owner's finalized financial
+reconciliation groups, which already exist for neutral cash-flow reporting.
 
-This reconciliation step matters because a transaction may first arrive as
-pending or incomplete and later arrive as booked with stronger identifiers or
-slightly different dates/descriptions.
-
-Pending transactions should be treated as provisional:
-
-- They may be shown in the UI later if useful.
-- They should not be the main source for permanent reports unless intentionally
-  designed.
-- Manual categories should primarily apply to booked transactions.
-- If a pending row is later reconciled with a booked row, user-owned metadata
-  should be preserved where safe.
+Sync can store pending rows. Excel export uses booked rows only; current
+cashflow/chart builders do not enforce the same booking-status restriction.
 
 ## Consent Expiration
 
@@ -470,7 +456,7 @@ shows a Spanish reconnection action and does not retry invalid sessions.
 PSD2 consents expire. The app should make expiration visible in the data model
 and UI.
 
-Future behavior should include:
+Implemented lifecycle behavior includes:
 
 - Marking connections as expired when consent is no longer valid.
 - Showing a Spanish user-visible reconnection message.
@@ -682,7 +668,8 @@ storage, balance sync, and overlapping incremental transaction sync. Future work
 still prefer small steps:
 
 1. Add focused tests for transaction identity and sync idempotency.
-2. Improve reconnection flows for expired or failed consents.
+2. Verify existing reconnection and owner account-review flows against real bank
+   return behavior when explicitly requested; do not rebuild them as missing features.
 3. Add scheduled sync only after manual and authenticated sync behavior is well
    understood.
 4. Keep all provider calls server-only and Account Information only.

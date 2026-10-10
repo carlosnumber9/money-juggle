@@ -1,204 +1,135 @@
 # Repository Agent Guide
 
-This repository is the foundation for a personal finance application named `money-juggle`.
+`money-juggle` is an implemented private personal finance app, developed in
+small, reviewable slices. It uses Next.js App Router, TypeScript, React,
+Supabase Auth/Postgres with RLS, and server-only Enable Banking Account
+Information. Vercel is the deployment target. Do not treat this repository as a
+documentation-only scaffold or generate the whole app again.
 
-The current phase is documentation-first. Do not generate the full application, broad scaffolding, large feature sets, database migrations, API routes, React components, or integration clients unless the user explicitly asks for that next step.
+## Start Here
 
-## Repository Instructions Take Precedence
+1. Read this guide, [development workflow](docs/development-workflow.md), and
+   the documents relevant to the task using the [documentation index](docs/README.md).
+2. Check `git status` and inspect the existing implementation before editing.
+   Preserve unrelated work; do not include it in commits without authorization.
+3. Use [current state](docs/current-state.md) for implemented capabilities and
+   code locations, [roadmap](docs/feature-roadmap.md) for remaining work, and
+   [decisions](docs/decisions.md) for rationale and superseded history.
+4. Treat source files, `package.json`, and SQL migrations as executable evidence.
+   If they disagree with docs, report the discrepancy and update the relevant
+   docs within the requested scope. Do not silently change product behavior to
+   match an obsolete proposal.
 
-- Before acting, read this guide and the repository documentation relevant to
-  the requested workflow.
-- Repository-specific instructions and the user's explicit request take
-  precedence over generic agent conventions, skills, templates, GitHub
-  workflows, or personal defaults whenever they are compatible with
-  higher-priority platform instructions.
-- Never replace a documented repository workflow with a generic one. Do not
-  invent branches, pull requests, tools, or publication steps that the user did
-  not request.
-- If a generic skill or tool recommends a different workflow, follow the
-  repository workflow instead. If the conflict cannot be resolved safely, stop
-  and ask the user before changing repository state.
-- Before any commit or push, re-read the publication rules in
-  `docs/development-workflow.md` and follow them exactly.
+These instructions apply throughout the repository. Read any more specific
+`AGENTS.md` before editing files in its directory. Follow applicable platform
+instructions and explicit user requests; repository workflows take precedence
+over generic skills and publication defaults when compatible with them.
 
-## Product Goal
+## Scope And Language
 
-`money-juggle` will help the owner review their financial situation from mobile and desktop without manually exporting bank statements.
+- Build one small feature at a time. Explain the feature, likely files, and
+  security/ownership implications before important implementation changes.
+- Broad architectural changes require explicit user confirmation. Do not create
+  unrequested pages, API routes, migrations, environment/configuration files,
+  integration clients, component libraries, or broad abstractions.
+- Existing features may be maintained within the user's requested scope.
+  A roadmap item or historical proposal is not permission to implement it.
+- Conversation may be in Spanish. Persisted documentation, code, comments,
+  technical names, and commit messages must be in English. App-visible text
+  must be in Spanish.
 
-The app should connect to banks through Open Banking / PSD2, read account data, balances, and transactions, and build personal financial reports over time.
+## Security Invariants
 
-Initial target institutions and platforms:
+- Bank access is read-only Account Information. Never initiate payments,
+  transfers, collections, mandates, trading, or online banking scraping.
+  Never store bank login credentials.
+- All Enable Banking calls, RSA signing keys, JWTs, provider session identifiers,
+  and Supabase elevated keys stay server-only. Never expose secrets through
+  `NEXT_PUBLIC_`, browser props, logs, or raw error payloads.
+- Require a validated Supabase user and the owner email allowlist at private
+  boundaries. `ALLOWED_EMAILS` is preferred; `OWNER_EMAIL` is supported for
+  compatibility. Never add local authentication bypasses.
+- Financial tables require explicit ownership and RLS. Use `user_id` for owned
+  rows; `profiles.id` is the owner's auth ID. Composite ownership foreign keys
+  protect relationships. Authenticated users may read global institutions.
+- Ordinary financial reads and exports use authenticated RLS-aware clients.
+  Elevated provider writes and existing category/reporting-date mutations must
+  validate ownership explicitly. Never make the service role the default client.
+- The bank callback validates its state against an authenticated-start pending
+  connection and uses its stored owner; it can complete without browser auth
+  cookies. Do not weaken this boundary or require cookies that break bank returns.
+- Preserve app-owned categories, labels, reporting dates, and reconciliation
+  metadata during provider sync. Keep original bank dates separate from
+  reporting dates. Do not merge currencies or infer complete historical coverage.
+- Keep full IBANs out of persistence. Use masked suffixes and server-generated
+  HMAC fingerprints. Do not commit secrets or generated financial workbooks.
+- Trade Republic AIS covers current-account cash and movements. Brokerage,
+  crypto, portfolio valuation, and Cobee integration remain deferred.
 
-- CaixaBank
-- ING
-- Trade Republic
+## Code Boundaries
 
-CaixaBank, ING, and the Trade Republic current account should use Enable Banking
-Account Information through Open Banking / PSD2. Trade Republic brokerage
-positions, crypto assets, and portfolio valuation remain a special case because
-they are not available through the current PSD2 path and may require manual
-input, a separate integration, or a future solution.
+| Location                     | Responsibility                                                 |
+| ---------------------------- | -------------------------------------------------------------- |
+| `app/`                       | Thin routes, layouts, server actions, and feature UI           |
+| `components/ui/`             | Existing shadcn/Base UI primitives                             |
+| `definitions/`               | Shared contracts re-exported from `@/definitions`              |
+| `lib/views/`                 | Prepare route and panel view props                             |
+| `lib/data/`                  | Single authenticated application-facing banking data source    |
+| `lib/db/`                    | Persistence, normalization, and provider sync orchestration    |
+| `lib/domain/`                | Framework-independent financial rules                          |
+| `lib/enableBanking/`         | Server-only provider client, signing, display metadata         |
+| `lib/supabase/`              | Authenticated clients, session refresh, narrow elevated client |
+| `lib/reports/monthlyExport/` | Aggregate workbook calculation and serialization               |
+| `scripts/`                   | Monthly report CLI using authenticated saved-data reads        |
+| `supabase/migrations/`       | Executable schema, ownership constraints, and RLS              |
+| `supabase/tests/`            | Explicit SQL verification with rollback fixtures               |
 
-## Language Rules
+Use the actual camelCase `lib/enableBanking/` path. Prefer existing shadcn/ui
+components and theme tokens. Keep provider/database details out of UI. Extract
+nontrivial formatting, filtering, grouping, and chart preparation into colocated
+`.ts` files; reusable financial rules belong in `lib/domain/`. Avoid unrelated
+refactors and helpers for trivial expressions.
 
-- Conversation with the user may be in Spanish.
-- Repository documentation must be written in English.
-- Future code, comments, technical names, folders, files, functions, variables, types, and database entities must be written in English.
-- User-visible text inside the app must be written in Spanish.
+## Commands And Verification
 
-## Chosen Stack
+Use Node.js 24.x and npm; the declared package manager is npm 10.8.2. Install
+locked dependencies with `npm ci` when needed. See `package.json` for scripts.
 
-- Next.js with App Router
-- TypeScript
-- React
-- Vercel
-- Supabase Auth
-- Email and password login
-- Supabase Postgres
-- Supabase Row Level Security
-- Enable Banking Account Information API
-- Next.js Route Handlers for server-side logic
-- Private environment variables in Vercel
-- Possible Vercel Cron for periodic synchronization
-
-Conceptual architecture:
-
-```text
-Browser / mobile
-  -> Next.js on Vercel
-  -> Supabase Auth
-  -> Supabase Postgres
-  -> Enable Banking Account Information API
+```bash
+npm run check
+npm run test
+npm run test:coverage
 ```
 
-## Non-Negotiable Security Rules
+`check` runs typecheck, lint, and format checks; it does not run tests or a build.
+Use targeted Vitest tests during iteration, then relevant static checks and tests
+before publication. For documentation-only changes, check formatting, local
+links/paths, commands, and consistency with source; do not add tests that merely
+repeat prose. Format only intended files, not the whole worktree.
 
-- The app is read-only with respect to banks.
-- Never initiate payments.
-- Never create transfers.
-- Never collect money.
-- Never create mandates.
-- Never use payment initiation flows.
-- Never scrape online banking.
-- Never store bank login credentials.
-- Never expose Enable Banking signing keys or provider tokens to the browser.
-- All Enable Banking calls must happen on the server.
-- The frontend must never receive `ENABLE_BANKING_PRIVATE_KEY`, provider tokens, service role keys, or other sensitive credentials.
-- Supabase RLS must be enabled for tables containing financial data.
-- Even though this is a personal app, model ownership as if multiple users may exist later.
-- Password login must be restricted to the owner email or an explicit allowlist.
-- Avoid overusing the Supabase service role. Use it only in server-only contexts where RLS bypass is intentionally required.
+Tests are colocated `*.test.ts`, use Node by default, and mock provider/database
+boundaries. Pass explicit dates and never use production credentials or live
+bank calls. Coverage is diagnostic, without a global percentage threshold.
 
-## What Not To Build Without Confirmation
+Do not start `npm run dev`, `npm run start`, or another local app server for
+verification unless the user explicitly requests a local run or browser testing.
+Report skipped browser checks when relevant. `npm run build` is an optional
+non-server build check. Do not apply migrations or run real bank synchronization
+as incidental verification; use the documented operational workflow when requested.
 
-Do not create these without explicit user approval:
+## Git And Completion
 
-- Full application pages
-- React component libraries
-- API routes
-- Supabase migrations
-- Environment files
-- Project configuration files
-- Database clients
-- Enable Banking clients
-- Payment flows
-- Scraping tools
-- Large architectural rewrites
-- Broad abstractions that are not needed for the current feature
-
-When a requested change would affect architecture, persistence, authentication, or external integrations, explain the change before implementing it.
-
-## Incremental Feature Workflow
-
-For each future feature:
-
-1. Explain the feature and the concept being introduced.
-2. Propose the smallest useful scope.
-3. List the files that will likely change.
-4. Mention security, data ownership, and RLS implications.
-5. Ask for confirmation before broad architectural changes.
-6. Implement the smallest reviewable slice.
-7. Verify the behavior with tests, type checks, or manual steps as appropriate.
-8. Summarize what changed and what the user learned.
-9. Update documentation or `docs/decisions.md` when a durable decision is made.
-
-## Suggested Future Repository Structure
-
-Do not create these folders until they are needed. This is only a convention guide.
-
-```text
-app/
-  (public)/
-  (private)/
-  api/
-components/
-lib/
-  auth/
-  db/
-  domain/
-  enable-banking/
-  supabase/
-docs/
-supabase/
-  migrations/
-tests/
-```
-
-Suggested responsibilities:
-
-- `app/`: routes, layouts, and route handlers.
-- `components/`: reusable UI components.
-- `lib/auth/`: authentication helpers and allowlist checks.
-- `lib/db/`: database access helpers.
-- `lib/domain/`: business rules independent from framework details.
-- `lib/enable-banking/`: server-only Enable Banking integration code.
-- `lib/supabase/`: Supabase browser/server client setup.
-- `supabase/migrations/`: database migrations when schema work begins.
-- `tests/`: focused tests for domain rules and integration boundaries.
-
-## Supabase Rules
-
-- Treat RLS as mandatory, not optional.
-- Every financial table should include a clear `user_id` ownership column unless there is a strong documented reason not to.
-- Policies should make the ownership model explicit.
-- The anon key may be exposed to the browser, but it must rely on RLS.
-- The service role key must remain server-only and should be used sparingly.
-- Prefer SSR-compatible Supabase patterns when implementing Next.js authentication.
-- Restrict login to the owner email or an explicit allowlist.
-- Keep schema changes small and documented.
-
-## Enable Banking Rules
-
-- Use Enable Banking Account Information for PSD2 account information.
-- Use only Account Information. Do not implement Enable Banking payment initiation or any other money-moving capability.
-- Keep all Enable Banking credentials, signing keys, and provider tokens server-only.
-- Store consent state clearly: institution/ASPSP, authorization flow, linked accounts, expiration, status, and relevant events.
-- Handle consent expiration and reconnection explicitly.
-- Sync failures should be recorded and visible enough to debug.
-- Separate UI from integration logic. UI starts flows; server-side code talks to Enable Banking.
-
-## Feature Acceptance Criteria
-
-A feature is acceptable when:
-
-- It solves one small, clearly stated user problem.
-- The implementation is understandable and reviewable.
-- Server-only data stays server-only.
-- RLS and ownership implications are handled or documented.
-- The user-visible app text is Spanish.
-- Internal names and code are English.
-- Verification steps were run or clearly explained if not run.
-- Relevant documentation was updated when behavior or architecture changed.
-- The implementation avoids unrelated refactors.
-
-## Development Style
-
-Build in small, didactic steps. Prefer clear, explicit code over premature abstractions. Add tests when they clarify behavior, protect financial logic, or reduce regression risk. Keep explanations practical and focused on what the user is learning.
-
-Never generate large parts of the app without the user's confirmation. Explain important changes before implementing them.
-
-## Local App Startup Rule
-
-Do not start the local Next.js app for testing or verification unless the user's prompt explicitly asks for a local app run or browser-based local testing.
-
-Prefer non-server verification such as type checks, linting, formatting checks, unit tests, or focused code inspection. If a change would normally benefit from running the app locally, explain that this was intentionally skipped because local app startup was not requested.
+- Before every commit or push, re-read the publication rules in
+  [development workflow](docs/development-workflow.md#publishing-changes) and
+  [Git workflow](docs/git-workflow.md).
+- Ordinary commit/push uses only local `git`, the configured SSH remote, and
+  direct publication to `main`. Stage intended files explicitly, synchronize
+  safely, and run `git push origin main`. Never force-push.
+- Do not use `gh`, GitHub plugins/connectors, or pull request workflows unless
+  the user explicitly requests a GitHub or pull request workflow. Commit and
+  push does not authorize a branch, fork, PR, or merge commit.
+- Use `<type>: <Capitalized simple-past message>`, for example
+  `docs: Updated agent guidance and implementation status`.
+- Complete with a concise summary of changes, verification, and material limits.
+  Update feature docs and roadmap when behavior changes. Record durable
+  architectural decisions in `docs/decisions.md`, preserving superseded history.

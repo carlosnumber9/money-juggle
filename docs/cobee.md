@@ -3,6 +3,10 @@
 Cobee by Pluxee is a future candidate integration for restaurant and flexible
 compensation spending that does not come from PSD2 bank Account Information.
 
+No Cobee client, runtime configuration, or persistence tables are implemented.
+The following is historical research, not a verified current API contract.
+Revalidate access, endpoints, and granularity before implementation.
+
 Source reviewed on 2026-07-15:
 
 - `https://docs.api.cobee.io/en/api-reference/api_introduction`

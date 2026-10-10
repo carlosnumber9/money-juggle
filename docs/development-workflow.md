@@ -107,7 +107,9 @@ Examples:
 
 ## Publishing Changes
 
-The repository's normal publication flow is direct to `main`.
+The repository's normal publication flow is direct to `main`. Read
+[Git workflow](git-workflow.md) for the publication sequence and scope checks.
+This section remains authoritative; do not introduce a generic PR workflow.
 
 - When the user asks to commit, push, publish, or upload changes to `origin`,
   interpret that request as: stage only the intended files, create the commit
@@ -140,6 +142,12 @@ Update documentation when:
 
 Use `docs/decisions.md` for decisions that future sessions should remember.
 
+Follow the [documentation index](README.md) and
+[maintenance checklist](agent-documentation.md#maintenance-checklist). Update
+[current state](current-state.md) and roadmap entries when capability or limits
+change. Keep historical proposals and superseded decisions explicitly labeled;
+they are context, not authorization to implement new work.
+
 ## Tests
 
 Add tests when they reduce risk or clarify behavior.
@@ -157,6 +165,15 @@ npm run test
 npm run test:watch
 npm run test:coverage
 ```
+
+`npm run check` runs typecheck, lint, and formatting, not tests or a build.
+`npm run build` is an optional non-server build check. Use Node.js 24.x and
+`npm ci` for the locked dependency installation. For documentation-only changes,
+verify formatting, links, paths, scripts, and consistency with source; no new
+application tests are required. Format intended files only.
+
+Linked database checks, migration deployment, and live provider requests are
+explicit operational tasks. Do not run them as incidental static verification.
 
 Coverage uses V8 and is a diagnostic tool. Do not optimize for a global
 percentage. Prioritize meaningful positive, negative, boundary, and failure

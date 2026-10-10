@@ -1,6 +1,25 @@
 # Architecture Decision Record
 
-This file records durable decisions that future sessions should preserve unless the user explicitly revisits them.
+This file records durable decisions that future sessions should preserve unless
+the user explicitly revisits them. Context and earlier slice descriptions are
+historical; follow status and supersession notes rather than treating every old
+statement as current behavior. Use [current state](current-state.md), feature
+docs, and source for the implemented contract.
+
+Common reading paths:
+
+- Authentication: ADR-035 supersedes ADR-003.
+- Banking provider: ADR-016 supersedes ADR-005; ADR-041 scopes Trade Republic AIS.
+- Runtime data: ADR-040 supersedes ADR-018.
+- Elevated writes: ADR-017 plus the narrow category/date exceptions in ADR-028
+  and ADR-038; ordinary reads and exports retain authenticated RLS.
+- Reporting: ADR-039 for reconciliations, ADR-046 for signed net savings,
+  ADR-047/049 for Excel and CLI, and ADR-048 for category netting.
+- Navigation/cache/progress: the named sections after ADR-049 describe later
+  implementation updates.
+
+Routine documentation status corrections do not constitute new architecture
+choices. Maintain relevant feature documents and roadmap alongside the code.
 
 ## ADR-001: Use Next.js Instead Of Vite Plus A Separate Backend
 
@@ -298,7 +317,9 @@ Possible future revisit trigger:
 
 Status:
 
-- Accepted.
+- Accepted for stable-key identity and upsert. Cross-key candidate matching and
+  pending-to-booked identity promotion remain deferred. See
+  [current persistence](enable-banking.md#transaction-upsert-and-reconciliation).
 
 Context:
 
@@ -321,13 +342,13 @@ if provider_internal_transaction_id exists:
   provider_internal:{account_id}:{provider_internal_transaction_id}
 
 else if provider_transaction_id exists:
-  bank_transaction:{account_id}:{provider_transaction_id}
+  provider_transaction:{account_id}:{provider_transaction_id}
 
 else if entry_reference exists:
-  bank_entry_reference:{account_id}:{entry_reference}
+  entry_reference:{account_id}:{entry_reference}
 
 else if end_to_end_id exists and is meaningful:
-  bank_end_to_end:{account_id}:{end_to_end_id}
+  end_to_end:{account_id}:{end_to_end_id}
 
 else:
   fingerprint:{account_id}:{deduplication_fingerprint}
@@ -335,7 +356,8 @@ else:
 
 - Store `identity_source` so future maintainers can understand which identity rule was used.
 - Use an app-computed `deduplication_fingerprint` only as a fallback when stronger identifiers are unavailable.
-- Before inserting a new transaction, attempt reconciliation against recent same-account candidates if the stable key does not match.
+- Deferred extension: reconcile against recent same-account candidates when
+  the stable key changes. Current persistence does not implement this step.
 
 Consequences:
 
@@ -464,7 +486,9 @@ Possible future revisit trigger:
 
 Status:
 
-- Accepted.
+- Accepted as the provider-write boundary; narrow owner-metadata exceptions
+  were introduced by ADR-028 and ADR-038. See
+  [Security](security.md#secret-key-risk) for current elevated usage.
 
 Context:
 
@@ -660,9 +684,10 @@ Context:
 
 Decision:
 
-- Treat a `linking` connection as stale when its `created_at` timestamp is more
-  than 15 minutes old. Do not use `updated_at`, because operational metadata and
-  sync-lease updates can touch the same row without restarting authorization.
+- Treat a `linking` connection as stale 15 minutes after the current attempt
+  starts. Use `provider_metadata.linking_started_at`, with `created_at` only
+  as a fallback for older rows. Do not use `updated_at`, because operational
+  metadata and sync-lease updates can touch the row without restarting authorization.
 - Present stale linking attempts as a recoverable UI state instead of an
   indefinite loading state.
 - Send the stale deadline to the client and schedule the retryable state while
@@ -697,7 +722,9 @@ Possible future revisit trigger:
 
 Status:
 
-- Accepted.
+- Historical visual choice; current rows use bank logos/fallbacks and accessible
+  account labels instead of institution-colored row text. Corporate bank colors
+  remain display tokens. See the transaction review in [current state](current-state.md).
 
 Context:
 
@@ -1012,7 +1039,8 @@ Possible future revisit trigger:
 
 Status:
 
-- Accepted and implemented for creation and assignment.
+- Accepted and implemented for creation and assignment; annual label expense
+  reporting has since been added. Global management remains deferred.
 
 Context:
 
@@ -1034,7 +1062,8 @@ Decision:
 - Keep labels separate from categories and from provider-owned transaction
   data.
 - Create, assign, and remove labels from transaction detail. Keep table chips
-  informational and defer global management and reporting UI.
+  informational and defer global management. The initial reporting deferral
+  ended when the annual label expense chart was implemented.
 - Treat names as equal after whitespace normalization and case folding, while
   preserving the original display spelling.
 

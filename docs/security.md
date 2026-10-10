@@ -59,11 +59,10 @@ tokens, cookie values, or full email addresses.
 
 The allowlist should be enforced server-side. It may also be reflected in UI messaging, but UI checks are not enough.
 
-Future options:
-
-- A single configured owner email.
-- A small environment-based allowlist.
-- A database-backed allowlist if multi-user support becomes real.
+The implementation reads `ALLOWED_EMAILS` and the compatibility `OWNER_EMAIL`
+value as a combined normalized list. Missing configuration denies access. A
+database-backed allowlist remains a future option if multi-user support becomes
+real.
 
 ## Supabase Row Level Security
 
@@ -187,11 +186,21 @@ Mitigations:
 Supabase secret keys authorize the built-in Postgres `service_role` and bypass
 RLS. They should only be used in server-only code when there is a clear reason.
 
-The Enable Banking connection flow uses a secret-key-backed client only for
+The Enable Banking connection flow uses a secret-key-backed client for
 controlled provider writes. The start step validates the authenticated user and
 email allowlist; the callback step validates the provider `state` against the
 pending connection before updating financial records. Ordinary user-facing reads
-should continue to use the RLS-aware Supabase server client.
+use the RLS-aware Supabase server client, including both export paths.
+
+Two existing user-metadata mutations also use the elevated helper:
+`lib/db/transactionCategories/updateTransactionCategoryAssignment.ts` and
+`lib/db/enableBankingTransactions/updateTransactionReportingDate.ts`. Their
+server actions validate session and allowlist; persistence filters by transaction
+ID and authenticated owner, and category assignment checks category ownership
+and archive state. Transactions have owner-read RLS, so these are narrow
+server-side write exceptions, not ordinary RLS-protected updates. Preserve
+explicit ownership checks and do not expand elevated access implicitly. Labels
+and reconciliation operations use authenticated RLS-aware clients/RPCs.
 
 Avoid:
 
@@ -225,6 +234,25 @@ Transaction labels follow the same security model as categorization:
 - Provider sync must not overwrite label assignments.
 - Label names are normalized and unique per owner, and assignment foreign keys
   include `user_id` to prevent cross-owner relationships at the database level.
+
+## Reporting, Reconciliation, And Export Boundaries
+
+Reconciliation tables and memberships require owner RLS and composite ownership
+constraints. Save/delete RPCs validate whole groups atomically; the state-reading
+RPC checks the authenticated owner and uses `SECURITY INVOKER`. User-controlled
+notes, labels, and residual adjustments remain sensitive financial metadata.
+
+The transaction browser cache is memory-only and scoped by user and month. It
+is cleared after sign-out or rejected access. The monthly read endpoint and
+Excel route validate session/allowlist and send private no-store responses.
+
+The local report CLI authenticates with the publishable key and owner password,
+keeps its session in memory, reads through RLS, and signs out only its own
+session. Passwords must not be supplied in command arguments. Generated XLSX
+files remain sensitive despite Git ignoring `reports/`; they are not an audit
+log or proof of complete bank coverage. See
+[Monthly Excel export](monthly-excel-export.md) for file replacement and
+permission behavior.
 
 ## Cobee By Pluxee Risks
 

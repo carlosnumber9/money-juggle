@@ -1,6 +1,6 @@
 # Supabase
 
-Supabase will provide authentication, Postgres persistence, and Row Level Security.
+Supabase provides authentication, Postgres persistence, and Row Level Security.
 
 The app should treat Supabase as a security boundary, not just a database.
 
@@ -20,7 +20,7 @@ Conceptual flow:
 6. The Next.js Proxy refreshes expiring tokens and returns updated cookies.
 7. Private app areas become available.
 
-User-visible authentication text should be Spanish when the UI is implemented.
+User-visible authentication text is Spanish.
 
 ## Supabase Auth Dashboard Configuration
 
@@ -69,7 +69,9 @@ The app must not expose an admin password endpoint. Before deploying password
 login, assign a strong password to the existing owner user through a one-off
 server-only call to `auth.admin.updateUserById`. Enter the password
 interactively and never place it in a committed script, shell argument, log, or
-persistent environment variable.
+persistent environment variable during provisioning. The separate local
+report CLI may read `REPORT_PASSWORD` from the shell or ignored `.env.local`
+for ordinary owner authentication; it never provisions users or uses admin access.
 
 Use the same controlled admin procedure if the password is forgotten or needs
 rotation. The normal login path uses only the publishable key and never receives
@@ -147,12 +149,20 @@ Current required variables:
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 - `ALLOWED_EMAILS`
 
-Future server-only variables:
+Server-only variables used by the current banking implementation:
 
 - `SUPABASE_SECRET_KEYS`
 - `ENABLE_BANKING_APPLICATION_ID`
-- `ENABLE_BANKING_PRIVATE_KEY`
-- Enable Banking provider tokens or authorization secrets if the implementation requires them.
+- `ENABLE_BANKING_PRIVATE_KEY` or ignored local `ENABLE_BANKING_PRIVATE_KEY_PATH`
+- `ENABLE_BANKING_REDIRECT_URL`
+- `ENABLE_BANKING_API_BASE_URL` (optional override)
+- `MONEY_JUGGLE_ACCOUNT_FINGERPRINT_SECRET` (account HMAC matching)
+
+See [.env.example](../.env.example) and
+[Enable Banking](enable-banking.md#secret-handling) for configuration. Signing
+JWTs are generated server-side; no separate provider-token environment variable
+is used. The report CLI's `REPORT_EMAIL` and `REPORT_PASSWORD` are documented in
+[Monthly Excel export](monthly-excel-export.md#local-command).
 
 Only values explicitly intended for browser use should use `NEXT_PUBLIC_`.
 
@@ -177,18 +187,21 @@ backend component needs its own separately rotatable named key.
 
 ## Client Helpers
 
-The project provides two small Supabase helpers:
+The project provides authenticated Supabase helpers:
 
-- `lib/supabase/client.ts` creates a browser client for future client
-  components.
-- `lib/supabase/server.ts` creates a server client for future Server
-  Components, Route Handlers, and Server Actions.
+- `lib/supabase/client.ts` creates the browser client.
+- `lib/supabase/server.ts` creates the cookie-backed server client.
+- `lib/supabase/proxy.ts` refreshes sessions through root `proxy.ts`.
+- `lib/supabase/currentUser.ts` verifies the user for server-side access checks.
 
-Both helpers use the publishable key. They do not use secret keys.
+Browser and cookie-backed server clients use the publishable key, not secret keys.
 
 The server-only elevated helper reads the `default` key from
-`SUPABASE_SECRET_KEYS`. Do not add elevated clients until a server-only feature
-has a documented need to bypass RLS.
+`SUPABASE_SECRET_KEYS`. It is used for controlled provider persistence and the existing
+owner-checked category/reporting-date updates, as documented in
+[Security](security.md#secret-key-risk). Ordinary reads, labels, reconciliations,
+and reports use authenticated clients. Do not add another elevated path without
+a documented need and explicit ownership enforcement.
 
 ## Migration Workflow
 
@@ -203,19 +216,10 @@ project, the helper scripts are:
   project.
 - `npm run db:migrations`: lists local and remote migration status.
 
-Current local migrations:
-
-- `20260704143000_create_initial_schema.sql`
-- `20260704170000_add_enable_banking_connection_fields.sql`
-- `20260707120000_add_account_fingerprints_for_internal_transfers.sql`
-- `20260709120000_seed_initial_transaction_categories.sql`
-- `20260719120000_add_transaction_labels.sql`
-- `20260719214000_add_shared_expense_settlement_category.sql`
-- `20260804120000_add_personal_care_and_rename_vehicle_insurance.sql`
-- `20260809120000_add_transaction_reporting_date.sql`
-- `20260810120000_add_transaction_reconciliations.sql`
-- `20261004211500_add_fines_category.sql`
-- `20261005013000_add_reconciliation_state_rpc.sql`
+The full ordered local migration inventory is maintained in
+[Data model](data-model.md). The executable files are in
+[supabase/migrations/](../supabase/migrations/); avoid duplicating a partial
+inventory here.
 
 Use `npm run db:migrations` to confirm which local migrations are applied to the
 linked remote Supabase project before pushing new schema changes.
@@ -271,7 +275,7 @@ Conceptual options:
   compatibility fallback, but `ALLOWED_EMAILS` is the preferred variable.
 - A future database table for allowed users.
 
-The check happens server-side before email sending, after Supabase
+The check happens server-side before password authentication, after Supabase
 authentication, and before private route rendering. UI-only filtering is not
 sufficient.
 

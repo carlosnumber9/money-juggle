@@ -68,16 +68,26 @@ This app should make financial review easier by collecting read-only financial d
 | Trade Republic          | Enable Banking Account Information | Cash balance and movements only; brokerage and crypto remain separate.      |
 | Cobee by Pluxee         | Exploratory official API           | Flexible compensation consumptions; separate from bank Account Information. |
 
-## Initial Limitations
+## Current Capabilities And Limitations
+
+See [current state](current-state.md) for code entry points and verification
+limits, and [roadmap](feature-roadmap.md) for remaining scope.
 
 - The current implemented foundation covers authentication, owner allowlist
   checks, consent tracking, account sync, balance sync, transaction sync, a
   first private dashboard, selected-month transaction review, and inline manual
   transaction categorization and labeling.
-- Reporting has started with selected-month cashflow cards and a current-year
-  income/spending evolution chart. The working app also has a selected-month
-  category expense visualization, but it is not yet a complete monthly
-  reporting system.
+- Reporting includes selected-month cashflow cards, current-year net category
+  income/spending evolution, a selected-month category radar, annual labeled
+  spending, and signed net categorized savings. Monthly Excel export is
+  implemented from both the dashboard and CLI, with a distinct aggregate
+  contract and explicitly unverified historical coverage. It is not a complete
+  accounting, budgeting, or portfolio system.
+- Reporting dates are owner-editable without changing bank booking dates.
+  Finalized reconciliations exclude grouped principal movements and optionally
+  report a residual difference once.
+- Reconnection preserves historical accounts and offers an owner review when
+  strong account matching cannot resolve renewed consent.
 - Transfers between the owner's own accounts remain visible as imported
   movements for review, but they are financially neutral. When the app detects
   them from account data or the owner assigns the `internal_transfer` category,
@@ -91,10 +101,10 @@ This app should make financial review easier by collecting read-only financial d
 - Reporting should start simple and become richer later.
 - Categorization has started as user-owned app metadata. Automated rules remain
   future work.
-- Labels are implemented as optional user-owned metadata that can be created,
-  assigned, and removed from transaction detail. Label reporting and global
-  management remain future work. Labels complement categories rather than
-  replacing them.
+- Labels can be created, assigned, and removed from transaction detail; annual
+  labeled expense reporting is implemented. Global management and
+  transaction-list label filtering remain future work. Labels complement
+  categories rather than replacing them.
 - Cobee by Pluxee is a future exploratory integration. Real implementation
   should wait until API access, available data granularity, and credential
   handling are confirmed.

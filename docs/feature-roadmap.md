@@ -4,7 +4,16 @@ This roadmap is intentionally incremental. Do not implement these phases unless 
 
 ## Implementation Tracker
 
-Use this checklist as the source of truth for what remains to be implemented. Keep completed items checked, and keep the detailed phase notes below for context.
+Use this checklist with [current state](current-state.md) and source evidence.
+Checked items represent their initial useful scope, not completion of every
+possible enhancement. Unchecked items explicitly identify remaining scope.
+Update statuses when behavior changes; do not infer remote deployment from them.
+
+The detailed phase notes preserve original incremental plans and earlier slices.
+Their “Possible future files” and “Do not do yet” lists are historical context,
+not a blanket prohibition on features implemented later or authorization to
+implement them now. Current status and implemented-result sections take priority.
+Magic-link phases 5/6 were superseded by password login in phase 31.
 
 - [x] 1. Bootstrap the Next.js project.
 - [x] 2. Configure basic project tooling.
@@ -28,12 +37,12 @@ Use this checklist as the source of truth for what remains to be implemented. Ke
 - [x] 20. Build a basic dashboard.
 - [x] 21. Add current-month transaction review.
 - [x] 22. Add transaction categorization.
-- [ ] 23. Add monthly reports.
+- [x] 23. Add initial monthly reports and aggregate Excel export; richer reporting remains deferred.
 - [ ] 24. Add manual assets for Trade Republic brokerage / crypto investments.
 - [ ] 25. Add scheduled sync with Vercel Cron.
-- [ ] 26. Add error and reconnection flows.
+- [x] 26. Add error feedback, consent reconnection, and owner account-match review.
 - [ ] 27. Security hardening.
-- [ ] 28. Add transaction labels for trips, events, and ad hoc reporting.
+- [ ] 28. Labels and annual reporting implemented; global management and label filters remain deferred.
 - [ ] 29. Explore Cobee by Pluxee consumption reports.
 - [x] 30. Add monthly period navigation for transactions and charts.
 - [x] 31. Replace magic links with owner password login and session refresh.
@@ -510,7 +519,7 @@ Possible future files:
 
 - Environment variable docs.
 - `docs/enable-banking.md`.
-- `lib/enable-banking/` later.
+- `lib/enableBanking/` later.
 
 Risks or decisions:
 
@@ -561,7 +570,7 @@ Concepts learned:
 
 Possible future files:
 
-- `lib/enable-banking/`
+- `lib/enableBanking/`
 - A controlled server endpoint or script.
 
 Risks or decisions:
@@ -582,7 +591,7 @@ Status:
 
 Implemented result:
 
-- `lib/enable-banking/client.ts` can call `GET /aspsps` with country, PSU
+- `lib/enableBanking/client.ts` can call `GET /aspsps` with country, PSU
   type, and service filters.
 - `app/api/bank-connections/enable-banking/aspsps/route.ts` exposes a
   protected internal ASPSP list for authenticated allowed users.
@@ -653,7 +662,7 @@ Concepts learned:
 Possible future files:
 
 - `app/api/bank-connections/enable-banking/start/route.ts`
-- `lib/enable-banking/`
+- `lib/enableBanking/`
 
 Risks or decisions:
 
@@ -847,20 +856,20 @@ Do not do yet:
 
 Status:
 
-- Completed as a first current-month slice.
+- Implemented with overlapping previous/current-month incremental sync and
+  a separate current-year backfill.
 
 Implemented result:
 
-- The private home screen now loads cached current-month transactions from
-  Supabase and displays them below the account cards.
-- A client-side refresh triggers `POST /api/sync/transactions`, which runs
-  server-only Enable Banking transaction fetches for each linked account.
+- The Transactions tab loads selected-month saved rows from Supabase.
+- Dashboard refresh orchestrates recent sync through `POST /api/sync/dashboard`;
+  resource-specific transaction and historical backfill routes remain available.
 - Transaction sync stores normalized provider-owned fields, stable import keys,
   identity source, fallback fingerprints, and sync run observability.
 - Re-running the same sync updates rows with the same `user_id`, `account_id`,
   and `stable_import_key` instead of inserting duplicates.
-- Rows are visually associated with the source institution through corporate
-  row coloring instead of an extra account column.
+- Rows identify the institution through bank logos/fallbacks and accessible
+  account labels without an extra account column.
 
 Goal:
 
@@ -911,7 +920,8 @@ Current limitations:
 - The first implementation matches existing rows by the computed stable import
   key. The broader same-account reconciliation path for pending transactions
   that later gain stronger identifiers is still deferred.
-- Focused transaction identity tests are still deferred.
+- Mapping and synchronization tests exist; focused stable-identity and
+  persistence idempotency coverage remains incomplete.
 
 Suggested acceptance criteria:
 
@@ -935,8 +945,8 @@ Status:
 
 Implemented result:
 
-- The private home screen is a tabbed account area with `Dashboard` and
-  `Transacciones` sections.
+- The private home screen has `Dashboard`, `Transacciones`, and `Evolución`
+  sections; only the active panel loads its financial data.
 - The dashboard tab shows available and connected bank institution cards.
 - The dashboard tab now shows current-month income and expense summary cards
   before the bank institution cards, computed from the same Supabase transaction
@@ -984,17 +994,17 @@ Implemented result:
 
 - The private home screen includes a `Transacciones` tab that shows current-month
   transactions loaded from Supabase through the app data source boundary.
-- A client-side refresh triggers the existing server-only
-  `POST /api/sync/transactions` route while cached rows remain available for
-  review.
-- Transactions are grouped by booking date instead of using a repeated date
-  column.
+- Dashboard owns automatic/manual refresh through `POST /api/sync/dashboard`.
+  Transaction-month navigation reads saved rows through
+  `GET /api/transactions/month`; it does not start provider synchronization.
+- Transactions are grouped by owner-controlled reporting date; bank dates
+  remain separately visible in detail.
 - The table is intentionally compact: no header row, no outer border, and no
   separate visible account column.
 - Each row shows a bank logo or fallback initial, an accessible account label,
   the transaction concept, and the signed amount.
 - Filter chips let the owner narrow the current-month view by institution
-  (`ING`, `CaixaBank`) and by direction (`Ingresos`, `Gastos`).
+  (`ING`, `CaixaBank`, `Trade Republic`) and by direction (`Ingresos`, `Gastos`).
 - Local transaction review uses synchronized owner data from Supabase.
 
 Goal:
@@ -1126,7 +1136,8 @@ Current limitations:
 
 - There is no category management UI yet; the first catalog is migration-seeded.
 - There are no automatic categorization rules yet.
-- Category totals and rollups are still part of the future monthly reports work.
+- Category totals are implemented in charts and Excel export; global category
+  management and automatic rules remain deferred.
 
 Do not do yet:
 
@@ -1137,10 +1148,20 @@ Do not do yet:
 
 Status:
 
-- Started with a small dashboard summary and a first annual evolution chart,
-  not yet a full reporting system.
+- Initial reporting scope implemented: monthly dashboard cards, annual
+  evolution, category and label charts, net savings, and aggregate Excel export.
+  Advanced budgeting, verified coverage, snapshots, and portfolio reporting
+  remain deferred.
 
 Implemented so far:
+
+- Three-sheet monthly Excel export (`Resumen`, `Categorías`, `Cuentas`) is
+  available from the dashboard and `npm run report:monthly`. It reads saved
+  owner data through RLS without bank sync and explicitly discloses incomplete
+  coverage. Its financial rules differ from dashboard totals; see
+  [Monthly Excel export](monthly-excel-export.md).
+- Annual labeled expense reporting and finalized reconciliation residuals are
+  implemented, with the shared owner-controlled reporting-date pipeline.
 
 - Current-month income and expense totals are visible in the dashboard as two
   summary cards.
@@ -1176,9 +1197,8 @@ Implemented so far:
   movements reduce savings and can produce a negative month. It reads
   owner-assigned categories directly, so an internal transfer or reconciled
   movement still contributes when categorized as savings.
-- A current-month category expense radar visualization is present in the
-  working tree, using categorized expense rows and the shared internal-transfer
-  exclusion.
+- A selected-month category expense radar is implemented using net categorized
+  movements and the shared financial-neutrality pipeline.
 - The category radar excludes categories listed by stable internal slug so
   fixed costs, savings, and shared-expense settlements do not hide anomalies in
   the remaining categories. The exclusions are `mortgage`, `community_fees`,
@@ -1284,6 +1304,22 @@ Do not do yet:
 
 ## 26. Add Error And Reconnection Flows
 
+Status:
+
+- Initial scope implemented.
+
+Implemented result:
+
+- Expired/revoked sessions, abandoned authorization, empty account returns,
+  partial transaction downloads, busy leases, and retry deadlines have prepared
+  bank feedback.
+- Reconnection reuses the connection and historical accounts, validates strong
+  identifiers, and offers a 15-minute owner review for ambiguous account matches.
+- iOS callbacks end on a public status-only result page; provider state and stored
+  ownership allow completion without relying on browser auth cookies.
+- Real-bank and browser behavior still require explicit operational verification;
+  mocked tests do not establish live provider availability.
+
 Goal:
 
 - Make expired consent and sync failures understandable.
@@ -1345,8 +1381,8 @@ Do not do yet:
 
 Status:
 
-- Assignment slice implemented; reporting and global management remain
-  planned.
+- Creation/assignment and annual labeled expense reporting are implemented.
+  Global management and transaction-list label filtering remain planned.
 
 Goal:
 
@@ -1386,11 +1422,13 @@ Implemented slice:
   detail.
 - Removable detail chips and compact transaction-row summaries.
 - Optimistic interaction with rollback when authenticated persistence fails.
+- Annual labeled-spending chart in Evolution, including net refunds and
+  reconciliation residual labels.
 
 Still planned:
 
 - Label archive, rename, and global management UI.
-- Report and transaction-list filters by label.
+- Transaction-list filters and arbitrary report filters by label.
 
 Risks or decisions:
 
@@ -1405,7 +1443,8 @@ Suggested acceptance criteria:
 - A user can create their own labels. Archiving remains a later management UI.
 - A user can assign and remove labels only on their own transactions.
 - Unlabeled transactions remain the default state.
-- A future report can filter or group transactions by label across categories.
+- Annual reporting already groups by labels across categories; broader filters
+  remain future work.
 - RLS and server-side checks prevent assigning another user's label.
 
 Do not do yet:
@@ -1658,7 +1697,7 @@ from the implemented outcome above, the implemented outcome is authoritative.
 - Show a Spanish status chip in the transaction table and provide a focused
   flow for reviewing linked movements.
 
-Related reporting dependency:
+Historical reporting dependency (resolved by the shared neutrality rule):
 
 - The current reporting code already excludes automatically detected
   own-account transfers from monthly cards and charts.

@@ -1,20 +1,26 @@
 # Data Model
 
-This document describes the initial data model for `money-juggle`.
+This document describes the implemented local schema and explicitly deferred
+entities for `money-juggle`. SQL migrations are authoritative for exact columns,
+constraints, grants, and policies.
 
-The executable schema is defined by the local migration chain:
+The executable schema is defined by the ordered local migration chain below.
+Remote deployment must be checked separately through the migration workflow.
 
-- `supabase/migrations/20260704143000_create_initial_schema.sql`
-- `supabase/migrations/20260704170000_add_enable_banking_connection_fields.sql`
-- `supabase/migrations/20260707120000_add_account_fingerprints_for_internal_transfers.sql`
-- `supabase/migrations/20260709120000_seed_initial_transaction_categories.sql`
-- `supabase/migrations/20260719120000_add_transaction_labels.sql`
-- `supabase/migrations/20260719214000_add_shared_expense_settlement_category.sql`
-- `supabase/migrations/20260804120000_add_personal_care_and_rename_vehicle_insurance.sql`
-- `supabase/migrations/20260809120000_add_transaction_reporting_date.sql`
-- `supabase/migrations/20260810120000_add_transaction_reconciliations.sql`
-- `supabase/migrations/20261004211500_add_fines_category.sql`
-- `supabase/migrations/20261005013000_add_reconciliation_state_rpc.sql`
+- [`20260704143000_create_initial_schema.sql`](../supabase/migrations/20260704143000_create_initial_schema.sql)
+- [`20260704170000_add_enable_banking_connection_fields.sql`](../supabase/migrations/20260704170000_add_enable_banking_connection_fields.sql)
+- [`20260707120000_add_account_fingerprints_for_internal_transfers.sql`](../supabase/migrations/20260707120000_add_account_fingerprints_for_internal_transfers.sql)
+- [`20260709120000_seed_initial_transaction_categories.sql`](../supabase/migrations/20260709120000_seed_initial_transaction_categories.sql)
+- [`20260719120000_add_transaction_labels.sql`](../supabase/migrations/20260719120000_add_transaction_labels.sql)
+- [`20260719214000_add_shared_expense_settlement_category.sql`](../supabase/migrations/20260719214000_add_shared_expense_settlement_category.sql)
+- [`20260803183000_add_provider_rate_limit_cooldown.sql`](../supabase/migrations/20260803183000_add_provider_rate_limit_cooldown.sql)
+- [`20260803190000_add_connection_sync_lease.sql`](../supabase/migrations/20260803190000_add_connection_sync_lease.sql)
+- [`20260803193000_add_transaction_sync_freshness.sql`](../supabase/migrations/20260803193000_add_transaction_sync_freshness.sql)
+- [`20260804120000_add_personal_care_and_rename_vehicle_insurance.sql`](../supabase/migrations/20260804120000_add_personal_care_and_rename_vehicle_insurance.sql)
+- [`20260809120000_add_transaction_reporting_date.sql`](../supabase/migrations/20260809120000_add_transaction_reporting_date.sql)
+- [`20260810120000_add_transaction_reconciliations.sql`](../supabase/migrations/20260810120000_add_transaction_reconciliations.sql)
+- [`20261004211500_add_fines_category.sql`](../supabase/migrations/20261004211500_add_fines_category.sql)
+- [`20261005013000_add_reconciliation_state_rpc.sql`](../supabase/migrations/20261005013000_add_reconciliation_state_rpc.sql)
 
 The model should preserve user ownership even though the app starts as a personal project.
 
@@ -114,9 +120,10 @@ through a server action. That action validates the current Supabase user and
 email allowlist, verifies that any selected category belongs to the same owner,
 and then updates the owner-scoped transaction row.
 
-Detailed RLS checks with representative rows are deferred until the features
-that create those rows exist. The initial migration still enables RLS from day
-one so no financial table starts in a public-by-default state.
+The reconciliation-state RPC has a focused rollback-fixture SQL check in
+`supabase/tests/transaction_reconciliation_states.sql`. Broader deployed RLS
+verification remains an operational task; mocked application tests do not prove
+remote policy deployment. The initial migration enables RLS from day one.
 
 ## Initial Schema Constraints
 
@@ -161,7 +168,7 @@ Purpose:
 - Supabase-managed authentication users.
 - This table is owned by Supabase Auth, not by application migrations.
 
-Probable fields:
+Implemented fields:
 
 - `id`.
 - `email`.
@@ -191,7 +198,7 @@ Purpose:
 
 - Stores app-specific user profile data linked to Supabase Auth.
 
-Probable fields:
+Implemented fields:
 
 - `id`: same value as Supabase Auth user ID.
 - `email`.
@@ -201,7 +208,8 @@ Probable fields:
 
 Relationships:
 
-- Owns `bank_connections`, `accounts`, `manual_assets`, and imported financial data through `user_id`.
+- Owns bank connections, accounts, and imported financial data through `user_id`.
+- The deferred manual asset model would use the same ownership.
 
 Ownership model:
 
@@ -221,7 +229,7 @@ Purpose:
 
 - Represents banks or platforms that can be connected or tracked.
 
-Probable fields:
+Implemented fields:
 
 - `id`.
 - `provider`: for example `enable_banking` or `manual`.
@@ -243,7 +251,7 @@ Ownership model:
 
 Security and RLS:
 
-- Can be publicly readable if it contains only non-sensitive reference data.
+- Readable by authenticated users; anonymous read is not granted.
 - Writes should be server-controlled.
 
 Source:
@@ -256,7 +264,7 @@ Purpose:
 
 - Tracks a user's consent-based connection to an institution.
 
-Probable fields:
+Implemented fields:
 
 - `id`.
 - `user_id`.
@@ -266,8 +274,8 @@ Probable fields:
   for GoCardless. It should be treated as a generic external authorization or
   session identifier until a future migration renames it.
 - `provider_agreement_id`: current first-migration name; originally chosen for
-  GoCardless. It may become unnecessary or be renamed once the Enable Banking
-  flow is implemented.
+  GoCardless. It is retained as a legacy nullable field; the
+  current flow uses explicit Enable Banking authorization/session columns.
 - `provider_authorization_id`: Enable Banking authorization identifier returned
   by `POST /auth`.
 - `provider_session_id`: Enable Banking session identifier returned by
@@ -281,8 +289,9 @@ Probable fields:
 - `consent_expires_at`.
 - `redirect_url`.
 - `last_synced_at`.
-- `last_transaction_synced_at`: last successful or partially successful
-  incremental transaction refresh, used for automatic freshness checks.
+- `last_transaction_synced_at`: last fully successful
+  transaction refresh used for automatic freshness checks. Historical migration
+  backfill included partial runs; current incomplete runs do not advance it.
 - `provider_rate_limited_until`: server-managed cooldown shared by balance and
   transaction synchronization after the ASPSP rejects account-data requests.
 - `sync_lease_token` and `sync_lease_until`: short-lived server-managed lease
@@ -316,7 +325,7 @@ Purpose:
 
 - Represents linked bank accounts.
 
-Probable fields:
+Implemented fields:
 
 - `id`.
 - `user_id`.
@@ -356,7 +365,7 @@ Purpose:
 
 - Stores balance snapshots for accounts.
 
-Probable fields:
+Implemented fields:
 
 - `id`.
 - `user_id`.
@@ -371,7 +380,7 @@ Probable fields:
 Relationships:
 
 - Belongs to `accounts`.
-- May be associated with a `sync_run`.
+- No direct `sync_run` foreign key exists; sync observability is connection-scoped.
 
 Latest balance selection:
 
@@ -402,13 +411,15 @@ Purpose:
 - Provides the normalized transaction rows used by reports and categorization.
 - Keeps enough provider identity data to make repeated syncs idempotent.
 
-Probable fields:
+Implemented fields:
 
 - `id`.
 - `user_id`.
 - `account_id`.
 - `stable_import_key`.
-- `identity_source`: for example `provider_internal`, `bank_transaction`, `bank_entry_reference`, `bank_end_to_end`, or `fingerprint`.
+- `identity_source`: `provider_internal_transaction_id`,
+  `provider_transaction_id`, `entry_reference`, `end_to_end_id`, or
+  `deduplication_fingerprint`.
 - `provider`: for example `enable_banking`.
 - `provider_transaction_id`.
 - `provider_internal_transaction_id`.
@@ -433,7 +444,6 @@ Probable fields:
 - `bank_transaction_code`.
 - `merchant_category_code`.
 - `category_id`: nullable, because imported transactions should start uncategorized.
-- `raw_data` or a limited `raw_provider_data` object, only if useful.
 - `first_seen_at`.
 - `last_seen_at`.
 - `created_at`.
@@ -452,10 +462,11 @@ Ownership model:
 Security and RLS:
 
 - User can read only their own transactions.
-- Raw provider payloads may contain sensitive details; store only what is useful.
+- No raw payload column is implemented. Persist normalized provider fields only.
 - Deduplication should use provider IDs and account context when available.
 - Inserts and sync updates should usually be server-controlled.
-- User-controlled updates should be limited to user-owned metadata such as categorization, notes, or review state.
+- Current user-controlled transaction-column updates are limited to
+  `category_id` and `reporting_date`; labels and reconciliations use separate tables.
 
 Source:
 
@@ -472,71 +483,64 @@ Provider transaction identity is not guaranteed to be perfect. Bank data provide
 
 The app should therefore not depend on one external field being present for every transaction.
 
-Recommended identity design:
+Implemented identity design:
 
-- Keep `id` as the internal Supabase primary key, probably a UUID.
+- Keep `id` as the internal Supabase primary key, a UUID.
 - Use `stable_import_key` as the app's deterministic sync identity.
 - Always include the internal `account_id` in the identity scope, because external transaction identifiers may only be unique within an account.
 - Store every useful external identifier separately for debugging, reconciliation, and future provider changes.
 - Store `identity_source` so future maintainers can understand which rule created the current `stable_import_key`.
 
-Recommended `stable_import_key` priority:
+Implemented `stable_import_key` priority:
 
 ```text
 if provider_internal_transaction_id exists:
   provider_internal:{account_id}:{provider_internal_transaction_id}
 
 else if provider_transaction_id exists:
-  bank_transaction:{account_id}:{provider_transaction_id}
+  provider_transaction:{account_id}:{provider_transaction_id}
 
 else if entry_reference exists:
-  bank_entry_reference:{account_id}:{entry_reference}
+  entry_reference:{account_id}:{entry_reference}
 
 else if end_to_end_id exists and is meaningful:
-  bank_end_to_end:{account_id}:{end_to_end_id}
+  end_to_end:{account_id}:{end_to_end_id}
 
 else:
   fingerprint:{account_id}:{deduplication_fingerprint}
 ```
 
-The `deduplication_fingerprint` should be a deterministic hash of normalized fields that are likely to remain stable, for example:
+The fallback fingerprint is a SHA-256 hash over account ID, separate booking
+and value dates, signed amount text, currency, normalized
+description, counterparty and merchant names, account suffix, bank transaction
+code, and merchant category code. Amount signing/whitespace are normalized,
+but equivalent decimal representations are not canonicalized before hashing. See
+`lib/db/enableBankingTransactions/transactionIdentity.ts` and `rowIdentity.ts`.
 
-- `account_id`.
-- `booking_date` or `value_date`.
-- Amount in minor units.
-- Currency.
-- Normalized description or remittance information.
-- Counterparty name when available.
-- Counterparty account last 4 characters when available.
-- Bank transaction code or merchant category code when available.
+Current persistence:
 
-The exact fingerprint inputs should be implemented and tested when transaction sync is built. The implementation should normalize whitespace, casing, decimal precision, and absent fields before hashing.
+1. Normalize provider fields and compute the stable key and fingerprint.
+2. Deduplicate the incoming batch by owner, account, and stable key.
+3. Read matching stored keys in batches of 100, scoped to the owner.
+4. Upsert on `user_id,account_id,stable_import_key`, preserving `first_seen_at`,
+   non-null `reporting_date`, and user metadata omitted from the payload.
+5. Advance `last_seen_at` to the fetch timestamp.
 
-The first sync implementation should use an upsert-like flow:
+No cross-key candidate reconciliation or identity promotion is implemented.
+A pending-to-booked identity change may fail a partial unique index or produce
+another row when all usable identity inputs change. This provider-import issue
+is separate from owner-created financial reconciliation groups.
 
-1. Normalize the provider transaction.
-2. Compute `stable_import_key`.
-3. Look for an existing transaction with the same `user_id`, `account_id`, and `stable_import_key`.
-4. If found, update normalized provider fields and `last_seen_at` without
-   overwriting app-owned metadata such as `reporting_date` or categorization.
-5. If not found, try reconciliation against recent same-account candidates using the external IDs and fingerprint.
-6. If a compatible candidate is found, update that row and improve its identity fields.
-7. If no candidate is found, insert a new row.
-
-This matters because a transaction may first appear as pending or incomplete and later appear as booked with stronger identifiers or slightly different text/date fields.
-
-Recommended unique constraints when migrations are eventually created:
+Implemented constraints:
 
 - Unique `user_id`, `account_id`, `stable_import_key`.
-- Partial unique index for `user_id`, `account_id`, `provider_internal_transaction_id` when it is not null.
-- Partial unique index for `user_id`, `account_id`, `provider_transaction_id` when it is not null.
+- Partial unique indexes for non-null provider internal and transaction IDs,
+  scoped to owner and account.
 
-Pending transactions:
-
-- Pending transactions may change when they become booked.
-- The app may store pending rows for visibility, but should treat them as provisional.
-- Permanent categorization and reports should prefer booked transactions unless pending support is intentionally designed.
-- If a pending row is reconciled to a booked row, user-owned metadata should be preserved where safe.
+Pending transactions remain provisional. Sync can store them; current dashboard
+aggregations do not impose a booked-only filter. Excel explicitly includes only
+booked rows, and reconciliation candidates require booked same-currency rows.
+Do not claim automatic pending-to-booked merging or complete historical coverage.
 
 #### App-Owned Reporting Date
 
@@ -544,7 +548,7 @@ Pending transactions:
 Banking. `reporting_date` is the app-owned date used to select, order, and group
 transactions and to calculate monthly and annual reports.
 
-Recommended behavior:
+Implemented behavior:
 
 - Initialize `reporting_date` from `booking_date` for existing and newly
   imported rows.
@@ -566,7 +570,7 @@ The app should not rely on provider categories as the source of truth. Provider 
 Recommended approach:
 
 - Use a separate `transaction_category_groups` table for broad reporting groups.
-- Use a separate `transaction_categories` table rather than a free-text `category` column once schema work begins.
+- Use the implemented `transaction_categories` table instead of free-text categories.
 - Link each category to one category group through `group_id`.
 - Link transactions with nullable `category_id`.
 - Keep category groups and categories user-owned through `user_id`.
@@ -611,7 +615,7 @@ Purpose:
 - Stores broad user-defined groups for transaction categories.
 - Allows reports to roll category totals up into a simpler view.
 
-Probable fields:
+Implemented fields:
 
 - `id`.
 - `user_id`.
@@ -648,7 +652,7 @@ Purpose:
 - Stores user-defined categories for transaction reporting.
 - Allows fast filtering, grouping, and recategorization using simple database queries.
 
-Probable fields:
+Implemented fields:
 
 - `id`.
 - `user_id`.
@@ -685,12 +689,14 @@ Source:
 
 ### `transaction_category_rules`
 
+Status: deferred; no table or feature exists in the migration chain.
+
 Purpose:
 
 - Stores optional user-owned rules for suggesting or applying categories.
 - Helps categorize repeated merchants or descriptions quickly without requiring machine learning.
 
-Probable fields:
+Proposed fields (not implemented):
 
 - `id`.
 - `user_id`.
@@ -797,7 +803,7 @@ Purpose:
 
 - Records synchronization attempts for observability and debugging.
 
-Probable fields:
+Implemented fields:
 
 - `id`.
 - `user_id`.
@@ -833,7 +839,7 @@ Purpose:
 
 - Tracks important events in the PSD2 consent lifecycle.
 
-Probable fields:
+Implemented fields:
 
 - `id`.
 - `user_id`.
@@ -864,6 +870,8 @@ Source:
 
 ### `manual_assets`
 
+Status: deferred; no table or feature exists in the migration chain.
+
 Purpose:
 
 - Stores assets or investment values that are not available through PSD2,
@@ -871,7 +879,7 @@ Purpose:
   valuations. Trade Republic current-account cash belongs in the standard
   Enable Banking account and balance tables instead.
 
-Probable fields:
+Proposed fields (not implemented):
 
 - `id`.
 - `user_id`.
@@ -943,10 +951,10 @@ Important modeling notes:
 | `transactions`                  | Enable Banking transactions                         |
 | `transaction_category_groups`   | Manual user setup or app defaults                   |
 | `transaction_categories`        | Manual user setup or app defaults                   |
-| `transaction_category_rules`    | Manual user setup or future suggestions             |
+| `transaction_category_rules`    | Deferred: manual setup or future suggestions        |
 | `transaction_labels`            | Manual user setup                                   |
 | `transaction_label_assignments` | Manual user action                                  |
 | `sync_runs`                     | App sync process                                    |
 | `consent_events`                | App consent lifecycle tracking                      |
-| `manual_assets`                 | Manual user input or future import                  |
+| `manual_assets`                 | Deferred: manual input or future import             |
 | Future Cobee report rows        | Cobee by Pluxee Public API                          |

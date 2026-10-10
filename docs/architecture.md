@@ -1,6 +1,8 @@
 # Architecture
 
-The app should be built as a small, incremental Next.js application with server-side integration boundaries.
+The app is an implemented Next.js application with server-side integration
+boundaries. It continues to grow in small slices. See
+[current state](current-state.md) for capabilities and deferred work.
 
 ```text
 Browser / mobile
@@ -8,7 +10,6 @@ Browser / mobile
   -> Supabase Auth
   -> Supabase Postgres with RLS
   -> Enable Banking Account Information API
-  -> Optional future external data sources such as Cobee by Pluxee
 ```
 
 ## Frontend Responsibilities
@@ -57,16 +58,18 @@ Server-side code currently lives in:
 ```text
 app/api/
 lib/auth/
+lib/data/
 lib/domain/
 lib/db/
-lib/enable-banking/
+lib/enableBanking/
 lib/supabase/
+lib/reports/monthlyExport/
 lib/views/
 ```
 
 `app/api/` owns thin Route Handlers. `lib/views/` prepares route-level props.
 `lib/data/` exposes the single application-facing banking data source.
-`lib/db/` owns persistence helpers. `lib/enable-banking/` owns server-only
+`lib/db/` owns persistence helpers. `lib/enableBanking/` owns server-only
 provider calls and request signing.
 
 ## Data Source Boundary
@@ -125,15 +128,17 @@ The private UI is split into three tabs:
 - `Dashboard`: bank institution cards, connected accounts, latest balances, and
   per-bank balance totals, plus selected-month income and expense cards.
 - `Transacciones`: selected-month transaction review with date grouping,
-  institution cues, signed amounts, client-side filters over already-loaded
+  institution cues, signed amounts, reporting-date edits, finalized
+  reconciliation dialogs, client-side filters over already-loaded
   owner data, category filtering, inline manual category assignment, label
   chips, detail-dialog label assignment, and month navigation.
 - `Evolución`: current-year income and expense trend chart with 12 monthly
   points, annual income and spending totals, a selected-month category expense
   radar, and a same-sized radial current-year expense breakdown that includes
   only labeled transactions. A full-width annual savings line chart appears
-  last and totals positive original transaction rows categorized as
+  last and totals signed original transaction rows categorized as
   `savings_transfer` by month, regardless of their financial-neutrality state.
+  Negative amounts reduce savings and can produce a negative month (ADR-046).
   The visualizations are calculated from cached transaction rows with
   shadcn/Recharts.
 
@@ -238,7 +243,8 @@ The database should preserve the consent state clearly enough to answer: which i
 
 Conceptual flow:
 
-1. A sync is triggered manually or by a scheduled job.
+1. Dashboard mount triggers freshness-limited sync, a manual update forces recent
+   refresh, or the owner requests a current-year historical backfill.
 2. Server code loads active bank connections for the user.
 3. Server code fetches account details, balances, and transactions from Enable Banking.
 4. Data is normalized and stored.
@@ -249,21 +255,32 @@ Scheduled sync may later use Vercel Cron, but it should not be introduced before
 
 ## Current Folder Separation
 
-The implemented project now follows this broad separation:
+The implemented project follows this separation. Exact files and contracts are
+listed in [current state](current-state.md):
 
 ```text
 app/
   (private)/
   api/
+  login/
+  auth/sign-out/
+  bank-connection-result/
 components/
+  ui/
+definitions/
 lib/
   auth/
+  data/
   db/
   domain/
-  enable-banking/
+  enableBanking/
+  reports/monthlyExport/
   supabase/
+  views/
 supabase/
   migrations/
+  tests/
+scripts/
 ```
 
 Responsibilities:
@@ -272,12 +289,12 @@ Responsibilities:
 - Shared UI belongs in `components/`.
 - Business rules belong in `lib/domain/`.
 - Database access belongs in `lib/db/` or integration-specific modules.
-- Enable Banking calls belong in `lib/enable-banking/` and must be server-only.
+- Enable Banking calls belong in `lib/enableBanking/` and must be server-only.
 - Supabase client setup belongs in `lib/supabase/`.
 
 ## Server-Only Isolation
 
-Enable Banking credentials, signing keys, provider tokens, and service role operations must only appear in server-side modules. Future implementation should use clear boundaries such as:
+Enable Banking credentials, signing keys, provider tokens, and service role operations must only appear in server-side modules. The implementation uses boundaries such as:
 
 - Server-only modules for Enable Banking clients.
 - Route Handlers for bank connection callbacks and sync triggers.
@@ -295,26 +312,31 @@ app/api/bank-connections/enable-banking/aspsps/route.ts
 app/api/integrations/enable-banking/application/route.ts
 app/api/sync/balances/route.ts
 app/api/sync/transactions/route.ts
+app/api/sync/transactions/backfill/route.ts
+app/api/sync/dashboard/route.ts
+app/api/transactions/month/route.ts
+app/api/reports/monthly/route.ts
 ```
 
-They must remain thin, authenticated server boundaries. Provider calls,
+Private routes must remain thin authenticated boundaries. The bank callback
+instead validates pending authorization state and stored ownership, as described
+in [Enable Banking](enable-banking.md#implemented-connection-flow). Provider calls,
 normalization, and database writes should stay in server-only helper modules.
 
-## Future Domain Logic Locations
+## Domain And Report Logic
 
-Possible future domain modules:
+Implemented pure rules live in `lib/domain/`, including decimal arithmetic,
+transaction dates/ranges, internal transfers, reporting movements, savings,
+labels, and reconciliations. They remain independent of React and raw provider
+responses. Presentation aggregations live in `lib/views/privateHomeView/`.
 
-```text
-lib/domain/accounts.ts
-lib/domain/balances.ts
-lib/domain/transactions.ts
-lib/domain/labels.ts
-lib/domain/reports.ts
-lib/domain/consents.ts
-lib/domain/cobee.ts
-```
-
-Domain modules should describe financial concepts without depending directly on React components or raw external API responses.
+Monthly Excel calculation and serialization live in `lib/reports/monthlyExport/`.
+The export route obtains owner-scoped data through `lib/data/`;
+`scripts/monthlyReport.ts` supplies its own in-memory authenticated Supabase
+session to the same database reader and report logic. Export reads saved data,
+never refreshes banks, and has no server-side report persistence. Its financial
+contract deliberately differs from dashboard totals. See
+[Monthly Excel export](monthly-excel-export.md).
 
 ## Transaction Month Loading
 

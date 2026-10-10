@@ -6,15 +6,23 @@ The current implementation includes a private Next.js App Router application
 with Supabase email-and-password authentication, owner email allowlist checks, a
 server-only Enable Banking Account Information integration, connected account
 storage, balance synchronization, current-month transaction synchronization,
-monthly cashflow cards, current-year evolution charts, category expense
-visualization, and inline transaction categorization.
+monthly cashflow cards, current-year evolution charts, category and label
+expense visualization, net savings, inline transaction categorization, reporting
+date edits, finalized reconciliations, reconnection review, and monthly Excel
+exports from the dashboard or command line.
+
+See the [documentation index](docs/README.md) for task-specific reading,
+[current implementation](docs/current-state.md) for capabilities and limits, and
+[AGENTS.md](AGENTS.md) for agent instructions.
+
+Use Node.js 24.x and npm (declared package manager: npm 10.8.2).
 
 ## Development
 
 Install dependencies:
 
 ```bash
-npm install
+npm ci
 ```
 
 Create local environment variables:
@@ -40,19 +48,10 @@ because the app does not expose public registration or password recovery.
 
 ## Database Schema
 
-The local migration chain is defined in:
-
-```text
-supabase/migrations/20260704143000_create_initial_schema.sql
-supabase/migrations/20260704170000_add_enable_banking_connection_fields.sql
-supabase/migrations/20260707120000_add_account_fingerprints_for_internal_transfers.sql
-supabase/migrations/20260709120000_seed_initial_transaction_categories.sql
-supabase/migrations/20260719120000_add_transaction_labels.sql
-supabase/migrations/20260719214000_add_shared_expense_settlement_category.sql
-supabase/migrations/20260804120000_add_personal_care_and_rename_vehicle_insurance.sql
-supabase/migrations/20260809120000_add_transaction_reporting_date.sql
-supabase/migrations/20260810120000_add_transaction_reconciliations.sql
-```
+The ordered local migration chain lives in [supabase/migrations/](supabase/migrations/).
+See [Data model](docs/data-model.md) for its inventory, ownership constraints,
+and RLS, and [Supabase](docs/supabase.md#migration-workflow) for deployment steps.
+Local migration files do not prove that the remote project is up to date.
 
 Apply pending migrations to the Supabase project to create and evolve the
 tables, indexes, constraints, RLS policies, Enable Banking connection fields,
@@ -84,7 +83,7 @@ This command is for intentional local development. Agents should not start the
 local app for testing or verification unless the prompt specifically asks for a
 local app run or browser-based local testing.
 
-Run the basic checks:
+Run static checks (typecheck, lint, and formatting; tests run separately):
 
 ```bash
 npm run check
