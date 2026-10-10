@@ -18,7 +18,14 @@ import {
 import { getCurrentSupabaseUser } from "@/lib/supabase/currentUser";
 import { getMonthlyReportData } from "@/lib/db/monthlyReportData";
 
+import {
+  getPortfolioDraft,
+  getPortfolioSnapshotForDate
+} from "@/lib/db/portfolio/imports";
+
 export const bankingDataSource: BankingDataSource = {
+  getPortfolioImportDraft: getPortfolioDraft,
+  getPortfolioSnapshotForDate,
   async getMonthlyReportData(userId, range) {
     return getMonthlyReportData(userId, range);
   },

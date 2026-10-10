@@ -45,5 +45,6 @@ export type PortfolioImportReview = {
 
 export type PortfolioImportState = {
   error: string | null;
+  reviewedDate?: string;
   existing?: PortfolioSnapshotSummary | null;
 };
