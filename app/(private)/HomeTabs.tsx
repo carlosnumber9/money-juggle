@@ -9,9 +9,23 @@ import {
   type ReactNode
 } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  LayoutDashboard,
+  ArrowLeftRight,
+  ChartNoAxesCombined,
+  ChartPie
+} from "lucide-react";
+import { useTabMagnification } from "./HomeTabs/useTabMagnification";
 import type { HomeTab } from "@/definitions";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { createHomeTabNavigation } from "./homeTabNavigation";
+
+const sections = [
+  { value: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { value: "transactions", label: "Transacciones", icon: ArrowLeftRight },
+  { value: "evolution", label: "Evolución", icon: ChartNoAxesCombined },
+  { value: "investments", label: "Inversiones", icon: ChartPie }
+] as const;
 
 export function HomeTabs({
   selectedTab,
@@ -37,6 +51,7 @@ export function HomeTabs({
   }, [navigation, selectedTab, isPending]);
   const loading = snapshot.loading;
   const activeTab = loading ? snapshot.selectedTab : selectedTab;
+  const tabsRef = useTabMagnification(loading);
 
   return (
     <Tabs
@@ -52,31 +67,29 @@ export function HomeTabs({
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         {heading}
-        <TabsList aria-label="Secciones de tus cuentas" aria-busy={loading}>
-          <TabsTrigger
-            value="dashboard"
-            disabled={loading && activeTab !== "dashboard"}
-          >
-            Dashboard
-          </TabsTrigger>
-          <TabsTrigger
-            value="transactions"
-            disabled={loading && activeTab !== "transactions"}
-          >
-            Transacciones
-          </TabsTrigger>
-          <TabsTrigger
-            value="evolution"
-            disabled={loading && activeTab !== "evolution"}
-          >
-            Evolución
-          </TabsTrigger>
-          <TabsTrigger
-            value="investments"
-            disabled={loading && activeTab !== "investments"}
-          >
-            Inversiones
-          </TabsTrigger>
+        <TabsList
+          ref={tabsRef}
+          aria-label="Secciones de tus cuentas"
+          aria-busy={loading}
+          className="h-11 gap-3 md:h-10 md:gap-1 [&_[data-slot=tabs-indicator]]:hidden md:[&_[data-slot=tabs-indicator]]:block"
+        >
+          {sections.map(({ value, label, icon: Icon }) => (
+            <TabsTrigger
+              key={value}
+              value={value}
+              aria-label={label}
+              disabled={loading && activeTab !== value}
+              className="h-11 w-11 border-0 bg-transparent px-0 shadow-none md:h-10 md:w-auto md:px-4"
+            >
+              <span
+                data-tab-content
+                className="inline-flex origin-center items-center justify-center"
+              >
+                <Icon className="size-7 md:hidden" aria-hidden />
+                <span className="hidden md:inline">{label}</span>
+              </span>
+            </TabsTrigger>
+          ))}
         </TabsList>
       </div>
       <TabsContent

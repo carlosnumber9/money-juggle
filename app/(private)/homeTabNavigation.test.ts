@@ -2,6 +2,15 @@ import { describe, expect, it, vi } from "vitest";
 import { createHomeTabNavigation } from "./homeTabNavigation";
 
 describe("home tab navigation", () => {
+  it("supports the investments section and URL-driven selection", () => {
+    const navigation = createHomeTabNavigation("dashboard");
+    expect(navigation.select("investments")).toBe(true);
+    navigation.synchronize("investments", false);
+    expect(navigation.getSnapshot()).toEqual({
+      selectedTab: "investments",
+      loading: false
+    });
+  });
   it("selects immediately and blocks repeated or competing requests", () => {
     const navigation = createHomeTabNavigation("dashboard");
     expect(navigation.select("transactions")).toBe(true);
