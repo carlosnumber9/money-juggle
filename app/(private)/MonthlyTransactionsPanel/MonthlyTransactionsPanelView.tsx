@@ -208,7 +208,7 @@ export function MonthlyTransactionsPanel({
   }
 
   return (
-    <section aria-labelledby="monthly-transactions-title">
+    <section aria-label="Transacciones">
       <MonthlyTransactionsHeader
         message={error}
         selectedMonth={selectedMonth}

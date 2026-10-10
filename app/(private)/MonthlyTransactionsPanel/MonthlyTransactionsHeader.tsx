@@ -31,13 +31,7 @@ export function MonthlyTransactionsHeader({
 }) {
   return (
     <div className="mb-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2
-          id="monthly-transactions-title"
-          className="text-xl leading-tight font-semibold"
-        >
-          Movimientos
-        </h2>
+      <div className="flex justify-end">
         <MonthNavigation selectedMonth={selectedMonth} tab="transactions" />
       </div>
       <div>

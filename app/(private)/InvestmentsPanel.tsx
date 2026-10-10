@@ -13,8 +13,7 @@ import {
 export function InvestmentsPanel({ view }: { view: InvestmentsView }) {
   return (
     <section className="grid gap-6" aria-label="Inversiones">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="text-xl font-semibold">Tu portfolio</h2>
+      <div className="flex justify-end">
         <Link
           className={buttonVariants({ variant: "outline" })}
           href="/investments/import"
@@ -30,7 +29,7 @@ export function InvestmentsPanel({ view }: { view: InvestmentsView }) {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="p-0">
           <CardContent className="p-5 sm:p-6">
-            <h3 className="text-lg font-semibold">Trade Republic</h3>
+            <h2 className="text-lg font-semibold">Trade Republic</h2>
             {view.latest ? (
               <>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -80,10 +79,7 @@ export function InvestmentsPanel({ view }: { view: InvestmentsView }) {
           </CardContent>
         </Card>
       </div>
-      <ChartContainer
-        title="Evolución del patrimonio"
-        description="Efectivo e inversiones según tus PDFs. Cada punto corresponde a una foto confirmada."
-      >
+      <ChartContainer title="Evolución del patrimonio">
         {view.points.length ? (
           <PortfolioHistoryChart points={view.points} />
         ) : (

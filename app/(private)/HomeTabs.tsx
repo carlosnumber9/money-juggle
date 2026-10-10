@@ -29,11 +29,11 @@ const sections = [
 
 export function HomeTabs({
   selectedTab,
-  heading,
+  status,
   children
 }: {
   selectedTab: HomeTab;
-  heading: ReactNode;
+  status: ReactNode;
   children: ReactNode;
 }) {
   const router = useRouter();
@@ -65,8 +65,8 @@ export function HomeTabs({
         });
       }}
     >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        {heading}
+      <div className="flex min-w-0 items-center gap-2">
+        {status}
         <TabsList
           ref={tabsRef}
           aria-label="Secciones de tus cuentas"

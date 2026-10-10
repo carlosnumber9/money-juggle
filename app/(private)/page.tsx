@@ -92,12 +92,7 @@ async function PreparedHome({
       <InitialLoadCheckpoint phase="mounted" />
       <HomeTabs
         selectedTab={view.tab}
-        heading={
-          <div className="flex min-w-0 items-center gap-2">
-            <EnableBankingStatus status={view.providerStatus} />
-            <h1 className="min-w-0 text-3xl leading-tight">Tus cuentas</h1>
-          </div>
-        }
+        status={<EnableBankingStatus status={view.providerStatus} />}
       >
         {view.tab === "dashboard" && (
           <>
