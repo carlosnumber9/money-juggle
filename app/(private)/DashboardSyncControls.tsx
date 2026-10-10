@@ -1,10 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
+import { LogOutIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { Tooltip } from "@/components/ui/tooltip";
 import type {
   DashboardProgressEvent,
   DashboardSyncControlsProps,
@@ -27,7 +30,7 @@ import { MonthlyExportButton } from "./MonthlyExport/MonthlyExportButton";
 
 import { LoadingSteps } from "@/components/LoadingSteps";
 import { useInitialLoadReady } from "./InitialLoadProvider";
-import { usePrivateQuerySession } from "./PrivateQueryProvider";
+import { PrivateSignOut, usePrivateQuerySession } from "./PrivateQueryProvider";
 import {
   applyDashboardProgress,
   createDashboardProgress,
@@ -51,7 +54,7 @@ export function DashboardSyncControls({
   const [progress, setProgress] = useState(createDashboardProgress);
   const [expanded, setExpanded] = useState(false);
   const { invalidate: invalidateMonths } = useMonthInvalidation();
-  const { beginSync } = useSyncActivity();
+  const { beginSync, controlsTarget } = useSyncActivity();
   const didAutoRefreshRef = useRef(false);
   const [activeOperation, setActiveOperation] = useState<ActiveOperation>(null);
   const [refreshResult, setRefreshResult] = useState<SyncResponse | null>(null);
@@ -212,23 +215,37 @@ export function DashboardSyncControls({
         currentMonth={exportPeriod.currentMonth}
         disabled={isBusy}
       />
-      {enabled || activeOperation === "refresh" ? (
-        <LoadingSteps
-          label={
-            activeOperation === "refresh"
-              ? "Actualizando tus cuentas"
-              : shouldRetryRefresh
-                ? "Reintentar actualización"
-                : "Actualizar"
-          }
-          rows={progress}
-          busy={activeOperation === "refresh"}
-          expanded={expanded}
-          onToggle={() => setExpanded((value) => !value)}
-          onAction={handleRefresh}
-          disabled={activeOperation === "backfill"}
-        />
-      ) : null}
+      <PrivateSignOut>
+        <Tooltip
+          label="Cerrar sesión"
+          triggerLabel="Cerrar sesión"
+          triggerType="submit"
+          triggerClassName="size-8 rounded-none"
+        >
+          <LogOutIcon className="size-4" aria-hidden />
+        </Tooltip>
+      </PrivateSignOut>
+      {controlsTarget && (enabled || activeOperation === "refresh")
+        ? createPortal(
+            <LoadingSteps
+              floating
+              label={
+                activeOperation === "refresh"
+                  ? "Actualizando tus cuentas"
+                  : shouldRetryRefresh
+                    ? "Reintentar actualización"
+                    : "Actualizar"
+              }
+              rows={progress}
+              busy={activeOperation === "refresh"}
+              expanded={expanded}
+              onToggle={() => setExpanded((value) => !value)}
+              onAction={handleRefresh}
+              disabled={activeOperation === "backfill"}
+            />,
+            controlsTarget
+          )
+        : null}
       {backfill.status === "available" ? (
         <Button
           type="button"

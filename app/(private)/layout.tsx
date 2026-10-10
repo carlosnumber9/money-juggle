@@ -8,12 +8,11 @@ import {
 import { redirect } from "next/navigation";
 
 import type { PrivateLayoutProps } from "@/definitions";
-import { Button } from "@/components/ui/button";
 import { getPrivateLayoutView } from "@/lib/views/privateLayoutView";
 
-import { PrivateQueryProvider, PrivateSignOut } from "./PrivateQueryProvider";
+import { PrivateQueryProvider } from "./PrivateQueryProvider";
 
-import { SyncActivityProvider } from "./SyncActivityProvider";
+import { SyncActivityProvider, SyncControlsSlot } from "./SyncActivityProvider";
 import { SyncingAppLogo } from "./SyncingAppLogo";
 
 // The streamed shell must resolve the real cookie-backed session per request.
@@ -44,13 +43,9 @@ async function AuthenticatedPrivateLayout({ children }: PrivateLayoutProps) {
     <PrivateQueryProvider key={view.user.id} userId={view.user.id}>
       <SyncActivityProvider>
         <InitialLoadCheckpoint phase="layout" />
-        <header className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-4 px-6 pt-6">
+        <header className="mx-auto flex w-full max-w-5xl items-center gap-4 px-6 pt-6">
           <SyncingAppLogo />
-          <PrivateSignOut>
-            <Button type="submit" variant="outline" size="sm">
-              Cerrar sesión
-            </Button>
-          </PrivateSignOut>
+          <SyncControlsSlot />
         </header>
         {children}
       </SyncActivityProvider>

@@ -13,6 +13,8 @@ import {
 type SyncActivityContextValue = {
   isSyncing: boolean;
   beginSync: () => () => void;
+  controlsTarget: HTMLDivElement | null;
+  setControlsTarget: (target: HTMLDivElement | null) => void;
 };
 
 const SyncActivityContext = createContext<SyncActivityContextValue | null>(
@@ -22,6 +24,9 @@ const SyncActivityContext = createContext<SyncActivityContextValue | null>(
 export function SyncActivityProvider({ children }: { children: ReactNode }) {
   const activeCountRef = useRef(0);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [controlsTarget, setControlsTarget] = useState<HTMLDivElement | null>(
+    null
+  );
   const beginSync = useCallback(() => {
     let finished = false;
 
@@ -39,8 +44,8 @@ export function SyncActivityProvider({ children }: { children: ReactNode }) {
     };
   }, []);
   const value = useMemo(
-    () => ({ isSyncing, beginSync }),
-    [beginSync, isSyncing]
+    () => ({ isSyncing, beginSync, controlsTarget, setControlsTarget }),
+    [beginSync, isSyncing, controlsTarget]
   );
 
   return (
@@ -48,6 +53,11 @@ export function SyncActivityProvider({ children }: { children: ReactNode }) {
       {children}
     </SyncActivityContext.Provider>
   );
+}
+
+export function SyncControlsSlot() {
+  const { setControlsTarget } = useSyncActivity();
+  return <div ref={setControlsTarget} className="min-w-0" />;
 }
 
 export function useSyncActivity() {

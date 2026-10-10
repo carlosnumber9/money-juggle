@@ -397,7 +397,12 @@ panel error feedback. A private page error boundary provides a full reload retry
 for unrecoverable failures. Tab navigation and subsequent server refreshes do not
 restart the centered document-load trace.
 
-Dashboard's update control uses the same Steps presentation. It automatically
+Dashboard's update control sits beside the header logo and uses the same Steps
+presentation inside the existing non-modal Popover primitive. Its portalled
+content floats above the page without changing the layout, respects viewport
+boundaries, and can close with Escape or an outside click without stopping sync.
+The control is portalled from Dashboard into a header slot, preserving its
+existing mount lifecycle and automatic refresh behavior. It automatically
 expands during synchronization, shows separate bank rows under balances and
 transactions, and collapses into an Update button after the refreshed view
 commits. Each bank remains running through persistence. Rows distinguish fresh
@@ -426,7 +431,9 @@ The custom Steps composition is a narrow exception to the default UI primitives:
 it combines the existing Button, Spinner, Lucide icons and theme tokens for a
 status trace that those primitives do not provide. It keeps square controls,
 supports reduced motion, and announces the active step and bank to assistive
-technology. Historical import and export retain their existing controls.
+technology. Historical import and export retain their existing controls. Sign-out
+sits beside monthly export as a matching square icon button with a Spanish
+tooltip and accessible name; it retains the POST sign-out flow and query cleanup.
 
 Verification uses mocked provider/database route tests, fragmented stream tests,
 progress state tests and static accessible-markup checks. No local application
