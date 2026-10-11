@@ -13,3 +13,11 @@ foreign keys. Rules are soft deleted so earlier assignment attribution survives.
 Existing non-null categories are marked manual without changing categories.
 A manual category removal will be recorded as manual, protecting it from rules.
 Provider payloads must omit all app-owned category provenance fields.
+
+## Deterministic Matching
+
+Only booked, newly observed movements with bank dates on or after activation
+are eligible. The matcher compares normalized text, currency, direction and an
+optional account. Different-category overlaps require review; equal-category
+overlaps attribute the oldest active rule. No model runs during matching.
+Manual assignments, including clearing a category, take priority permanently.

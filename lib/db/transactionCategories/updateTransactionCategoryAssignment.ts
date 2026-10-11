@@ -20,7 +20,13 @@ export async function updateTransactionCategoryAssignment({
   const supabase = createSupabaseServiceRoleClient();
   const { data, error } = await supabase
     .from("transactions")
-    .update({ category_id: categoryId })
+    .update({
+      category_id: categoryId,
+      category_source: "manual",
+      category_rule_id: null,
+      category_rule_version: null,
+      category_rule_conflict: false
+    })
     .eq("id", transactionId)
     .eq("user_id", userId)
     .select("id")
