@@ -55,6 +55,10 @@ export type BankConnectionSummary = {
 };
 
 export type MonthlyTransactionSummary = {
+  category_source?: "manual" | "rule" | null;
+  category_rule_id?: string | null;
+  category_rule_version?: number | null;
+  category_rule_conflict?: boolean;
   id: string;
   institution_slug: "caixabank" | "ing" | "trade-republic" | "unknown";
   institution_name: string;

@@ -18,6 +18,10 @@ export const MONTHLY_TRANSACTION_SELECT = `
   counterparty_account_last4,
   counterparty_account_fingerprint,
   category_id,
+  category_source,
+  category_rule_id,
+  category_rule_version,
+  category_rule_conflict,
   transaction_categories (
     id,
     name,

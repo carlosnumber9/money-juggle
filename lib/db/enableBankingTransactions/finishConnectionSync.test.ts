@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/db/categoryRules/apply", () => ({
+  applyCategoryRulesAfterSync: vi.fn()
+}));
+import { applyCategoryRulesAfterSync } from "@/lib/db/categoryRules/apply";
 vi.mock("./persistTransactionRows", () => ({
   persistTransactionRows: vi.fn()
 }));
@@ -49,6 +53,23 @@ function emptyInput() {
 }
 
 describe("persistRowsAndFinishRun", () => {
+  it("isolates rule failure after persistence and retains sync success", async () => {
+    vi.mocked(applyCategoryRulesAfterSync).mockRejectedValueOnce(
+      new Error("rule failure")
+    );
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    await persistRowsAndFinishRun(emptyInput());
+    expect(applyCategoryRulesAfterSync).toHaveBeenCalledWith(
+      "user-id",
+      "connection-id"
+    );
+    expect(finishSyncRun).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "succeeded" })
+    );
+    expect(warn).toHaveBeenCalledWith(
+      "Category rule assignment deferred after transaction persistence."
+    );
+  });
   it("advances freshness for a genuinely complete empty response", async () => {
     const input = emptyInput();
     await persistRowsAndFinishRun(input);

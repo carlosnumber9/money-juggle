@@ -78,6 +78,10 @@ export type TransactionSyncResult = {
 export type TransactionSyncMode = "incremental" | "backfill";
 
 export type StoredMonthlyTransactionRow = {
+  category_source?: "manual" | "rule" | null;
+  category_rule_id?: string | null;
+  category_rule_version?: number | null;
+  category_rule_conflict?: boolean;
   id: string;
   account_id: string;
   booking_status: MonthlyTransactionSummary["booking_status"];

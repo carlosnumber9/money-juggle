@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { getTransactionConcept } from "./formatters";
 import {
   getCategoryFromSelectValue,
+  getInitialCategorySelectValue,
   getSelectedCategoryLabel,
   UNCATEGORIZED_CATEGORY_VALUE
 } from "./transactionCategoryOptions";
@@ -149,6 +150,23 @@ export function TransactionCategorySelect({
           </PopoverPrimitive.Positioner>
         </PopoverPrimitive.Portal>
       </PopoverPrimitive.Root>
+      {transaction.category_source === "rule" &&
+      !isPending &&
+      selectedCategoryValue === getInitialCategorySelectValue(transaction) ? (
+        <span
+          className="text-[10px] text-muted-foreground"
+          title={`Regla ${transaction.category_rule_id}, versión ${transaction.category_rule_version}`}
+        >
+          Asignada por regla
+        </span>
+      ) : null}
+      {transaction.category_rule_conflict &&
+      !isPending &&
+      !transaction.category ? (
+        <span className="text-[10px] text-destructive">
+          Conflicto entre reglas
+        </span>
+      ) : null}
       {saveError ? (
         <span className="text-center text-xs text-destructive" role="status">
           {saveError}

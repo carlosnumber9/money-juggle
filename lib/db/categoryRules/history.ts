@@ -26,7 +26,7 @@ export async function listCategoryRuleHistory(
   for (let offset = 0; offset <= 5000; offset += 500) {
     const { data, error } = await db
       .from("transactions")
-      .select(`${MONTHLY_TRANSACTION_SELECT},first_seen_at,category_source`)
+      .select(`${MONTHLY_TRANSACTION_SELECT},first_seen_at`)
       .eq("user_id", userId)
       .eq("booking_status", "booked")
       .gte("booking_date", range.from)

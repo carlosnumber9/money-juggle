@@ -48,3 +48,20 @@ activates deterministic matching. Proposal fingerprints suppress identical
 rediscovery, including dismissed proposals. No inference service is contacted
 with transaction data. Hosting quotas and deployed Linux behavior remain
 independent operational checks.
+
+## Synchronization
+
+After owned provider persistence, a narrow service-role helper loads owned
+active rules and pending uncategorized rows. The shared pure matcher selects
+candidates; a service-role-only security-invoker RPC locks rules/categories and
+transactions and rechecks current ownership, manual metadata, eligibility and
+all matching rules before writing. The RPC also excludes reconciliation members
+and internal transfer fingerprints/pairs. This preserves callback operation
+without browser cookies. Ordinary reads and rule management remain authenticated
+and RLS-aware. Automatic assignment failures are sanitized and deferred without
+changing the bank synchronization result.
+
+Candidate reads use batches of 500 with keyset pagination. Repeated syncs
+retry eligible unassigned rows. Category origins appear in transaction review.
+Paused, edited and deleted rules affect only future assignments; historical
+categories and provenance are retained. No model participates in this path.

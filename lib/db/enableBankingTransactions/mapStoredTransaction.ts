@@ -33,6 +33,14 @@ export function mapStoredTransactionToSummary(
 
   return {
     id: row.id,
+    ...(row.category_source !== undefined
+      ? {
+          category_source: row.category_source,
+          category_rule_id: row.category_rule_id ?? null,
+          category_rule_version: row.category_rule_version ?? null,
+          category_rule_conflict: row.category_rule_conflict ?? false
+        }
+      : {}),
     institution_slug: getInstitutionSlug(
       institutionProviderId ?? institutionName
     ),

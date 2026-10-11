@@ -1,4 +1,5 @@
 import "server-only";
+import { applyCategoryRulesAfterSync } from "@/lib/db/categoryRules/apply";
 
 import { getErrorMessage } from "../shared/getErrorMessage";
 import { persistTransactionRows } from "./persistTransactionRows";
@@ -48,6 +49,13 @@ export async function persistRowsAndFinishRun(
     throw error;
   }
 
+  try {
+    await applyCategoryRulesAfterSync(input.userId, input.connection.id);
+  } catch {
+    console.warn(
+      "Category rule assignment deferred after transaction persistence."
+    );
+  }
   await finishSuccessfulRun(input);
 }
 
