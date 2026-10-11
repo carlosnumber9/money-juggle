@@ -125,6 +125,15 @@ export type MonthlyTransactionRange = {
 };
 
 export type BankingDataSource = {
+  listCategoryRules(
+    userId: string
+  ): Promise<import("./categoryRules").CategoryRule[]>;
+  listCategoryRuleAccounts(
+    userId: string
+  ): Promise<import("./categoryRules").CategoryRuleSettings["accounts"]>;
+  listCategoryRuleConflicts(
+    userId: string
+  ): Promise<import("./categoryRules").CategoryRuleSettings["conflicts"]>;
   getLatestPortfolioSnapshot(
     userId: string
   ): Promise<import("./portfolio").PortfolioSnapshot | null>;

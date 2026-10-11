@@ -1,4 +1,9 @@
 import "server-only";
+import {
+  listCategoryRules,
+  listCategoryRuleAccounts,
+  listCategoryRuleConflicts
+} from "@/lib/db/categoryRules/reads";
 
 import { type AppUser, type BankingDataSource } from "@/definitions";
 import { isEmailAllowed } from "@/lib/auth/allowlist";
@@ -29,6 +34,9 @@ import {
 } from "@/lib/db/portfolio/reads";
 
 export const bankingDataSource: BankingDataSource = {
+  listCategoryRules,
+  listCategoryRuleAccounts,
+  listCategoryRuleConflicts,
   getLatestPortfolioSnapshot,
   listPortfolioHistory,
   getPortfolioImportDraft: getPortfolioDraft,

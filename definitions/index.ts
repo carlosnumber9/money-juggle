@@ -11,3 +11,4 @@ export * from "./sync";
 export * from "./monthlyReport";
 export * from "./progress";
 export * from "./portfolio";
+export * from "./categoryRules";
