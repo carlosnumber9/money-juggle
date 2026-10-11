@@ -22,6 +22,11 @@ history is not a prerequisite for a focused change.
 | Commit and push                     | [Git workflow](git-workflow.md), [publication rules](development-workflow.md#publishing-changes) | Local `git` status, diff, branch, remote                                |
 | Maintain agent documentation        | [Agent documentation](agent-documentation.md)                                                    | Source, scripts, migrations, and CI                                     |
 
+## Category Rule Feature
+
+See [Category rules](category-rules.md) for Settings, model packaging, matching,
+ownership, migration operations and local acceptance checks.
+
 ## Document Roles
 
 - `AGENTS.md`: short operational instructions, security invariants, commands,

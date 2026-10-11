@@ -47,6 +47,11 @@ Magic-link phases 5/6 were superseded by password login in phase 31.
 - [x] 30. Add monthly period navigation for transactions and charts.
 - [x] 31. Replace magic links with owner password login and session refresh.
 - [x] 32. Investigate neutral cash-flow reconciliation for debts and reimbursements.
+- [x] 33. Add reviewed recurring category rules, Settings management and server-only MiniLM discovery.
+
+Phase 33 implements future assignment only. Vercel invocation, quota verification
+and owner browser acceptance remain operational checks; see
+[Category rules](category-rules.md).
 
 ## 1. Bootstrap The Next.js Project
 

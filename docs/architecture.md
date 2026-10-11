@@ -133,7 +133,7 @@ validated `month=YYYY-MM` URL value is resolved into a range in
 instead of querying persistence directly. Malformed and future periods fall
 back to the current month.
 
-The private UI is split into four tabs:
+The private UI is split into five tabs:
 
 - `Dashboard`: bank institution cards, aggregate cash balances, latest imported
   Trade Republic investments, and selected-month income and expense cards.
@@ -152,6 +152,8 @@ The private UI is split into four tabs:
   The visualizations are calculated from cached transaction rows with
   shadcn/Recharts.
 - `Inversiones`: latest reviewed PDF positions and observed cash/investment history.
+- `Configuración`: owned category rules and proposals in one half-width card,
+  a fixed-height scrolling table and review/edit dialogs.
 
 The selected month is shared by transaction rows, cashflow cards, and the
 category expense radar. Transactions updates the month through the native History API and reads only
@@ -493,3 +495,16 @@ Report dates govern history and latest-photo selection, while position quote
 dates remain separate. Authenticated read views serialize decimals as strings;
 chart preparation alone uses display numbers. Next.js traces the external
 PDF.js worker and native dependencies explicitly for Vercel.
+
+## Category Rule Discovery And Application
+
+Rule management extends the single banking data source and lazy private tab
+view. A dedicated Node discovery route runs pinned MiniLM q8 CPU inference
+against bounded RLS-aware saved history. Build-time artifacts are verified and
+traced exclusively into discovery, with runtime downloads disabled.
+
+Confirmed rules use pure deterministic matching after provider persistence. A
+narrow service-only RPC repeats current ownership, category, eligibility and
+manual-origin checks under row locks. Assignment failures are deferred without
+turning persisted bank sync into a failure. Discovery, manual CRUD and automatic
+assignment are separate boundaries; see [Category rules](category-rules.md).

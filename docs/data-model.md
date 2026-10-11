@@ -23,6 +23,7 @@ Remote deployment must be checked separately through the migration workflow.
 - [`20261005013000_add_reconciliation_state_rpc.sql`](../supabase/migrations/20261005013000_add_reconciliation_state_rpc.sql)
 - [`20261010120000_add_portfolio_snapshots.sql`](../supabase/migrations/20261010120000_add_portfolio_snapshots.sql)
 - [`20261010123000_add_portfolio_read_views.sql`](../supabase/migrations/20261010123000_add_portfolio_read_views.sql)
+- [`20261011120000_add_category_rules.sql`](../supabase/migrations/20261011120000_add_category_rules.sql)
 
 The model should preserve user ownership even though the app starts as a personal project.
 
@@ -991,3 +992,19 @@ Important modeling notes:
 | `portfolio_import_drafts`       | Temporary financial extraction                      |
 | `manual_assets`                 | Deferred: manual input or future import             |
 | Future Cobee report rows        | Cobee by Pluxee Public API                          |
+
+## Category Rules And Assignment Provenance
+
+`category_rules` owns confirmed rules and proposals through `user_id`, with
+composite owner foreign keys to category and optional account, owner RLS,
+versioned edits and soft deletion. The preparation trigger normalizes conditions,
+validates active categories and advances activation time on active revisions.
+Proposal fingerprints prevent duplicate detection, including dismissed rows.
+
+Transactions retain `category_source`, rule ID/version and a conflict flag.
+Manual category removal is an explicit manual origin. Existing categorized rows
+are conservatively marked manual; no category is changed. Provider payloads
+omit these columns. The service-only security-invoker assignment RPC checks
+connection ownership, serializes rule/category edits and transaction writes,
+rechecks eligibility and neutral movements, and preserves existing categories.
+See [Category rules](category-rules.md) for semantics and rollback verification.

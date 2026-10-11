@@ -305,3 +305,19 @@ Authenticated read views use `security_invoker`; the confirmation function uses
 again. Draft/date locking and revision checks prevent duplicate confirmations
 and stale replacements. No elevated client is introduced. See
 [Portfolio imports](portfolio-imports.md) for contracts and deployment limits.
+
+## Category Rule Boundaries
+
+Rules, proposals and history use validated owner sessions, allowlist checks and
+authenticated RLS reads/writes. Composite ownership foreign keys protect category
+and account references. Model files are fixed, checksum verified, server-only
+and excluded from browser bundles. Transaction descriptions are processed by
+local server inference, without external inference requests or financial logs.
+
+Post-sync assignment is a documented narrow elevated path: the service helper
+validates the stored owner and connection and the service-role-only RPC repeats
+that validation, locks current rules/categories and transaction rows, and checks
+manual origin before writing. This is required by the bank callback's stored
+owner flow, which can run without browser cookies. It does not change session
+boundaries or make service role the default data client. SQL rollback fixtures
+verify access, ownership and assignment guards.

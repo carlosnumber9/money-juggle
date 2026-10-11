@@ -1,10 +1,16 @@
 # Category Rules
 
-## Implementation Progress
+## Implemented Behavior
 
-Owned rule storage and assignment provenance are defined by
-`20261011120000_add_category_rules.sql`. The migration is not yet applied.
-Rule management, discovery and automatic assignment follow in later commits.
+The private `Configuración` tab manages manual rules and MiniLM proposals.
+Confirming a proposal enables future deterministic assignment during bank sync.
+Detection does not create active rules automatically and does not recategorize
+historical movements. All accounts are included unless a rule restricts one.
+Periodicity discovers proposals; active rules do not impose a calendar.
+
+Schema is defined in `20261011120000_add_category_rules.sql`. Remote application
+is verified separately through the migration workflow below; local files and
+commits alone do not establish deployment status.
 
 ## Ownership And History
 
@@ -65,3 +71,59 @@ Candidate reads use batches of 500 with keyset pagination. Repeated syncs
 retry eligible unassigned rows. Category origins appear in transaction review.
 Paused, edited and deleted rules affect only future assignments; historical
 categories and provenance are retained. No model participates in this path.
+
+## Verification And Migration Workflow
+
+Implementation checks passed: `npm run check`, 558 Vitest tests across 122 files,
+and a production build. PostgreSQL 17 with synthetic auth roles applied the full
+migration chain and passed the rollback fixtures in
+`supabase/tests/category_rules.sql`. Fixtures cover owner isolation, composite
+category ownership, origin constraints, service-only RPC permission, manual
+priority, historical/pending/currency exclusion, neutral movements, conflicting
+rules, idempotence and pause behavior. These are synthetic checks, not live bank
+synchronization.
+
+A local q8 smoke check produced normalized 384-dimensional embeddings from
+synthetic descriptions. The macOS build traced all four model artifacts
+(129.12 MiB) exclusively into discovery, with no model in browser bundles or
+other route traces. Its trace total was 175.34 MiB, excluding platform packages
+installed only on Linux. The earlier Linux dependency fixture measured 192.8
+MiB; an actual Vercel invocation and quota availability remain unverified.
+No development or production app server was started for verification.
+
+Apply only this feature migration to the existing linked project:
+
+```bash
+npm run db:migrations
+npx supabase db push --dry-run
+npm run db:push
+npm run db:migrations
+npx supabase db query --linked --file supabase/tests/category_rules.sql
+```
+
+The dry run must contain only the category-rules migration. Do not apply other
+pending migrations as part of this feature. The SQL verification wraps synthetic
+fixtures in a transaction and rolls them back. It does not recategorize existing
+transactions. Record the actual application result in the handoff.
+
+## Local Acceptance Checks
+
+After applying the migration, use the existing local-run workflow. Model assets
+are already prepared on the implementation workstation; a fresh checkout needs
+`npm run models:prepare` before detection. Open `/?tab=settings` and verify:
+
+- One half-width card from `lg`, full width on mobile, fixed 420 px table
+  viewport, sticky header, and internal scrolling.
+- Create, edit, pause, reactivate and delete a manual rule; earlier categories
+  remain unchanged.
+- Detect patterns, inspect coverage/examples/conflicting categories, and confirm
+  a proposal once. Dismissal prevents identical proposals from returning.
+- Future eligible movements are categorized by an active rule after normal
+  authorized synchronization. Manual categorization or manual removal takes
+  precedence. No historical backfill is categorized.
+- Review conflicting movements in the Settings dialog and assign their category
+  manually. Model failure leaves rule management available.
+
+Local commits remain unpublished until the owner finishes local acceptance and
+explicitly requests push. Browser behavior and Linux deployment require their
+own checks; a build does not certify them.

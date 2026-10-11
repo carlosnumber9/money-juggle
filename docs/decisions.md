@@ -2076,3 +2076,21 @@ Consequences:
   the existing mutable report flow rather than creating immutable report history.
 - Four worksheets are always present. No new schema, provider integration or
   elevated read path is required. Unsupported Excel precision still fails export.
+
+## ADR-052: Confirm Model Proposals Once And Apply Deterministic Category Rules
+
+Status: Accepted and implemented.
+
+The owner wants recurring movements categorized from previously assigned
+categories, using free model artifacts on the existing server and editable rules.
+Use pinned multilingual MiniLM q8 only to discover proposals from saved history;
+confirm each rule once and apply deterministic conditions after bank persistence.
+Keep model assets and inference out of devices and synchronization, preserving
+manual categories and manual clearing. Owner RLS protects rule management; a
+service-only owner-checked RPC handles callback-compatible atomic assignment.
+
+This trades unrestricted semantic matching and runtime downloads for reviewable
+conditions, bounded inference and a larger dedicated deployment bundle. It avoids
+model latency and external inference dependencies during bank synchronization.
+Historical categories remain unchanged when rules are edited or removed. Actual
+Linux deployment and free quota availability require independent verification.

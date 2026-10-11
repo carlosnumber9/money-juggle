@@ -1,6 +1,6 @@
 # Current Implementation State
 
-Reviewed against repository source (`e8abd71`) on 2026-10-10. This describes local
+Reviewed against repository source (`c1ebf10`) on 2026-10-11. This describes local
 implementation, not a certification of production configuration or provider
 availability. Update the affected entry when a feature changes.
 
@@ -23,7 +23,7 @@ remote settings require independent operational verification.
 | Area                   | Implemented behavior                                                                                                                             | Entry points                                                                                            |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
 | Authentication         | Owner password login, allowlist, cookie refresh, sign-out; no public registration or self-service recovery                                       | `app/login/`, `lib/auth/`, `lib/supabase/`, `proxy.ts`                                                  |
-| Private home           | Dashboard, Transacciones, Evolución, Inversiones; only the active panel loads its financial data                                                 | `app/(private)/page.tsx`, `lib/views/privateHomeView/getPrivateHomeView.ts`                             |
+| Private home           | Dashboard, Transacciones, Evolución, Inversiones, Configuración; only the active panel loads its financial data                                  | `app/(private)/page.tsx`, `lib/views/privateHomeView/getPrivateHomeView.ts`                             |
 | Bank authorization     | AIS discovery, authorization, state-validated callback, empty-account failure, iOS return page                                                   | `app/api/bank-connections/enable-banking/`, `app/bank-connection-result/`                               |
 | Reconnection           | Reuses connection/history, strong account matching, authenticated owner review for ambiguous matches                                             | `lib/db/enableBankingConnections/`, `app/(private)/bank-connections/[connectionId]/review/`             |
 | Synchronization        | Balance snapshots, overlapping recent transaction sync, current-year backfill, per-connection leases, cooldowns, partial-page persistence        | `lib/db/enableBankingBalances/`, `lib/db/enableBankingTransactions/`, `lib/db/enableBankingSync/`       |
@@ -46,6 +46,20 @@ Trade Republic `OTHR` cash only, without treating it as booked opening/closing
 balance evidence. Its separate `Inversiones` sheet selects the latest confirmed
 PDF report date up to the selected month end, preserves quote dates and declared
 valuations, and omits PDF cash from economic and account totals.
+
+## Category Rules
+
+The private Settings tab provides a half-width rule card with a fixed-height
+scrolling table. Authenticated rule CRUD and confirmed MiniLM proposals share
+owned storage. Discovery uses a pinned q8 multilingual model server-side over
+up to twelve months of saved history; it never sends transaction text to a
+hosted inference service. Future deterministic assignment runs after provider
+persistence through an owner-checked service-only RPC, preserving manual
+categories and manually cleared categories. Conflicting categories require
+review. See [Category rules](category-rules.md) for limits and operational checks.
+
+The additive rule migration is applied separately after implementation checks.
+Local source does not establish remote schema or Vercel invocation status.
 
 ## Important Financial And Ownership Boundaries
 
@@ -77,7 +91,7 @@ The executable local schema is the ordered chain in
 [Supabase migrations](../supabase/migrations/), documented in
 [Data model](data-model.md). It includes provider connection fields, account
 fingerprints, category seeds, labels, provider cooldowns, connection leases,
-transaction freshness, reporting dates, reconciliations, and reconciliation
+transaction freshness, reporting dates, category rules and assignment provenance, reconciliations, and reconciliation
 state RPCs, portfolio drafts/snapshots/positions and exact-decimal read views.
 Owned tables enable RLS; institutions are authenticated reference data.
 
