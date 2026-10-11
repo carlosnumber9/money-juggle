@@ -10,6 +10,7 @@ export async function saveCategoryRule(
   const db = await createSupabaseServerClient();
   const values = {
     user_id: userId,
+    name: input.name.trim(),
     category_id: input.category_id,
     account_id: input.account_id,
     field: input.field,
@@ -37,7 +38,7 @@ export async function changeCategoryRuleStatus(
   userId: string,
   id: string,
   version: number,
-  status: "paused" | "dismissed" | "deleted"
+  status: "active" | "paused" | "dismissed" | "deleted"
 ): Promise<void> {
   const db = await createSupabaseServerClient();
   const query = db
@@ -49,6 +50,7 @@ export async function changeCategoryRuleStatus(
     .not("status", "in", "(deleted,dismissed)");
   if (status === "dismissed") query.eq("status", "proposed");
   if (status === "paused") query.eq("status", "active");
+  if (status === "active") query.eq("status", "paused");
   const { data, error } = await query.select("id").maybeSingle();
   if (error || !data)
     throw new Error("Rule could not be changed or its version changed.");

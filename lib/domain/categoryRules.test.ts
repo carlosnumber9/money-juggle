@@ -8,6 +8,7 @@ import {
 } from "./categoryRules";
 const rule: CategoryRule = {
   id: "r1",
+  name: "Netflix",
   user_id: "u1",
   field: "merchant_name",
   operator: "equals",
@@ -116,6 +117,9 @@ describe("category rules", () => {
     for (const v of [
       null,
       {},
+      { ...input, name: undefined },
+      { ...input, name: " " },
+      { ...input, name: "a".repeat(301) },
       { ...input, operator: "contains" },
       { ...input, value: " " },
       { ...input, currency: "eur" },

@@ -73,6 +73,9 @@ export function isCategoryRuleInput(
   if (!value || typeof value !== "object") return false;
   const v = value as Record<string, unknown>;
   return (
+    typeof v.name === "string" &&
+    v.name.trim().length >= 1 &&
+    v.name.length <= 300 &&
     ["merchant_name", "counterparty_name", "description"].includes(
       String(v.field)
     ) &&

@@ -36,6 +36,7 @@ export function RuleEditor({
   const [input, setInput] = useState<CategoryRuleInput>({
     id: rule?.id,
     version: rule?.version,
+    name: rule?.name ?? "",
     category_id: rule?.category_id ?? "",
     field: rule?.field ?? "merchant_name",
     operator: rule?.operator ?? "equals",
@@ -77,6 +78,18 @@ export function RuleEditor({
             onSave(input);
           }}
         >
+          <label className="grid gap-1 text-xs">
+            Nombre
+            <Input
+              required
+              maxLength={300}
+              value={input.name}
+              placeholder={input.value || "Nombre de la regla"}
+              onChange={(event) =>
+                setInput({ ...input, name: event.target.value })
+              }
+            />
+          </label>
           <label className="grid gap-1 text-xs">
             Campo
             <RuleSelect
@@ -121,7 +134,14 @@ export function RuleEditor({
               maxLength={300}
               value={input.value}
               onChange={(event) =>
-                setInput({ ...input, value: event.target.value })
+                setInput({
+                  ...input,
+                  value: event.target.value,
+                  name:
+                    !rule && input.name === input.value
+                      ? event.target.value
+                      : input.name
+                })
               }
             />
           </label>
@@ -253,7 +273,12 @@ export function RuleEditor({
             </Button>
             <Button
               type="submit"
-              disabled={busy || !input.category_id || !input.value.trim()}
+              disabled={
+                busy ||
+                !input.category_id ||
+                !input.value.trim() ||
+                !input.name.trim()
+              }
             >
               {busy
                 ? "Guardando…"

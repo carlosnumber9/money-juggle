@@ -43,7 +43,7 @@ export async function saveCategoryRuleAction(
 export async function changeCategoryRuleStatusAction(input: {
   id: string;
   version: number;
-  status: "paused" | "dismissed" | "deleted";
+  status: "active" | "paused" | "dismissed" | "deleted";
 }): Promise<Result<null>> {
   if (
     !input ||
@@ -51,7 +51,7 @@ export async function changeCategoryRuleStatusAction(input: {
     !RULE_UUID_PATTERN.test(input.id) ||
     !Number.isSafeInteger(input.version) ||
     input.version < 1 ||
-    !["paused", "dismissed", "deleted"].includes(input.status)
+    !["active", "paused", "dismissed", "deleted"].includes(input.status)
   )
     return { ok: false, reason: "La regla seleccionada no es válida." };
   return mutateRule((userId) =>

@@ -18,6 +18,7 @@ import {
   changeCategoryRuleStatusAction
 } from "./actions";
 const input = {
+  name: "Netflix",
   field: "merchant_name",
   operator: "equals",
   value: "netflix",
@@ -68,6 +69,20 @@ describe("rule actions", () => {
       ).ok
     ).toBe(false);
     expect(changeCategoryRuleStatus).not.toHaveBeenCalled();
+  });
+  it("accepts a direct owned reactivation without editing the condition", async () => {
+    const toggle = {
+      id: "f8000000-0000-4000-8000-000000000030",
+      version: 4,
+      status: "active" as const
+    };
+    expect((await changeCategoryRuleStatusAction(toggle)).ok).toBe(true);
+    expect(changeCategoryRuleStatus).toHaveBeenCalledWith(
+      "owner",
+      toggle.id,
+      toggle.version,
+      "active"
+    );
   });
   it("hides persistence failures", async () => {
     vi.mocked(saveCategoryRule).mockRejectedValueOnce(

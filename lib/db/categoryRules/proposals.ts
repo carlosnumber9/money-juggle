@@ -11,6 +11,7 @@ export async function persistRuleProposals(
   for (let offset = 0; offset < proposals.length; offset += 100) {
     const values = proposals.slice(offset, offset + 100).map((proposal) => ({
       ...proposal.condition,
+      name: proposal.condition.value,
       user_id: userId,
       category_id: proposal.categoryId,
       status: "proposed",

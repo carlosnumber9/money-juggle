@@ -23,6 +23,7 @@ export type CategoryRuleEvidence = {
 };
 export type CategoryRule = CategoryRuleCondition & {
   id: string;
+  name: string;
   user_id: string;
   category_id: string | null;
   status: CategoryRuleStatus;
@@ -33,6 +34,7 @@ export type CategoryRule = CategoryRuleCondition & {
   created_at: string;
 };
 export type CategoryRuleInput = CategoryRuleCondition & {
+  name: string;
   id?: string;
   version?: number;
   category_id: string;
