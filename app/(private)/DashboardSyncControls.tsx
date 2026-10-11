@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  useTransition
+} from "react";
 import { createPortal } from "react-dom";
 import { LogOutIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -40,6 +47,8 @@ import {
 
 type ActiveOperation = "refresh" | "backfill" | null;
 
+const subscribeToHydration = () => () => {};
+
 export function DashboardSyncControls({
   enabled,
   backfill,
@@ -55,6 +64,12 @@ export function DashboardSyncControls({
   const [expanded, setExpanded] = useState(false);
   const { invalidate: invalidateMonths } = useMonthInvalidation();
   const { beginSync, controlsTarget } = useSyncActivity();
+  // The header slot can mount before this streamed boundary hydrates.
+  const hydrated = useSyncExternalStore(
+    subscribeToHydration,
+    () => true,
+    () => false
+  );
   const didAutoRefreshRef = useRef(false);
   const [activeOperation, setActiveOperation] = useState<ActiveOperation>(null);
   const [refreshResult, setRefreshResult] = useState<SyncResponse | null>(null);
@@ -225,7 +240,7 @@ export function DashboardSyncControls({
           <LogOutIcon className="size-4" aria-hidden />
         </Tooltip>
       </PrivateSignOut>
-      {controlsTarget && (enabled || activeOperation === "refresh")
+      {hydrated && controlsTarget && (enabled || activeOperation === "refresh")
         ? createPortal(
             <LoadingSteps
               floating
