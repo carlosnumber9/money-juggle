@@ -234,6 +234,10 @@ Transaction labels follow the same security model as categorization:
 - Provider sync must not overwrite label assignments.
 - Label names are normalized and unique per owner, and assignment foreign keys
   include `user_id` to prevent cross-owner relationships at the database level.
+- Settings management derives ownership from a verified allowlisted session and
+  uses authenticated RLS-aware writes with explicit owner filters. Confirmed
+  deletion removes the label and both assignment types, preserving transactions
+  and reconciliations. The DELETE policy permits only `user_id = auth.uid()`.
 
 ## Reporting, Reconciliation, And Export Boundaries
 

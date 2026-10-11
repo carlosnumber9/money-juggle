@@ -42,7 +42,7 @@ Magic-link phases 5/6 were superseded by password login in phase 31.
 - [ ] 25. Add scheduled sync with Vercel Cron.
 - [x] 26. Add error feedback, consent reconnection, and owner account-match review.
 - [ ] 27. Security hardening.
-- [ ] 28. Labels and annual reporting implemented; global management and label filters remain deferred.
+- [ ] 28. Labels, Settings management and annual reporting implemented; archive and label filters remain deferred.
 - [ ] 29. Explore Cobee by Pluxee consumption reports.
 - [x] 30. Add monthly period navigation for transactions and charts.
 - [x] 31. Replace magic links with owner password login and session refresh.
@@ -1402,8 +1402,8 @@ Do not do yet:
 
 Status:
 
-- Creation/assignment and annual labeled expense reporting are implemented.
-  Global management and transaction-list label filtering remain planned.
+- Creation/assignment, Settings management and annual labeled expense reporting
+  are implemented. Archiving and transaction-list label filtering remain planned.
 
 Goal:
 
@@ -1445,10 +1445,13 @@ Implemented slice:
 - Optimistic interaction with rollback when authenticated persistence fails.
 - Annual labeled-spending chart in Evolution, including net refunds and
   reconciliation residual labels.
+- Settings card with standalone creation, inline renaming on blur and confirmed
+  permanent deletion of the label and both assignment types. Financial records
+  and reconciliations remain intact. See [Transaction labels](transaction-labels.md).
 
 Still planned:
 
-- Label archive, rename, and global management UI.
+- Label archive.
 - Transaction-list filters and arbitrary report filters by label.
 
 Risks or decisions:

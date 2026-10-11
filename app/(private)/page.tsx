@@ -110,7 +110,12 @@ async function PreparedHome({
             />
           </>
         )}
-        {view.tab === "settings" && <SettingsPanel view={view.settings} />}
+        {view.tab === "settings" && (
+          <SettingsPanel
+            view={view.settings}
+            labelSettings={view.labelSettings}
+          />
+        )}
         {view.tab === "transactions" && (
           <TransactionsMonthPanel initialData={view.monthlyTransactions} />
         )}

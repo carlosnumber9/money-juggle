@@ -12,6 +12,9 @@ const source = vi.hoisted(() => ({
   listMonthlyTransactions: vi.fn(),
   listTransactionCategoryGroups: vi.fn(),
   listTransactionLabels: vi.fn(),
+  listCategoryRules: vi.fn(),
+  listCategoryRuleAccounts: vi.fn(),
+  listCategoryRuleConflicts: vi.fn(),
   listTransactionReconciliationAdjustments: vi.fn()
 }));
 vi.mock("@/lib/data/bankingDataSource", () => ({ bankingDataSource: source }));
@@ -32,6 +35,54 @@ beforeEach(() => {
 });
 
 describe("active home tab", () => {
+  it("loads owned labels and rule settings without transaction history", async () => {
+    source.listTransactionLabels.mockResolvedValue([
+      { id: "label", name: "Trip" }
+    ]);
+    const view = await getPrivateHomeView(undefined, "settings");
+    expect(view).toMatchObject({
+      kind: "ready",
+      tab: "settings",
+      settings: { error: null },
+      labelSettings: { labels: [{ id: "label", name: "Trip" }], error: null }
+    });
+    expect(source.listTransactionLabels).toHaveBeenCalledWith("owner");
+    expect(source.listMonthlyTransactions).not.toHaveBeenCalled();
+    expect(source.listBankConnections).not.toHaveBeenCalled();
+    expect(source.listPortfolioHistory).not.toHaveBeenCalled();
+  });
+  it("keeps rules available when label loading fails", async () => {
+    source.listTransactionLabels.mockRejectedValue(
+      new Error("private database detail")
+    );
+    const report = vi.fn();
+    const view = await getPrivateHomeView(undefined, "settings", report);
+    expect(view).toMatchObject({
+      tab: "settings",
+      settings: { error: null },
+      labelSettings: {
+        labels: [],
+        error: "No se pudieron cargar las etiquetas."
+      }
+    });
+    expect(report).toHaveBeenCalledWith("data", "warning");
+  });
+  it("keeps labels available when rule loading fails", async () => {
+    source.listCategoryRules.mockRejectedValue(
+      new Error("private database detail")
+    );
+    source.listTransactionLabels.mockResolvedValue([
+      { id: "label", name: "Trip" }
+    ]);
+    const view = await getPrivateHomeView(undefined, "settings");
+    expect(view).toMatchObject({
+      tab: "settings",
+      settings: {
+        error: "No se pudieron cargar las reglas. Inténtalo de nuevo."
+      },
+      labelSettings: { labels: [{ id: "label", name: "Trip" }], error: null }
+    });
+  });
   it("loads only portfolio financial data in investments", async () => {
     const view = await getPrivateHomeView("2026-07", "investments");
     expect(view).toMatchObject({

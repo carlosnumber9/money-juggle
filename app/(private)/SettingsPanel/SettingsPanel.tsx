@@ -23,6 +23,7 @@ import type {
   CategoryRuleInput,
   CategoryRuleCoverage,
   CategoryRuleSettings,
+  TransactionLabelSettingsView,
   Result
 } from "@/definitions";
 import { useMonthInvalidation } from "../MonthlyTransactionsPanel/useMonthInvalidation";
@@ -35,7 +36,14 @@ import { updateTransactionCategoryAction } from "../MonthlyTransactionsPanel/act
 import { RuleEditor } from "./RuleEditor";
 import { RuleSelect } from "./RuleSelect";
 import { RuleRow } from "./RuleRow";
-export function SettingsPanel({ view }: { view: CategoryRuleSettings }) {
+import { TransactionLabelsCard } from "./TransactionLabelsCard";
+export function SettingsPanel({
+  view,
+  labelSettings
+}: {
+  view: CategoryRuleSettings;
+  labelSettings: TransactionLabelSettingsView;
+}) {
   const router = useRouter();
   const cache = useMonthInvalidation();
   const [busy, startTransition] = useTransition();
@@ -225,6 +233,7 @@ export function SettingsPanel({ view }: { view: CategoryRuleSettings }) {
           </div>
         </CardContent>
       </Card>
+      <TransactionLabelsCard view={labelSettings} />
       {editor && (
         <RuleEditor
           key={editor.rule?.id ?? "new"}

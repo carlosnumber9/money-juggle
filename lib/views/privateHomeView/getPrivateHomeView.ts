@@ -22,6 +22,7 @@ import {
   loadCompletedTransactionBackfillConnectionIds,
   loadInstitutions,
   loadMonthlyTransactions,
+  loadTransactionLabels,
   loadProviderStatus,
   loadTransactionReconciliationAdjustments
 } from "./loaders";
@@ -55,13 +56,23 @@ export async function getPrivateHomeView(
     selectedMonth
   };
   if (tab === "settings") {
-    const [settings, providerStatus] = await Promise.all([
+    const [settings, labels, providerStatus] = await Promise.all([
       getCategoryRuleSettings(user.id, dataSource),
+      loadTransactionLabels(dataSource, user.id),
       providerPromise
     ]);
-    report?.("data", settings.error ? "warning" : "completed");
+    report?.("data", settings.error || !labels.ok ? "warning" : "completed");
     report?.("prepared", "completed");
-    return { ...common, tab, providerStatus, settings };
+    return {
+      ...common,
+      tab,
+      providerStatus,
+      settings,
+      labelSettings: {
+        labels: labels.ok ? labels.value : [],
+        error: labels.ok ? null : labels.reason
+      }
+    };
   }
   if (tab === "transactions") {
     const [monthlyTransactions, providerStatus] = await Promise.all([

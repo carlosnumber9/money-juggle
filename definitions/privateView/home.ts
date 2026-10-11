@@ -25,6 +25,11 @@ export type MonthlyTransactionsView = {
   error: string | null;
 };
 
+export type TransactionLabelSettingsView = {
+  labels: TransactionLabelSummary[];
+  error: string | null;
+};
+
 export type TransactionMonthData = MonthlyTransactionsView & {
   selectedMonth: MonthlyPeriodView;
   loadedAt: number;
@@ -50,6 +55,7 @@ export type PrivateHomeView =
   | (ReadyHomeView & {
       tab: "settings";
       settings: import("../categoryRules").CategoryRuleSettings;
+      labelSettings: TransactionLabelSettingsView;
     })
   | { kind: "unauthenticated" }
   | { kind: "forbidden" }

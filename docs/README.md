@@ -27,6 +27,11 @@ history is not a prerequisite for a focused change.
 See [Category rules](category-rules.md) for Settings, model packaging, matching,
 ownership, migration operations and local acceptance checks.
 
+## Transaction Label Feature
+
+See [Transaction labels](transaction-labels.md) for Settings management, inline
+renaming, permanent deletion, ownership and migration verification.
+
 ## Document Roles
 
 - `AGENTS.md`: short operational instructions, security invariants, commands,

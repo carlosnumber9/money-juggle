@@ -63,6 +63,15 @@ review. See [Category rules](category-rules.md) for limits and operational check
 The additive rule migration is applied separately after implementation checks.
 Local source does not establish remote schema or Vercel invocation status.
 
+## Transaction Labels
+
+Settings also provides a half-width label card with standalone creation, inline
+renaming on blur and confirmed permanent deletion. Owner RLS and existing
+assignment cascades remove labels without changing transactions or
+reconciliations. Rule and label loading fail independently; successful label
+management invalidates all owned cached transaction months. See
+[Transaction labels](transaction-labels.md) for migration and acceptance checks.
+
 ## Important Financial And Ownership Boundaries
 
 - Reporting uses app-owned `reporting_date`; bank movement and account export
@@ -110,8 +119,8 @@ migrations are deployed remotely.
 - No general manual asset UI/table, brokerage API client, crypto import, or Cobee
   client exists. Reviewed portfolio PDF imports are implemented; Cobee remains
   dated research.
-- No automatic categorization rules, global category/label management UI, or
-  transaction-list label filter exists. Annual label reporting is implemented.
+- No global category management UI or transaction-list label filter exists.
+  Category rules, global label management and annual label reporting are implemented.
 - No dedicated `/privacy` or `/terms` page exists, despite URLs recorded in
   provider-registration notes. Confirm deployment requirements before relying
   on those URLs.

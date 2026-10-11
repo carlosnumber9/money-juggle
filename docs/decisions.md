@@ -2094,3 +2094,21 @@ conditions, bounded inference and a larger dedicated deployment bundle. It avoid
 model latency and external inference dependencies during bank synchronization.
 Historical categories remain unchanged when rules are edited or removed. Actual
 Linux deployment and free quota availability require independent verification.
+
+## ADR-053: Manage Transaction Labels In Settings With Permanent Deletion
+
+Status: Accepted and implemented.
+
+The owner requested standalone label creation, inline renaming on blur and
+confirmed permanent deletion from Settings, including labels already assigned.
+Reuse the owned label model and authenticated RLS-aware clients. Keep IDs during
+renaming and existing name normalization and uniqueness constraints. Add an
+owner-only DELETE policy and use existing cascades to remove transaction and
+reconciliation assignments in one label deletion.
+
+Deleting a label changes historical label grouping, while financial records,
+reconciliation memberships, amounts, dates and categories remain intact. The
+confirmation describes removal from both assignment types. Archiving and label
+filters remain deferred. Independent card loading and invalidation of all owned
+month caches prevent rule failures or cached transaction names from obscuring
+label management.

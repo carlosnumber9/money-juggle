@@ -25,6 +25,7 @@ Remote deployment must be checked separately through the migration workflow.
 - [`20261010123000_add_portfolio_read_views.sql`](../supabase/migrations/20261010123000_add_portfolio_read_views.sql)
 - [`20261011120000_add_category_rules.sql`](../supabase/migrations/20261011120000_add_category_rules.sql)
 - [`20261011190000_add_category_rule_names.sql`](../supabase/migrations/20261011190000_add_category_rule_names.sql)
+- [`20261011200000_allow_transaction_label_deletion.sql`](../supabase/migrations/20261011200000_allow_transaction_label_deletion.sql)
 
 The model should preserve user ownership even though the app starts as a personal project.
 
@@ -787,6 +788,9 @@ Ownership model:
 Security and RLS:
 
 - User can read and manage only their own labels.
+- Settings permits standalone creation, renaming with the same ID and confirmed
+  permanent deletion. Owner DELETE RLS and existing foreign-key cascades remove
+  transaction and reconciliation assignments without deleting financial rows.
 - Labels may reveal sensitive plans or events and should be treated as
   user-owned financial metadata.
 

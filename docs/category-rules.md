@@ -31,7 +31,8 @@ Manual assignments, including clearing a category, take priority permanently.
 
 ## Settings
 
-The private Settings tab loads only rule data and catalogs. One card occupies
+The private Settings tab loads rule data, catalogs and an independent
+[label management card](transaction-labels.md). Each card occupies
 one of two columns from `lg`, matching the half-width Evolution charts. The
 420 px table viewport has a sticky header and internal scrolling. Proposals and
 rules share the compact table, which shows only a status icon, the editable
