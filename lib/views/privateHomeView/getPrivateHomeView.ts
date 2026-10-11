@@ -1,4 +1,5 @@
 import "server-only";
+import { getCategoryRuleSettings } from "../categoryRuleSettings";
 
 import type {
   InitialLoadReporter,
@@ -53,6 +54,15 @@ export async function getPrivateHomeView(
     user: { id: user.id, email: user.email },
     selectedMonth
   };
+  if (tab === "settings") {
+    const [settings, providerStatus] = await Promise.all([
+      getCategoryRuleSettings(user.id, dataSource),
+      providerPromise
+    ]);
+    report?.("data", settings.error ? "warning" : "completed");
+    report?.("prepared", "completed");
+    return { ...common, tab, providerStatus, settings };
+  }
   if (tab === "transactions") {
     const [monthlyTransactions, providerStatus] = await Promise.all([
       getTransactionMonthView(user.id, requestedMonth, dataSource),

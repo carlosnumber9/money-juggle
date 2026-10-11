@@ -16,6 +16,7 @@ import { MonthlyCashflowCards } from "@/app/(private)/MonthlyCashflowCards";
 import { MonthlyEvolutionPanel } from "@/app/(private)/MonthlyEvolutionPanel";
 import { TransactionsMonthPanel } from "./TransactionsMonthPanel";
 import { HomeTabs } from "./HomeTabs";
+import { SettingsPanel } from "./SettingsPanel/SettingsPanel";
 import { InvestmentsPanel } from "./InvestmentsPanel";
 import type { PrivateHomePageProps } from "@/definitions";
 import { getPrivateHomeView } from "@/lib/views/privateHomeView";
@@ -109,6 +110,7 @@ async function PreparedHome({
             />
           </>
         )}
+        {view.tab === "settings" && <SettingsPanel view={view.settings} />}
         {view.tab === "transactions" && (
           <TransactionsMonthPanel initialData={view.monthlyTransactions} />
         )}
@@ -136,7 +138,8 @@ function getSelectedTab(
 ): import("@/definitions").HomeTab {
   return value === "transactions" ||
     value === "evolution" ||
-    value === "investments"
+    value === "investments" ||
+    value === "settings"
     ? value
     : "dashboard";
 }

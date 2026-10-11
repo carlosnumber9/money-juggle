@@ -21,3 +21,11 @@ are eligible. The matcher compares normalized text, currency, direction and an
 optional account. Different-category overlaps require review; equal-category
 overlaps attribute the oldest active rule. No model runs during matching.
 Manual assignments, including clearing a category, take priority permanently.
+
+## Settings
+
+The private Settings tab loads only rule data and catalogs. One card occupies
+one of two columns from `lg`, matching the half-width Evolution charts. The
+420 px table viewport has a sticky header, vertical scrolling and horizontal
+scrolling on narrow devices. Proposals and rules share the table. Editing,
+confirmation and conflict review use dialogs within the same feature.

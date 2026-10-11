@@ -15,7 +15,7 @@ import type { ProviderStatusView } from "./providerStatus";
 import type { TransactionBackfillView } from "./transactionBackfill";
 
 export type HomeTab =
-  "dashboard" | "transactions" | "evolution" | "investments";
+  "dashboard" | "transactions" | "evolution" | "investments" | "settings";
 
 export type MonthlyTransactionsView = {
   range: { from: string; to: string };
@@ -47,6 +47,10 @@ type ReadyHomeView = {
 };
 
 export type PrivateHomeView =
+  | (ReadyHomeView & {
+      tab: "settings";
+      settings: import("../categoryRules").CategoryRuleSettings;
+    })
   | { kind: "unauthenticated" }
   | { kind: "forbidden" }
   | (ReadyHomeView & {

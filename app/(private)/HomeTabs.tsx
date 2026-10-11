@@ -13,7 +13,8 @@ import {
   LayoutDashboard,
   ArrowLeftRight,
   ChartNoAxesCombined,
-  ChartPie
+  ChartPie,
+  Settings
 } from "lucide-react";
 import { useTabMagnification } from "./HomeTabs/useTabMagnification";
 import type { HomeTab } from "@/definitions";
@@ -24,7 +25,8 @@ const sections = [
   { value: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { value: "transactions", label: "Transacciones", icon: ArrowLeftRight },
   { value: "evolution", label: "Evolución", icon: ChartNoAxesCombined },
-  { value: "investments", label: "Inversiones", icon: ChartPie }
+  { value: "investments", label: "Inversiones", icon: ChartPie },
+  { value: "settings", label: "Configuración", icon: Settings }
 ] as const;
 
 export function HomeTabs({
@@ -71,7 +73,7 @@ export function HomeTabs({
           ref={tabsRef}
           aria-label="Secciones de tus cuentas"
           aria-busy={loading}
-          className="h-11 gap-3 md:h-10 md:gap-1 [&_[data-slot=tabs-indicator]]:hidden md:[&_[data-slot=tabs-indicator]]:block"
+          className="h-11 gap-1 md:h-10 md:gap-1 [&_[data-slot=tabs-indicator]]:hidden md:[&_[data-slot=tabs-indicator]]:block"
         >
           {sections.map(({ value, label, icon: Icon }) => (
             <TabsTrigger
