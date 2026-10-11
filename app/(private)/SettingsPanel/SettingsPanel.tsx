@@ -1,7 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Pause, Play, Trash2, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,13 +34,7 @@ import { ConflictReview } from "./ConflictReview";
 import { updateTransactionCategoryAction } from "../MonthlyTransactionsPanel/actions";
 import { RuleEditor } from "./RuleEditor";
 import { RuleSelect } from "./RuleSelect";
-const statusLabels = {
-  proposed: "Propuesta",
-  active: "Activa",
-  paused: "Pausada",
-  dismissed: "Descartada",
-  deleted: "Borrada"
-};
+import { RuleRow } from "./RuleRow";
 export function SettingsPanel({ view }: { view: CategoryRuleSettings }) {
   const router = useRouter();
   const cache = useMonthInvalidation();
@@ -71,7 +64,6 @@ export function SettingsPanel({ view }: { view: CategoryRuleSettings }) {
   function save(input: CategoryRuleInput) {
     mutate(() => saveCategoryRuleAction(input));
   }
-  const categories = view.categories.flatMap((group) => group.categories);
   const rules = view.rules.filter(
     (rule) => filter === "all" || rule.status === filter
   );
@@ -188,13 +180,10 @@ export function SettingsPanel({ view }: { view: CategoryRuleSettings }) {
             aria-label="Listado de reglas"
             tabIndex={0}
           >
-            <Table className="min-w-[620px]">
+            <Table>
               <TableHeader className="sticky top-0 z-10 bg-card">
                 <TableRow>
                   <TableHead>Regla</TableHead>
-                  <TableHead>Categoría</TableHead>
-                  <TableHead>Cuenta</TableHead>
-                  <TableHead>Estado</TableHead>
                   <TableHead>
                     <span className="sr-only">Acciones</span>
                   </TableHead>
@@ -202,107 +191,27 @@ export function SettingsPanel({ view }: { view: CategoryRuleSettings }) {
               </TableHeader>
               <TableBody>
                 {rules.map((rule) => (
-                  <TableRow key={rule.id}>
-                    <TableCell className="max-w-48 whitespace-normal">
-                      <p className="font-medium">{rule.value}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {rule.field === "merchant_name"
-                          ? "Comercio"
-                          : rule.field === "counterparty_name"
-                            ? "Contraparte"
-                            : "Descripción"}{" "}
-                        · {rule.operator === "equals" ? "Igual" : "Contiene"}
-                        <br />
-                        {rule.direction === "expense"
-                          ? "Gasto"
-                          : "Ingreso"} · {rule.currency}
-                      </p>
-                    </TableCell>
-                    <TableCell className="max-w-28 whitespace-normal">
-                      {categories.find(
-                        (category) => category.id === rule.category_id
-                      )?.name ??
-                        (rule.category_id ? "No disponible" : "Por elegir")}
-                    </TableCell>
-                    <TableCell className="max-w-28 whitespace-normal">
-                      {rule.account_id
-                        ? (view.accounts.find(
-                            (account) => account.id === rule.account_id
-                          )?.name ?? "Cuenta no disponible")
-                        : "Todas las cuentas"}
-                    </TableCell>
-                    <TableCell>{statusLabels[rule.status]}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button
-                          size="icon-xs"
-                          variant="ghost"
-                          aria-label={`Editar regla ${rule.value}`}
-                          disabled={busy}
-                          onClick={() => setEditor({ rule })}
-                        >
-                          <Pencil aria-hidden />
-                        </Button>
-                        {rule.status === "active" ? (
-                          <Button
-                            size="icon-xs"
-                            variant="ghost"
-                            aria-label={`Pausar regla ${rule.value}`}
-                            disabled={busy}
-                            onClick={() =>
-                              mutate(() =>
-                                changeCategoryRuleStatusAction({
-                                  id: rule.id,
-                                  version: rule.version,
-                                  status: "paused"
-                                })
-                              )
-                            }
-                          >
-                            <Pause aria-hidden />
-                          </Button>
-                        ) : (
-                          <Button
-                            size="icon-xs"
-                            variant="ghost"
-                            aria-label={`${rule.status === "proposed" ? "Revisar" : "Activar"} regla ${rule.value}`}
-                            disabled={busy}
-                            onClick={() =>
-                              setEditor({
-                                rule: {
-                                  ...rule,
-                                  status:
-                                    rule.status === "paused"
-                                      ? "active"
-                                      : rule.status
-                                }
-                              })
-                            }
-                          >
-                            <Play aria-hidden />
-                          </Button>
-                        )}
-                        <Button
-                          size="icon-xs"
-                          variant="ghost"
-                          aria-label={`${rule.status === "proposed" ? "Descartar" : "Borrar"} regla ${rule.value}`}
-                          disabled={busy}
-                          onClick={() => setRemoving(rule)}
-                        >
-                          {rule.status === "proposed" ? (
-                            <X aria-hidden />
-                          ) : (
-                            <Trash2 aria-hidden />
-                          )}
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                  <RuleRow
+                    key={rule.id}
+                    rule={rule}
+                    busy={busy}
+                    onEdit={() => setEditor({ rule })}
+                    onToggle={() =>
+                      mutate(() =>
+                        changeCategoryRuleStatusAction({
+                          id: rule.id,
+                          version: rule.version,
+                          status: rule.status === "active" ? "paused" : "active"
+                        })
+                      )
+                    }
+                    onRemove={() => setRemoving(rule)}
+                  />
                 ))}
                 {rules.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={5}
+                      colSpan={2}
                       className="py-12 text-center text-muted-foreground"
                     >
                       {view.error
