@@ -29,3 +29,22 @@ one of two columns from `lg`, matching the half-width Evolution charts. The
 420 px table viewport has a sticky header, vertical scrolling and horizontal
 scrolling on narrow devices. Proposals and rules share the table. Editing,
 confirmation and conflict review use dialogs within the same feature.
+
+## Server Model Discovery
+
+`npm run models:prepare` fetches checksum-verified artifacts from a fixed Hugging
+Face revision into ignored `.server-models/`. The build runs preparation
+automatically. Run it once before local development. Transformers.js 3.8.1 uses
+q8 CPU inference; browsers receive neither artifacts nor inference dependencies.
+Runtime downloads and filesystem caches are disabled. The dedicated Node route
+has a 120-second limit; computation uses a 110-second budget. Reads use bank
+dates, RLS and pagination over the last twelve months, capped at 5,000 rows and
+2,000 unique texts. Coverage and truncation are shown explicitly.
+
+Candidates require three distinct months, a stable editable text condition and
+manually categorized evidence. Cosine similarity of 0.90 only discovers groups.
+Conflicting categories require an explicit category choice. Confirming a proposal
+activates deterministic matching. Proposal fingerprints suppress identical
+rediscovery, including dismissed proposals. No inference service is contacted
+with transaction data. Hosting quotas and deployed Linux behavior remain
+independent operational checks.

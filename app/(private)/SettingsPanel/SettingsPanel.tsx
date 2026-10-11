@@ -22,6 +22,7 @@ import {
 import type {
   CategoryRule,
   CategoryRuleInput,
+  CategoryRuleCoverage,
   CategoryRuleSettings,
   Result
 } from "@/definitions";
@@ -46,6 +47,7 @@ export function SettingsPanel({ view }: { view: CategoryRuleSettings }) {
   const cache = useMonthInvalidation();
   const [busy, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [coverage, setCoverage] = useState<CategoryRuleCoverage | null>(null);
   const [filter, setFilter] = useState("all");
   const [editor, setEditor] = useState<{ rule: CategoryRule | null } | null>(
     null
@@ -98,10 +100,42 @@ export function SettingsPanel({ view }: { view: CategoryRuleSettings }) {
               <Button
                 size="xs"
                 variant="outline"
-                disabled
-                title="Disponible al completar detección"
+                disabled={busy || Boolean(view.error)}
+                onClick={() => {
+                  setError(null);
+                  startTransition(async () => {
+                    try {
+                      const response = await fetch(
+                        "/api/category-rules/discover",
+                        {
+                          method: "POST",
+                          credentials: "same-origin",
+                          cache: "no-store"
+                        }
+                      );
+                      const result =
+                        (await response.json()) as Result<CategoryRuleCoverage>;
+                      if (!result.ok) {
+                        if (response.status === 401 || response.status === 403)
+                          cache.checkResult({
+                            ok: false,
+                            reason: result.reason,
+                            status: response.status
+                          });
+                        setError(result.reason);
+                      } else {
+                        setCoverage(result.value);
+                      }
+                      router.refresh();
+                    } catch {
+                      setError(
+                        "No se pudo completar detección. Inténtalo de nuevo."
+                      );
+                    }
+                  });
+                }}
               >
-                Detectar reglas
+                {busy ? "Procesando…" : "Detectar reglas"}
               </Button>
               {view.conflicts.length > 0 && (
                 <Button
@@ -113,6 +147,16 @@ export function SettingsPanel({ view }: { view: CategoryRuleSettings }) {
                 </Button>
               )}
             </div>
+            {coverage && (
+              <p className="text-xs text-muted-foreground" role="status">
+                {coverage.from} – {coverage.to}: {coverage.rows} movimientos,{" "}
+                {coverage.texts} textos y {coverage.proposals} propuestas
+                nuevas.
+                {coverage.truncated
+                  ? " Análisis parcial por límite de capacidad; no cubre todo el historial."
+                  : " Cobertura limitada a movimientos guardados."}
+              </p>
+            )}
             <RuleSelect
               label="Filtrar reglas"
               value={filter}

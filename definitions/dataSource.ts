@@ -125,6 +125,13 @@ export type MonthlyTransactionRange = {
 };
 
 export type BankingDataSource = {
+  listCategoryRuleHistory(
+    userId: string,
+    range: MonthlyTransactionRange
+  ): Promise<{
+    rows: import("./categoryRules").CategoryRuleTransaction[];
+    truncated: boolean;
+  }>;
   listCategoryRules(
     userId: string
   ): Promise<import("./categoryRules").CategoryRule[]>;

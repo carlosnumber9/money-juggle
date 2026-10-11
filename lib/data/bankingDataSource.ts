@@ -1,4 +1,5 @@
 import "server-only";
+import { listCategoryRuleHistory } from "@/lib/db/categoryRules/history";
 import {
   listCategoryRules,
   listCategoryRuleAccounts,
@@ -34,6 +35,7 @@ import {
 } from "@/lib/db/portfolio/reads";
 
 export const bankingDataSource: BankingDataSource = {
+  listCategoryRuleHistory,
   listCategoryRules,
   listCategoryRuleAccounts,
   listCategoryRuleConflicts,

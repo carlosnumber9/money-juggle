@@ -21,10 +21,13 @@
     "report:monthly": "node --conditions=react-server --import tsx scripts/report-monthly.ts",
     "db:link": "supabase link --project-ref qsmtxtnugihqawjesslo",
     "db:push": "supabase db push",
-    "db:migrations": "supabase migration list"
+    "db:migrations": "supabase migration list",
+    "models:prepare": "node scripts/prepare-category-model.mjs",
+    "prebuild": "npm run models:prepare"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
+    "@huggingface/transformers": "3.8.1",
     "@next/env": "^16.2.10",
     "@number-flow/react": "^0.6.2",
     "@supabase/ssr": "^0.12.0",
