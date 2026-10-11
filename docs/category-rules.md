@@ -8,7 +8,8 @@ Detection does not create active rules automatically and does not recategorize
 historical movements. All accounts are included unless a rule restricts one.
 Periodicity discovers proposals; active rules do not impose a calendar.
 
-Schema is defined in `20261011120000_add_category_rules.sql`. Remote application
+Schema is defined in `20261011120000_add_category_rules.sql` and
+`20261011190000_add_category_rule_names.sql`. Remote application
 is verified separately through the migration workflow below; local files and
 commits alone do not establish deployment status.
 
@@ -32,9 +33,20 @@ Manual assignments, including clearing a category, take priority permanently.
 
 The private Settings tab loads only rule data and catalogs. One card occupies
 one of two columns from `lg`, matching the half-width Evolution charts. The
-420 px table viewport has a sticky header, vertical scrolling and horizontal
-scrolling on narrow devices. Proposals and rules share the table. Editing,
-confirmation and conflict review use dialogs within the same feature.
+420 px table viewport has a sticky header and internal scrolling. Proposals and
+rules share the compact table, which shows only a status icon, the editable
+display name and removal. Clicking a row or activating its name with the
+keyboard opens the detail/edit dialog; category, account and matching conditions
+appear there. Status icons directly toggle active/paused rules, while proposal
+icons open review before confirmation. Active/paused status and removal clicks do
+not open the row editor. Confirmation and conflict review use dialogs within the
+same feature. Status and removal icons are 24 px inside 44 px controls.
+
+Names preserve user capitalization and are trimmed, required and limited to
+300 characters. Existing rules and detected proposals default to their former
+condition-text title. New manual rules initially use their condition text until
+the name is customized. Renaming changes neither matching conditions nor the
+activation boundary, while still advancing the optimistic edit version.
 
 ## Server Model Discovery
 
@@ -74,7 +86,7 @@ categories and provenance are retained. No model participates in this path.
 
 ## Verification And Migration Workflow
 
-Implementation checks passed: `npm run check`, 558 Vitest tests across 122 files,
+Initial implementation checks passed: `npm run check`, 558 Vitest tests across 122 files,
 and a production build. PostgreSQL 17 with synthetic auth roles applied the full
 migration chain and passed the rollback fixtures in
 `supabase/tests/category_rules.sql`. Fixtures cover owner isolation, composite
@@ -82,6 +94,16 @@ category ownership, origin constraints, service-only RPC permission, manual
 priority, historical/pending/currency exclusion, neutral movements, conflicting
 rules, idempotence and pause behavior. These are synthetic checks, not live bank
 synchronization.
+
+The compact named-rule update passed `npm run check` and 565 Vitest tests across
+124 files. Isolated PostgreSQL 17 verification applied the complete migration
+chain and proved that name backfill preserves all existing rule metadata. Both
+rollback suites passed, including name constraints, direct status toggles and
+activation preservation during renaming.
+
+The name migration is applied on the implementation linked Supabase project.
+The remote migration inventory and the rolled-back name fixtures both confirmed
+successful application.
 
 A local q8 smoke check produced normalized 384-dimensional embeddings from
 synthetic descriptions. The macOS build traced all four model artifacts
@@ -101,8 +123,12 @@ npm run db:migrations
 npx supabase db query --linked --file supabase/tests/category_rules.sql
 ```
 
-The dry run must contain only the category-rules migration. Do not apply other
-pending migrations as part of this feature. The SQL verification wraps synthetic
+The initial category-rules migration is already applied on the implementation
+project. When applying the compact list change elsewhere, the dry run must contain only
+`20261011190000_add_category_rule_names.sql`. Do not apply other pending migrations
+as part of this feature. After application, also run
+`npx supabase db query --linked --file supabase/tests/category_rule_names.sql`
+to verify names, optimistic versions and activation behavior. The SQL verification wraps synthetic
 fixtures in a transaction and rolls them back. It does not recategorize existing
 transactions. Record the actual application result in the handoff.
 
@@ -114,6 +140,11 @@ are already prepared on the implementation workstation; a fresh checkout needs
 
 - One half-width card from `lg`, full width on mobile, fixed 420 px table
   viewport, sticky header, and internal scrolling.
+- Only status, name and removal appear in each row. Row clicks open details;
+  name activation also works with the keyboard. Pause/reactivation and removal
+  stay independent of the row click.
+- Existing rule names match their previous titles. Rename a rule in its dialog
+  and confirm that category, account and conditions remain unchanged.
 - Create, edit, pause, reactivate and delete a manual rule; earlier categories
   remain unchanged.
 - Detect patterns, inspect coverage/examples/conflicting categories, and confirm

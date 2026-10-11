@@ -24,6 +24,7 @@ Remote deployment must be checked separately through the migration workflow.
 - [`20261010120000_add_portfolio_snapshots.sql`](../supabase/migrations/20261010120000_add_portfolio_snapshots.sql)
 - [`20261010123000_add_portfolio_read_views.sql`](../supabase/migrations/20261010123000_add_portfolio_read_views.sql)
 - [`20261011120000_add_category_rules.sql`](../supabase/migrations/20261011120000_add_category_rules.sql)
+- [`20261011190000_add_category_rule_names.sql`](../supabase/migrations/20261011190000_add_category_rule_names.sql)
 
 The model should preserve user ownership even though the app starts as a personal project.
 
@@ -997,8 +998,13 @@ Important modeling notes:
 
 `category_rules` owns confirmed rules and proposals through `user_id`, with
 composite owner foreign keys to category and optional account, owner RLS,
-versioned edits and soft deletion. The preparation trigger normalizes conditions,
-validates active categories and advances activation time on active revisions.
+versioned edits and soft deletion. Its required `name` is a separate trimmed
+display label, preserving capitalization and limited to 300 characters. Existing
+rows and unnamed new inserts default to their condition text. Name backfill
+preserves existing versions, timestamps and activation dates. The preparation
+trigger normalizes conditions, validates active categories and advances
+activation time when active matching conditions change or a rule is activated.
+Name-only edits advance the version without moving the activation boundary.
 Proposal fingerprints prevent duplicate detection, including dismissed rows.
 
 Transactions retain `category_source`, rule ID/version and a conflict flag.

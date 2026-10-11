@@ -50,7 +50,9 @@ valuations, and omits PDF cash from economic and account totals.
 ## Category Rules
 
 The private Settings tab provides a half-width rule card with a fixed-height
-scrolling table. Authenticated rule CRUD and confirmed MiniLM proposals share
+scrolling table showing status icons, editable names and removal. Rows open the
+detail/edit dialog; icons toggle active/paused rules directly. Authenticated
+rule CRUD and confirmed MiniLM proposals share
 owned storage. Discovery uses a pinned q8 multilingual model server-side over
 up to twelve months of saved history; it never sends transaction text to a
 hosted inference service. Future deterministic assignment runs after provider
